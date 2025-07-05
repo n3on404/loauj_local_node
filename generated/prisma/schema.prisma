@@ -1,0 +1,311 @@
+// Louaj Local Node Database Schema (SQLite)
+// Station-specific data with sync capabilities
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============== STATION CONFIG ===============
+
+model StationConfig {
+  id            String    @id @default(cuid())
+  stationId     String    @unique @map("station_id") // Reference to central
+  stationName   String    @map("station_name")
+  governorate   String
+  delegation    String
+  serverVersion String    @map("server_version")
+  lastSync      DateTime? @map("last_sync")
+  isOnline      Boolean   @default(false) @map("is_online")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("station_config")
+}
+
+// =============== LOCAL STAFF (CACHED) ===============
+
+model Staff {
+  id          String    @id // Same ID as central
+  cin         String    @unique
+  phoneNumber String    @map("phone_number")
+  firstName   String    @map("first_name")
+  lastName    String    @map("last_name")
+  role        String // 'WORKER' or 'SUPERVISOR'
+  isActive    Boolean   @default(true) @map("is_active")
+  lastLogin   DateTime? @map("last_login")
+  syncedAt    DateTime  @map("synced_at")
+
+  // Relations
+  bookings      Booking[] @relation("BookingStaff")
+  verifications Booking[] @relation("VerificationStaff")
+  sessions      Session[]
+
+  @@map("staff")
+}
+
+// =============== SESSION MANAGEMENT ===============
+
+model Session {
+  id             String    @id @default(cuid())
+  staffId        String    @map("staff_id")
+  token          String    @unique
+  staffData      String    @map("staff_data") // JSON string with staff info
+  isActive       Boolean   @default(true) @map("is_active")
+  lastActivity   DateTime  @default(now()) @map("last_activity")
+  expiresAt      DateTime  @map("expires_at")
+  createdOffline Boolean   @default(false) @map("created_offline")
+  lastOfflineAt  DateTime? @map("last_offline_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@map("sessions")
+}
+
+// =============== VEHICLES & DRIVERS (LOCAL) ===============
+
+model Driver {
+  id          String @id // Same ID as central
+  cin         String @unique
+  phoneNumber String @map("phone_number")
+  firstName   String @map("first_name")
+  lastName    String @map("last_name")
+
+  // Origin location info (for compatibility with central)
+  originGovernorateId String? @map("origin_governorate_id")
+  originDelegationId  String? @map("origin_delegation_id")
+  originAddress       String? @map("origin_address")
+
+  // Vehicle relationship (one-to-one like central)
+  vehicleId String? @unique @map("vehicle_id")
+
+  // Status fields
+  accountStatus String   @default("APPROVED") @map("account_status") // 'PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'
+  isActive      Boolean  @default(true) @map("is_active")
+  syncedAt      DateTime @map("synced_at")
+
+  // Relations
+  vehicle Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  @@map("drivers")
+}
+
+model Vehicle {
+  id           String  @id // Same ID as central
+  licensePlate String  @unique @map("license_plate")
+  capacity     Int
+  model        String?
+  year         Int?
+  color        String?
+
+  // Vehicle status (matching central server)
+  isActive    Boolean @default(false) @map("is_active") // Only active after driver approval
+  isAvailable Boolean @default(true) @map("is_available") // Available for trips
+
+  syncedAt DateTime @map("synced_at")
+
+  // Relations
+  driver             Driver?                    @relation() // One vehicle has one driver
+  queueEntries       VehicleQueue[] // Vehicle can be in multiple queues over time
+  authorizedStations VehicleAuthorizedStation[] // Stations this vehicle can operate between
+
+  @@map("vehicles")
+}
+
+// Junction table for Vehicle-Station many-to-many relationship (matching central)
+model VehicleAuthorizedStation {
+  id        String   @id @default(cuid())
+  vehicleId String   @map("vehicle_id")
+  stationId String   @map("station_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  syncedAt  DateTime @map("synced_at")
+
+  // Relations
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate entries
+  @@unique([vehicleId, stationId])
+  @@map("vehicle_authorized_stations")
+}
+
+// =============== DESTINATION-BASED QUEUE MANAGEMENT (LOCAL) ===============
+
+model VehicleQueue {
+  id              String @id // Same ID as central
+  vehicleId       String @map("vehicle_id")
+  destinationId   String @map("destination_id")
+  destinationName String @map("destination_name") // Cached for display (Tunis, Gafsa, etc.)
+
+  // QUEUE MANAGEMENT
+  queueType     String   @default("REGULAR") // 'OVERNIGHT' or 'REGULAR'
+  queuePosition Int      @map("queue_position") // Position within THIS destination queue
+  status        String   @default("WAITING") // 'WAITING', 'LOADING', 'READY', 'DEPARTED'
+  enteredAt     DateTime @map("entered_at")
+
+  // SCHEDULE & BOOKING INFO (merged from VehicleSchedule)
+  availableSeats     Int       @map("available_seats") // Seats available for booking
+  totalSeats         Int       @map("total_seats") // Vehicle capacity
+  basePrice          Float     @map("base_price") // Price per seat (SQLite REAL)
+  estimatedDeparture DateTime? @map("estimated_departure") // When vehicle plans to leave
+  actualDeparture    DateTime? @map("actual_departure") // When vehicle actually left
+
+  syncedAt DateTime @map("synced_at")
+
+  // Relations
+  vehicle  Vehicle   @relation(fields: [vehicleId], references: [id])
+  bookings Booking[] // Customers book directly on queue entries
+
+  @@map("vehicle_queue")
+}
+
+// =============== ROUTES & SCHEDULES (LOCAL) ===============
+
+model Route {
+  id                   String   @id // Same ID as central
+  departureStationId   String   @map("departure_station_id")
+  destinationStationId String   @map("destination_station_id")
+  destinationName      String   @map("destination_name") // Cached for display
+  basePrice            Float    @map("base_price") // SQLite uses REAL for decimals
+  isActive             Boolean  @default(true) @map("is_active")
+  syncedAt             DateTime @map("synced_at")
+
+  // Relations
+  schedules VehicleSchedule[]
+
+  @@map("routes")
+}
+
+model VehicleSchedule {
+  id              String    @id // Same ID as central
+  vehicleId       String    @map("vehicle_id")
+  routeId         String    @map("route_id")
+  departureTime   DateTime  @map("departure_time")
+  availableSeats  Int       @map("available_seats")
+  totalSeats      Int       @map("total_seats") // Cached for quick display
+  status          String    @default("SCHEDULED") // 'SCHEDULED', 'LOADING', 'DEPARTED'
+  actualDeparture DateTime? @map("actual_departure")
+  syncedAt        DateTime  @map("synced_at")
+
+  // Relations
+  route Route @relation(fields: [routeId], references: [id])
+
+  @@map("vehicle_schedules")
+}
+
+// =============== BOOKINGS (LOCAL) ===============
+
+model Booking {
+  id            String @id // Same ID as central
+  queueId       String @map("queue_id") // Reference to VehicleQueue instead of schedule
+  seatsBooked   Int    @map("seats_booked")
+  totalAmount   Float  @map("total_amount")
+  bookingSource String @map("booking_source") // 'CASH_STATION', 'ONLINE'
+  bookingType   String @default("CASH") @map("booking_type") // 'CASH', 'ONLINE'
+
+  // Customer info (OPTIONAL - only for online bookings)
+  customerName  String? @map("customer_name")
+  customerPhone String? @map("customer_phone")
+
+  // Online booking specific
+  onlineTicketId String? @unique @map("online_ticket_id") // For online bookings
+
+  // Payment
+  paymentStatus String @default("PAID") @map("payment_status") // 'PAID' for cash, 'PENDING'/'COMPLETED' for online
+  paymentMethod String @default("CASH") @map("payment_method") // 'CASH', 'ONLINE', 'CARD'
+
+  // Verification
+  verificationCode String    @unique @map("verification_code") // Always generated for identification
+  qrCode           String?   @map("qr_code")
+  isVerified       Boolean   @default(false) @map("is_verified")
+  verifiedAt       DateTime? @map("verified_at")
+  verifiedById     String?   @map("verified_by_id")
+
+  // Local specific
+  createdOffline Boolean  @default(false) @map("created_offline")
+  localId        String?  @unique @map("local_id") // For offline-created bookings
+  createdBy      String?  @map("created_by") // Staff ID (required for cash bookings)
+  createdAt      DateTime @default(now()) @map("created_at")
+  syncStatus     String   @default("PENDING") @map("sync_status") // 'PENDING', 'SYNCED', 'FAILED'
+
+  // Relations
+  queue           VehicleQueue @relation(fields: [queueId], references: [id])
+  createdByStaff  Staff?       @relation("BookingStaff", fields: [createdBy], references: [id])
+  verifiedByStaff Staff?       @relation("VerificationStaff", fields: [verifiedById], references: [id])
+
+  @@map("bookings")
+}
+
+// =============== SYNC QUEUE (LOCAL ONLY) ===============
+
+model SyncQueue {
+  id          Int       @id @default(autoincrement())
+  tableName   String    @map("table_name")
+  recordId    String    @map("record_id")
+  operation   String // 'INSERT', 'UPDATE', 'DELETE'
+  data        String // JSON string
+  syncStatus  String    @default("PENDING") @map("sync_status")
+  retryCount  Int       @default(0) @map("retry_count")
+  error       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  lastAttempt DateTime? @map("last_attempt")
+
+  @@map("sync_queue")
+}
+
+// =============== LOCAL OPERATIONS LOG ===============
+
+model OperationLog {
+  id        Int      @id @default(autoincrement())
+  staffId   String   @map("staff_id")
+  operation String // 'LOGIN', 'BOOK_TICKET', 'VERIFY_TICKET', 'ADD_VEHICLE'
+  details   String? // JSON details
+  success   Boolean  @default(true)
+  error     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("operation_logs")
+}
+
+// =============== OFFLINE CUSTOMERS (LOCAL ONLY) ===============
+
+model OfflineCustomer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String?
+  cin       String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("offline_customers")
+}
+
+// =============== SYNC MANAGEMENT ===============
+
+model SyncOperation {
+  id              String    @id @default(cuid())
+  stationId       String    @map("station_id")
+  tableName       String    @map("table_name")
+  recordId        String    @map("record_id")
+  operation       String // INSERT, UPDATE, DELETE
+  data            Json // The data being modified
+  syncStatus      String    @map("sync_status") // PENDING, SYNCED, FAILED, CONFLICT, RESOLVED
+  sequenceNumber  Int       @map("sequence_number")
+  clientRequestId String    @unique @map("client_request_id") // For duplicate prevention
+  transactionId   String?   @map("transaction_id") // Group related operations
+  retryCount      Int       @default(0) @map("retry_count")
+  error           String? // Store error message if failed
+  syncLogId       String?   @map("sync_log_id") // ID from central server sync log
+  createdAt       DateTime  @default(now()) @map("created_at")
+  syncedAt        DateTime? @map("synced_at")
+  resolvedAt      DateTime? @map("resolved_at")
+
+  @@index([stationId, syncStatus])
+  @@index([sequenceNumber])
+  @@map("sync_operations")
+}
