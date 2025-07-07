@@ -115,6 +115,7 @@ model Vehicle {
   driver             Driver?                    @relation() // One vehicle has one driver
   queueEntries       VehicleQueue[] // Vehicle can be in multiple queues over time
   authorizedStations VehicleAuthorizedStation[] // Stations this vehicle can operate between
+  trips              Trip[] // Trips made by this vehicle
 
   @@map("vehicles")
 }
@@ -161,6 +162,7 @@ model VehicleQueue {
   // Relations
   vehicle  Vehicle   @relation(fields: [vehicleId], references: [id])
   bookings Booking[] // Customers book directly on queue entries
+  trips    Trip[] // Trips that started from this queue entry
 
   @@map("vehicle_queue")
 }
@@ -210,19 +212,19 @@ model Booking {
   bookingType   String @default("CASH") @map("booking_type") // 'CASH', 'ONLINE'
 
   // Customer info (OPTIONAL - only for online bookings)
-  customerName  String? @map("customer_name")
+  userId        String? @map("user_id") // Reference to central user ID (if exists)
   customerPhone String? @map("customer_phone")
 
   // Online booking specific
   onlineTicketId String? @unique @map("online_ticket_id") // For online bookings
 
   // Payment
-  paymentStatus String @default("PAID") @map("payment_status") // 'PAID' for cash, 'PENDING'/'COMPLETED' for online
-  paymentMethod String @default("CASH") @map("payment_method") // 'CASH', 'ONLINE', 'CARD'
+  paymentStatus      String    @default("PAID") @map("payment_status") // 'PAID' for cash, 'PENDING'/'COMPLETED' for online
+  paymentMethod      String    @default("CASH") @map("payment_method") // 'CASH', 'ONLINE', 'CARD'
+  paymentProcessedAt DateTime? @map("payment_processed_at") // When payment was completed
 
   // Verification
   verificationCode String    @unique @map("verification_code") // Always generated for identification
-  qrCode           String?   @map("qr_code")
   isVerified       Boolean   @default(false) @map("is_verified")
   verifiedAt       DateTime? @map("verified_at")
   verifiedById     String?   @map("verified_by_id")
@@ -285,27 +287,26 @@ model OfflineCustomer {
   @@map("offline_customers")
 }
 
-// =============== SYNC MANAGEMENT ===============
+// =============== TRIP TRACKING (LOCAL) ===============
 
-model SyncOperation {
-  id              String    @id @default(cuid())
-  stationId       String    @map("station_id")
-  tableName       String    @map("table_name")
-  recordId        String    @map("record_id")
-  operation       String // INSERT, UPDATE, DELETE
-  data            Json // The data being modified
-  syncStatus      String    @map("sync_status") // PENDING, SYNCED, FAILED, CONFLICT, RESOLVED
-  sequenceNumber  Int       @map("sequence_number")
-  clientRequestId String    @unique @map("client_request_id") // For duplicate prevention
-  transactionId   String?   @map("transaction_id") // Group related operations
-  retryCount      Int       @default(0) @map("retry_count")
-  error           String? // Store error message if failed
-  syncLogId       String?   @map("sync_log_id") // ID from central server sync log
-  createdAt       DateTime  @default(now()) @map("created_at")
-  syncedAt        DateTime? @map("synced_at")
-  resolvedAt      DateTime? @map("resolved_at")
+model Trip {
+  id              String   @id @default(cuid())
+  vehicleId       String   @map("vehicle_id")
+  licensePlate    String   @map("license_plate")
+  destinationId   String   @map("destination_id")
+  destinationName String   @map("destination_name")
+  queueId         String   @map("queue_id") // Reference to the queue entry
+  seatsBooked     Int      @map("seats_booked") // Total seats booked for this trip
+  startTime       DateTime @default(now()) @map("start_time") // When the trip started
 
-  @@index([stationId, syncStatus])
-  @@index([sequenceNumber])
-  @@map("sync_operations")
+  // Sync status
+  syncStatus String    @default("PENDING") @map("sync_status") // 'PENDING', 'SYNCED', 'FAILED'
+  syncedAt   DateTime? @map("synced_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  vehicle Vehicle      @relation(fields: [vehicleId], references: [id])
+  queue   VehicleQueue @relation(fields: [queueId], references: [id])
+
+  @@map("trips")
 }

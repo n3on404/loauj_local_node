@@ -32,6 +32,12 @@ interface EnvironmentConfig {
   MAX_RETRY_ATTEMPTS: number;
   BATCH_SYNC_SIZE: number;
   
+  // Auto Trip Sync Configuration
+  TRIP_SYNC_INTERVAL_MS: number;
+  CONNECTION_CHECK_INTERVAL_MS: number;
+  MAX_SYNC_RETRY_ATTEMPTS: number;
+  SYNC_RETRY_DELAY_MS: number;
+  
   // Logging
   LOG_LEVEL: string;
   LOG_TO_FILE: boolean;
@@ -71,6 +77,12 @@ export const env: EnvironmentConfig = {
   SYNC_INTERVAL_SECONDS: parseInt(process.env.SYNC_INTERVAL_SECONDS || '30', 10),
   MAX_RETRY_ATTEMPTS: parseInt(process.env.MAX_RETRY_ATTEMPTS || '3', 10),
   BATCH_SYNC_SIZE: parseInt(process.env.BATCH_SYNC_SIZE || '50', 10),
+  
+  // Auto Trip Sync Configuration
+  TRIP_SYNC_INTERVAL_MS: parseInt(process.env.TRIP_SYNC_INTERVAL_MS || '30000', 10), // 30 seconds
+  CONNECTION_CHECK_INTERVAL_MS: parseInt(process.env.CONNECTION_CHECK_INTERVAL_MS || '10000', 10), // 10 seconds
+  MAX_SYNC_RETRY_ATTEMPTS: parseInt(process.env.MAX_SYNC_RETRY_ATTEMPTS || '3', 10),
+  SYNC_RETRY_DELAY_MS: parseInt(process.env.SYNC_RETRY_DELAY_MS || '5000', 10), // 5 seconds
   
   // Logging
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',

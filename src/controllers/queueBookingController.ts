@@ -308,8 +308,137 @@ export class QueueBookingController {
       });
     }
   }
+
+  /**
+   * Create online booking from central server
+   * POST /api/queue-booking/online
+   */
+  async createOnlineBooking(req: Request, res: Response): Promise<void> {
+    try {
+      const { destinationId, seatsRequested, customerPhone, onlineTicketId, userId, totalAmount, vehicleAllocations } = req.body;
+
+      // Validate input
+      if (!destinationId || !seatsRequested || !customerPhone || !onlineTicketId || !userId || !totalAmount || !vehicleAllocations) {
+        res.status(400).json({
+          success: false,
+          error: 'All fields are required: destinationId, seatsRequested, customerPhone, onlineTicketId, userId, totalAmount, vehicleAllocations'
+        });
+        return;
+      }
+
+      // Validate that this is coming from central server
+      const isCentralServer = req.headers['x-central-server'] === 'true';
+      if (!isCentralServer) {
+        res.status(403).json({
+          success: false,
+          error: 'This endpoint is only accessible by the central server'
+        });
+        return;
+      }
+
+      const onlineBookingRequest = {
+        destinationId,
+        seatsRequested,
+        customerPhone,
+        onlineTicketId,
+        userId, // Add user ID
+        totalAmount, // Add total amount from central server
+        vehicleAllocations
+      };
+
+      console.log(`🌐 Received online booking request from central server:`);
+      console.log(`   User ID: ${userId}`);
+      console.log(`   Total Amount: $${totalAmount}`);
+      console.log(`   Seats: ${seatsRequested}`);
+      console.log(`   Online Ticket ID: ${onlineTicketId}`);
+
+      const result = await this.queueBookingService.createOnlineBooking(onlineBookingRequest);
+
+      if (result.success) {
+        res.status(201).json({
+          success: true,
+          message: `Online booking created successfully for ${seatsRequested} seat(s)`,
+          data: {
+            bookings: result.bookings,
+            totalAmount: result.totalAmount,
+            verificationCodes: result.verificationCodes
+          }
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Error in createOnlineBooking controller:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  /**
+   * Update online booking payment status
+   * PUT /api/queue-booking/online/:onlineTicketId/payment
+   */
+  async updateOnlineBookingPaymentStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { onlineTicketId } = req.params;
+      const { paymentStatus } = req.body;
+
+      if (!onlineTicketId) {
+        res.status(400).json({
+          success: false,
+          error: 'Online ticket ID is required'
+        });
+        return;
+      }
+
+      if (!paymentStatus || !['PAID', 'FAILED', 'CANCELLED'].includes(paymentStatus)) {
+        res.status(400).json({
+          success: false,
+          error: 'Valid payment status is required (PAID, FAILED, or CANCELLED)'
+        });
+        return;
+      }
+
+      // Validate that this is coming from central server
+      const isCentralServer = req.headers['x-central-server'] === 'true';
+      if (!isCentralServer) {
+        res.status(403).json({
+          success: false,
+          error: 'This endpoint is only accessible by the central server'
+        });
+        return;
+      }
+
+      const result = await this.queueBookingService.updateOnlineBookingPaymentStatus(onlineTicketId, paymentStatus);
+
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          message: result.message
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.message
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Error in updateOnlineBookingPaymentStatus controller:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
 }
 
 export const createQueueBookingController = (webSocketService: WebSocketService) => {
   return new QueueBookingController(webSocketService);
-}; 
+};

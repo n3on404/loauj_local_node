@@ -79,10 +79,10 @@ export type OperationLog = $Result.DefaultSelection<Prisma.$OperationLogPayload>
  */
 export type OfflineCustomer = $Result.DefaultSelection<Prisma.$OfflineCustomerPayload>
 /**
- * Model SyncOperation
+ * Model Trip
  * 
  */
-export type SyncOperation = $Result.DefaultSelection<Prisma.$SyncOperationPayload>
+export type Trip = $Result.DefaultSelection<Prisma.$TripPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -340,14 +340,14 @@ export class PrismaClient<
   get offlineCustomer(): Prisma.OfflineCustomerDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.syncOperation`: Exposes CRUD operations for the **SyncOperation** model.
+   * `prisma.trip`: Exposes CRUD operations for the **Trip** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more SyncOperations
-    * const syncOperations = await prisma.syncOperation.findMany()
+    * // Fetch zero or more Trips
+    * const trips = await prisma.trip.findMany()
     * ```
     */
-  get syncOperation(): Prisma.SyncOperationDelegate<ExtArgs, ClientOptions>;
+  get trip(): Prisma.TripDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -801,7 +801,7 @@ export namespace Prisma {
     SyncQueue: 'SyncQueue',
     OperationLog: 'OperationLog',
     OfflineCustomer: 'OfflineCustomer',
-    SyncOperation: 'SyncOperation'
+    Trip: 'Trip'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -820,7 +820,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "stationConfig" | "staff" | "session" | "driver" | "vehicle" | "vehicleAuthorizedStation" | "vehicleQueue" | "route" | "vehicleSchedule" | "booking" | "syncQueue" | "operationLog" | "offlineCustomer" | "syncOperation"
+      modelProps: "stationConfig" | "staff" | "session" | "driver" | "vehicle" | "vehicleAuthorizedStation" | "vehicleQueue" | "route" | "vehicleSchedule" | "booking" | "syncQueue" | "operationLog" | "offlineCustomer" | "trip"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1786,77 +1786,77 @@ export namespace Prisma {
           }
         }
       }
-      SyncOperation: {
-        payload: Prisma.$SyncOperationPayload<ExtArgs>
-        fields: Prisma.SyncOperationFieldRefs
+      Trip: {
+        payload: Prisma.$TripPayload<ExtArgs>
+        fields: Prisma.TripFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.SyncOperationFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload> | null
+            args: Prisma.TripFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.SyncOperationFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>
+            args: Prisma.TripFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>
           }
           findFirst: {
-            args: Prisma.SyncOperationFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload> | null
+            args: Prisma.TripFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.SyncOperationFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>
+            args: Prisma.TripFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>
           }
           findMany: {
-            args: Prisma.SyncOperationFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>[]
+            args: Prisma.TripFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>[]
           }
           create: {
-            args: Prisma.SyncOperationCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>
+            args: Prisma.TripCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>
           }
           createMany: {
-            args: Prisma.SyncOperationCreateManyArgs<ExtArgs>
+            args: Prisma.TripCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.SyncOperationCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>[]
+            args: Prisma.TripCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>[]
           }
           delete: {
-            args: Prisma.SyncOperationDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>
+            args: Prisma.TripDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>
           }
           update: {
-            args: Prisma.SyncOperationUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>
+            args: Prisma.TripUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>
           }
           deleteMany: {
-            args: Prisma.SyncOperationDeleteManyArgs<ExtArgs>
+            args: Prisma.TripDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.SyncOperationUpdateManyArgs<ExtArgs>
+            args: Prisma.TripUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.SyncOperationUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>[]
+            args: Prisma.TripUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>[]
           }
           upsert: {
-            args: Prisma.SyncOperationUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SyncOperationPayload>
+            args: Prisma.TripUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TripPayload>
           }
           aggregate: {
-            args: Prisma.SyncOperationAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateSyncOperation>
+            args: Prisma.TripAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTrip>
           }
           groupBy: {
-            args: Prisma.SyncOperationGroupByArgs<ExtArgs>
-            result: $Utils.Optional<SyncOperationGroupByOutputType>[]
+            args: Prisma.TripGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TripGroupByOutputType>[]
           }
           count: {
-            args: Prisma.SyncOperationCountArgs<ExtArgs>
-            result: $Utils.Optional<SyncOperationCountAggregateOutputType> | number
+            args: Prisma.TripCountArgs<ExtArgs>
+            result: $Utils.Optional<TripCountAggregateOutputType> | number
           }
         }
       }
@@ -1957,7 +1957,7 @@ export namespace Prisma {
     syncQueue?: SyncQueueOmit
     operationLog?: OperationLogOmit
     offlineCustomer?: OfflineCustomerOmit
-    syncOperation?: SyncOperationOmit
+    trip?: TripOmit
   }
 
   /* Types for Logging */
@@ -2103,11 +2103,13 @@ export namespace Prisma {
   export type VehicleCountOutputType = {
     queueEntries: number
     authorizedStations: number
+    trips: number
   }
 
   export type VehicleCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     queueEntries?: boolean | VehicleCountOutputTypeCountQueueEntriesArgs
     authorizedStations?: boolean | VehicleCountOutputTypeCountAuthorizedStationsArgs
+    trips?: boolean | VehicleCountOutputTypeCountTripsArgs
   }
 
   // Custom InputTypes
@@ -2135,6 +2137,13 @@ export namespace Prisma {
     where?: VehicleAuthorizedStationWhereInput
   }
 
+  /**
+   * VehicleCountOutputType without action
+   */
+  export type VehicleCountOutputTypeCountTripsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TripWhereInput
+  }
+
 
   /**
    * Count Type VehicleQueueCountOutputType
@@ -2142,10 +2151,12 @@ export namespace Prisma {
 
   export type VehicleQueueCountOutputType = {
     bookings: number
+    trips: number
   }
 
   export type VehicleQueueCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bookings?: boolean | VehicleQueueCountOutputTypeCountBookingsArgs
+    trips?: boolean | VehicleQueueCountOutputTypeCountTripsArgs
   }
 
   // Custom InputTypes
@@ -2164,6 +2175,13 @@ export namespace Prisma {
    */
   export type VehicleQueueCountOutputTypeCountBookingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: BookingWhereInput
+  }
+
+  /**
+   * VehicleQueueCountOutputType without action
+   */
+  export type VehicleQueueCountOutputTypeCountTripsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TripWhereInput
   }
 
 
@@ -6968,6 +6986,7 @@ export namespace Prisma {
     driver?: boolean | Vehicle$driverArgs<ExtArgs>
     queueEntries?: boolean | Vehicle$queueEntriesArgs<ExtArgs>
     authorizedStations?: boolean | Vehicle$authorizedStationsArgs<ExtArgs>
+    trips?: boolean | Vehicle$tripsArgs<ExtArgs>
     _count?: boolean | VehicleCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["vehicle"]>
 
@@ -7012,6 +7031,7 @@ export namespace Prisma {
     driver?: boolean | Vehicle$driverArgs<ExtArgs>
     queueEntries?: boolean | Vehicle$queueEntriesArgs<ExtArgs>
     authorizedStations?: boolean | Vehicle$authorizedStationsArgs<ExtArgs>
+    trips?: boolean | Vehicle$tripsArgs<ExtArgs>
     _count?: boolean | VehicleCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type VehicleIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -7023,6 +7043,7 @@ export namespace Prisma {
       driver: Prisma.$DriverPayload<ExtArgs> | null
       queueEntries: Prisma.$VehicleQueuePayload<ExtArgs>[]
       authorizedStations: Prisma.$VehicleAuthorizedStationPayload<ExtArgs>[]
+      trips: Prisma.$TripPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -7431,6 +7452,7 @@ export namespace Prisma {
     driver<T extends Vehicle$driverArgs<ExtArgs> = {}>(args?: Subset<T, Vehicle$driverArgs<ExtArgs>>): Prisma__DriverClient<$Result.GetResult<Prisma.$DriverPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     queueEntries<T extends Vehicle$queueEntriesArgs<ExtArgs> = {}>(args?: Subset<T, Vehicle$queueEntriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleQueuePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     authorizedStations<T extends Vehicle$authorizedStationsArgs<ExtArgs> = {}>(args?: Subset<T, Vehicle$authorizedStationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleAuthorizedStationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    trips<T extends Vehicle$tripsArgs<ExtArgs> = {}>(args?: Subset<T, Vehicle$tripsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7921,6 +7943,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: VehicleAuthorizedStationScalarFieldEnum | VehicleAuthorizedStationScalarFieldEnum[]
+  }
+
+  /**
+   * Vehicle.trips
+   */
+  export type Vehicle$tripsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Trip
+     */
+    select?: TripSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Trip
+     */
+    omit?: TripOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TripInclude<ExtArgs> | null
+    where?: TripWhereInput
+    orderBy?: TripOrderByWithRelationInput | TripOrderByWithRelationInput[]
+    cursor?: TripWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TripScalarFieldEnum | TripScalarFieldEnum[]
   }
 
   /**
@@ -9284,6 +9330,7 @@ export namespace Prisma {
     syncedAt?: boolean
     vehicle?: boolean | VehicleDefaultArgs<ExtArgs>
     bookings?: boolean | VehicleQueue$bookingsArgs<ExtArgs>
+    trips?: boolean | VehicleQueue$tripsArgs<ExtArgs>
     _count?: boolean | VehicleQueueCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["vehicleQueue"]>
 
@@ -9344,6 +9391,7 @@ export namespace Prisma {
   export type VehicleQueueInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     vehicle?: boolean | VehicleDefaultArgs<ExtArgs>
     bookings?: boolean | VehicleQueue$bookingsArgs<ExtArgs>
+    trips?: boolean | VehicleQueue$tripsArgs<ExtArgs>
     _count?: boolean | VehicleQueueCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type VehicleQueueIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9358,6 +9406,7 @@ export namespace Prisma {
     objects: {
       vehicle: Prisma.$VehiclePayload<ExtArgs>
       bookings: Prisma.$BookingPayload<ExtArgs>[]
+      trips: Prisma.$TripPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -9770,6 +9819,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     vehicle<T extends VehicleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VehicleDefaultArgs<ExtArgs>>): Prisma__VehicleClient<$Result.GetResult<Prisma.$VehiclePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     bookings<T extends VehicleQueue$bookingsArgs<ExtArgs> = {}>(args?: Subset<T, VehicleQueue$bookingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    trips<T extends VehicleQueue$tripsArgs<ExtArgs> = {}>(args?: Subset<T, VehicleQueue$tripsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10230,6 +10280,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: BookingScalarFieldEnum | BookingScalarFieldEnum[]
+  }
+
+  /**
+   * VehicleQueue.trips
+   */
+  export type VehicleQueue$tripsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Trip
+     */
+    select?: TripSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Trip
+     */
+    omit?: TripOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TripInclude<ExtArgs> | null
+    where?: TripWhereInput
+    orderBy?: TripOrderByWithRelationInput | TripOrderByWithRelationInput[]
+    cursor?: TripWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TripScalarFieldEnum | TripScalarFieldEnum[]
   }
 
   /**
@@ -12558,13 +12632,13 @@ export namespace Prisma {
     totalAmount: number | null
     bookingSource: string | null
     bookingType: string | null
-    customerName: string | null
+    userId: string | null
     customerPhone: string | null
     onlineTicketId: string | null
     paymentStatus: string | null
     paymentMethod: string | null
+    paymentProcessedAt: Date | null
     verificationCode: string | null
-    qrCode: string | null
     isVerified: boolean | null
     verifiedAt: Date | null
     verifiedById: string | null
@@ -12582,13 +12656,13 @@ export namespace Prisma {
     totalAmount: number | null
     bookingSource: string | null
     bookingType: string | null
-    customerName: string | null
+    userId: string | null
     customerPhone: string | null
     onlineTicketId: string | null
     paymentStatus: string | null
     paymentMethod: string | null
+    paymentProcessedAt: Date | null
     verificationCode: string | null
-    qrCode: string | null
     isVerified: boolean | null
     verifiedAt: Date | null
     verifiedById: string | null
@@ -12606,13 +12680,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: number
     bookingType: number
-    customerName: number
+    userId: number
     customerPhone: number
     onlineTicketId: number
     paymentStatus: number
     paymentMethod: number
+    paymentProcessedAt: number
     verificationCode: number
-    qrCode: number
     isVerified: number
     verifiedAt: number
     verifiedById: number
@@ -12642,13 +12716,13 @@ export namespace Prisma {
     totalAmount?: true
     bookingSource?: true
     bookingType?: true
-    customerName?: true
+    userId?: true
     customerPhone?: true
     onlineTicketId?: true
     paymentStatus?: true
     paymentMethod?: true
+    paymentProcessedAt?: true
     verificationCode?: true
-    qrCode?: true
     isVerified?: true
     verifiedAt?: true
     verifiedById?: true
@@ -12666,13 +12740,13 @@ export namespace Prisma {
     totalAmount?: true
     bookingSource?: true
     bookingType?: true
-    customerName?: true
+    userId?: true
     customerPhone?: true
     onlineTicketId?: true
     paymentStatus?: true
     paymentMethod?: true
+    paymentProcessedAt?: true
     verificationCode?: true
-    qrCode?: true
     isVerified?: true
     verifiedAt?: true
     verifiedById?: true
@@ -12690,13 +12764,13 @@ export namespace Prisma {
     totalAmount?: true
     bookingSource?: true
     bookingType?: true
-    customerName?: true
+    userId?: true
     customerPhone?: true
     onlineTicketId?: true
     paymentStatus?: true
     paymentMethod?: true
+    paymentProcessedAt?: true
     verificationCode?: true
-    qrCode?: true
     isVerified?: true
     verifiedAt?: true
     verifiedById?: true
@@ -12801,13 +12875,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType: string
-    customerName: string | null
+    userId: string | null
     customerPhone: string | null
     onlineTicketId: string | null
     paymentStatus: string
     paymentMethod: string
+    paymentProcessedAt: Date | null
     verificationCode: string
-    qrCode: string | null
     isVerified: boolean
     verifiedAt: Date | null
     verifiedById: string | null
@@ -12844,13 +12918,13 @@ export namespace Prisma {
     totalAmount?: boolean
     bookingSource?: boolean
     bookingType?: boolean
-    customerName?: boolean
+    userId?: boolean
     customerPhone?: boolean
     onlineTicketId?: boolean
     paymentStatus?: boolean
     paymentMethod?: boolean
+    paymentProcessedAt?: boolean
     verificationCode?: boolean
-    qrCode?: boolean
     isVerified?: boolean
     verifiedAt?: boolean
     verifiedById?: boolean
@@ -12871,13 +12945,13 @@ export namespace Prisma {
     totalAmount?: boolean
     bookingSource?: boolean
     bookingType?: boolean
-    customerName?: boolean
+    userId?: boolean
     customerPhone?: boolean
     onlineTicketId?: boolean
     paymentStatus?: boolean
     paymentMethod?: boolean
+    paymentProcessedAt?: boolean
     verificationCode?: boolean
-    qrCode?: boolean
     isVerified?: boolean
     verifiedAt?: boolean
     verifiedById?: boolean
@@ -12898,13 +12972,13 @@ export namespace Prisma {
     totalAmount?: boolean
     bookingSource?: boolean
     bookingType?: boolean
-    customerName?: boolean
+    userId?: boolean
     customerPhone?: boolean
     onlineTicketId?: boolean
     paymentStatus?: boolean
     paymentMethod?: boolean
+    paymentProcessedAt?: boolean
     verificationCode?: boolean
-    qrCode?: boolean
     isVerified?: boolean
     verifiedAt?: boolean
     verifiedById?: boolean
@@ -12925,13 +12999,13 @@ export namespace Prisma {
     totalAmount?: boolean
     bookingSource?: boolean
     bookingType?: boolean
-    customerName?: boolean
+    userId?: boolean
     customerPhone?: boolean
     onlineTicketId?: boolean
     paymentStatus?: boolean
     paymentMethod?: boolean
+    paymentProcessedAt?: boolean
     verificationCode?: boolean
-    qrCode?: boolean
     isVerified?: boolean
     verifiedAt?: boolean
     verifiedById?: boolean
@@ -12942,7 +13016,7 @@ export namespace Prisma {
     syncStatus?: boolean
   }
 
-  export type BookingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "queueId" | "seatsBooked" | "totalAmount" | "bookingSource" | "bookingType" | "customerName" | "customerPhone" | "onlineTicketId" | "paymentStatus" | "paymentMethod" | "verificationCode" | "qrCode" | "isVerified" | "verifiedAt" | "verifiedById" | "createdOffline" | "localId" | "createdBy" | "createdAt" | "syncStatus", ExtArgs["result"]["booking"]>
+  export type BookingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "queueId" | "seatsBooked" | "totalAmount" | "bookingSource" | "bookingType" | "userId" | "customerPhone" | "onlineTicketId" | "paymentStatus" | "paymentMethod" | "paymentProcessedAt" | "verificationCode" | "isVerified" | "verifiedAt" | "verifiedById" | "createdOffline" | "localId" | "createdBy" | "createdAt" | "syncStatus", ExtArgs["result"]["booking"]>
   export type BookingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     queue?: boolean | VehicleQueueDefaultArgs<ExtArgs>
     createdByStaff?: boolean | Booking$createdByStaffArgs<ExtArgs>
@@ -12973,13 +13047,13 @@ export namespace Prisma {
       totalAmount: number
       bookingSource: string
       bookingType: string
-      customerName: string | null
+      userId: string | null
       customerPhone: string | null
       onlineTicketId: string | null
       paymentStatus: string
       paymentMethod: string
+      paymentProcessedAt: Date | null
       verificationCode: string
-      qrCode: string | null
       isVerified: boolean
       verifiedAt: Date | null
       verifiedById: string | null
@@ -13420,13 +13494,13 @@ export namespace Prisma {
     readonly totalAmount: FieldRef<"Booking", 'Float'>
     readonly bookingSource: FieldRef<"Booking", 'String'>
     readonly bookingType: FieldRef<"Booking", 'String'>
-    readonly customerName: FieldRef<"Booking", 'String'>
+    readonly userId: FieldRef<"Booking", 'String'>
     readonly customerPhone: FieldRef<"Booking", 'String'>
     readonly onlineTicketId: FieldRef<"Booking", 'String'>
     readonly paymentStatus: FieldRef<"Booking", 'String'>
     readonly paymentMethod: FieldRef<"Booking", 'String'>
+    readonly paymentProcessedAt: FieldRef<"Booking", 'DateTime'>
     readonly verificationCode: FieldRef<"Booking", 'String'>
-    readonly qrCode: FieldRef<"Booking", 'String'>
     readonly isVerified: FieldRef<"Booking", 'Boolean'>
     readonly verifiedAt: FieldRef<"Booking", 'DateTime'>
     readonly verifiedById: FieldRef<"Booking", 'String'>
@@ -17070,502 +17144,463 @@ export namespace Prisma {
 
 
   /**
-   * Model SyncOperation
+   * Model Trip
    */
 
-  export type AggregateSyncOperation = {
-    _count: SyncOperationCountAggregateOutputType | null
-    _avg: SyncOperationAvgAggregateOutputType | null
-    _sum: SyncOperationSumAggregateOutputType | null
-    _min: SyncOperationMinAggregateOutputType | null
-    _max: SyncOperationMaxAggregateOutputType | null
+  export type AggregateTrip = {
+    _count: TripCountAggregateOutputType | null
+    _avg: TripAvgAggregateOutputType | null
+    _sum: TripSumAggregateOutputType | null
+    _min: TripMinAggregateOutputType | null
+    _max: TripMaxAggregateOutputType | null
   }
 
-  export type SyncOperationAvgAggregateOutputType = {
-    sequenceNumber: number | null
-    retryCount: number | null
+  export type TripAvgAggregateOutputType = {
+    seatsBooked: number | null
   }
 
-  export type SyncOperationSumAggregateOutputType = {
-    sequenceNumber: number | null
-    retryCount: number | null
+  export type TripSumAggregateOutputType = {
+    seatsBooked: number | null
   }
 
-  export type SyncOperationMinAggregateOutputType = {
+  export type TripMinAggregateOutputType = {
     id: string | null
-    stationId: string | null
-    tableName: string | null
-    recordId: string | null
-    operation: string | null
+    vehicleId: string | null
+    licensePlate: string | null
+    destinationId: string | null
+    destinationName: string | null
+    queueId: string | null
+    seatsBooked: number | null
+    startTime: Date | null
     syncStatus: string | null
-    sequenceNumber: number | null
-    clientRequestId: string | null
-    transactionId: string | null
-    retryCount: number | null
-    error: string | null
-    syncLogId: string | null
-    createdAt: Date | null
     syncedAt: Date | null
-    resolvedAt: Date | null
+    createdAt: Date | null
   }
 
-  export type SyncOperationMaxAggregateOutputType = {
+  export type TripMaxAggregateOutputType = {
     id: string | null
-    stationId: string | null
-    tableName: string | null
-    recordId: string | null
-    operation: string | null
+    vehicleId: string | null
+    licensePlate: string | null
+    destinationId: string | null
+    destinationName: string | null
+    queueId: string | null
+    seatsBooked: number | null
+    startTime: Date | null
     syncStatus: string | null
-    sequenceNumber: number | null
-    clientRequestId: string | null
-    transactionId: string | null
-    retryCount: number | null
-    error: string | null
-    syncLogId: string | null
-    createdAt: Date | null
     syncedAt: Date | null
-    resolvedAt: Date | null
+    createdAt: Date | null
   }
 
-  export type SyncOperationCountAggregateOutputType = {
+  export type TripCountAggregateOutputType = {
     id: number
-    stationId: number
-    tableName: number
-    recordId: number
-    operation: number
-    data: number
+    vehicleId: number
+    licensePlate: number
+    destinationId: number
+    destinationName: number
+    queueId: number
+    seatsBooked: number
+    startTime: number
     syncStatus: number
-    sequenceNumber: number
-    clientRequestId: number
-    transactionId: number
-    retryCount: number
-    error: number
-    syncLogId: number
-    createdAt: number
     syncedAt: number
-    resolvedAt: number
+    createdAt: number
     _all: number
   }
 
 
-  export type SyncOperationAvgAggregateInputType = {
-    sequenceNumber?: true
-    retryCount?: true
+  export type TripAvgAggregateInputType = {
+    seatsBooked?: true
   }
 
-  export type SyncOperationSumAggregateInputType = {
-    sequenceNumber?: true
-    retryCount?: true
+  export type TripSumAggregateInputType = {
+    seatsBooked?: true
   }
 
-  export type SyncOperationMinAggregateInputType = {
+  export type TripMinAggregateInputType = {
     id?: true
-    stationId?: true
-    tableName?: true
-    recordId?: true
-    operation?: true
+    vehicleId?: true
+    licensePlate?: true
+    destinationId?: true
+    destinationName?: true
+    queueId?: true
+    seatsBooked?: true
+    startTime?: true
     syncStatus?: true
-    sequenceNumber?: true
-    clientRequestId?: true
-    transactionId?: true
-    retryCount?: true
-    error?: true
-    syncLogId?: true
-    createdAt?: true
     syncedAt?: true
-    resolvedAt?: true
+    createdAt?: true
   }
 
-  export type SyncOperationMaxAggregateInputType = {
+  export type TripMaxAggregateInputType = {
     id?: true
-    stationId?: true
-    tableName?: true
-    recordId?: true
-    operation?: true
+    vehicleId?: true
+    licensePlate?: true
+    destinationId?: true
+    destinationName?: true
+    queueId?: true
+    seatsBooked?: true
+    startTime?: true
     syncStatus?: true
-    sequenceNumber?: true
-    clientRequestId?: true
-    transactionId?: true
-    retryCount?: true
-    error?: true
-    syncLogId?: true
-    createdAt?: true
     syncedAt?: true
-    resolvedAt?: true
+    createdAt?: true
   }
 
-  export type SyncOperationCountAggregateInputType = {
+  export type TripCountAggregateInputType = {
     id?: true
-    stationId?: true
-    tableName?: true
-    recordId?: true
-    operation?: true
-    data?: true
+    vehicleId?: true
+    licensePlate?: true
+    destinationId?: true
+    destinationName?: true
+    queueId?: true
+    seatsBooked?: true
+    startTime?: true
     syncStatus?: true
-    sequenceNumber?: true
-    clientRequestId?: true
-    transactionId?: true
-    retryCount?: true
-    error?: true
-    syncLogId?: true
-    createdAt?: true
     syncedAt?: true
-    resolvedAt?: true
+    createdAt?: true
     _all?: true
   }
 
-  export type SyncOperationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which SyncOperation to aggregate.
+     * Filter which Trip to aggregate.
      */
-    where?: SyncOperationWhereInput
+    where?: TripWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of SyncOperations to fetch.
+     * Determine the order of Trips to fetch.
      */
-    orderBy?: SyncOperationOrderByWithRelationInput | SyncOperationOrderByWithRelationInput[]
+    orderBy?: TripOrderByWithRelationInput | TripOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: SyncOperationWhereUniqueInput
+    cursor?: TripWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` SyncOperations from the position of the cursor.
+     * Take `±n` Trips from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` SyncOperations.
+     * Skip the first `n` Trips.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned SyncOperations
+     * Count returned Trips
     **/
-    _count?: true | SyncOperationCountAggregateInputType
+    _count?: true | TripCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: SyncOperationAvgAggregateInputType
+    _avg?: TripAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: SyncOperationSumAggregateInputType
+    _sum?: TripSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: SyncOperationMinAggregateInputType
+    _min?: TripMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: SyncOperationMaxAggregateInputType
+    _max?: TripMaxAggregateInputType
   }
 
-  export type GetSyncOperationAggregateType<T extends SyncOperationAggregateArgs> = {
-        [P in keyof T & keyof AggregateSyncOperation]: P extends '_count' | 'count'
+  export type GetTripAggregateType<T extends TripAggregateArgs> = {
+        [P in keyof T & keyof AggregateTrip]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateSyncOperation[P]>
-      : GetScalarType<T[P], AggregateSyncOperation[P]>
+        : GetScalarType<T[P], AggregateTrip[P]>
+      : GetScalarType<T[P], AggregateTrip[P]>
   }
 
 
 
 
-  export type SyncOperationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: SyncOperationWhereInput
-    orderBy?: SyncOperationOrderByWithAggregationInput | SyncOperationOrderByWithAggregationInput[]
-    by: SyncOperationScalarFieldEnum[] | SyncOperationScalarFieldEnum
-    having?: SyncOperationScalarWhereWithAggregatesInput
+  export type TripGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TripWhereInput
+    orderBy?: TripOrderByWithAggregationInput | TripOrderByWithAggregationInput[]
+    by: TripScalarFieldEnum[] | TripScalarFieldEnum
+    having?: TripScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: SyncOperationCountAggregateInputType | true
-    _avg?: SyncOperationAvgAggregateInputType
-    _sum?: SyncOperationSumAggregateInputType
-    _min?: SyncOperationMinAggregateInputType
-    _max?: SyncOperationMaxAggregateInputType
+    _count?: TripCountAggregateInputType | true
+    _avg?: TripAvgAggregateInputType
+    _sum?: TripSumAggregateInputType
+    _min?: TripMinAggregateInputType
+    _max?: TripMaxAggregateInputType
   }
 
-  export type SyncOperationGroupByOutputType = {
+  export type TripGroupByOutputType = {
     id: string
-    stationId: string
-    tableName: string
-    recordId: string
-    operation: string
-    data: JsonValue
+    vehicleId: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    queueId: string
+    seatsBooked: number
+    startTime: Date
     syncStatus: string
-    sequenceNumber: number
-    clientRequestId: string
-    transactionId: string | null
-    retryCount: number
-    error: string | null
-    syncLogId: string | null
-    createdAt: Date
     syncedAt: Date | null
-    resolvedAt: Date | null
-    _count: SyncOperationCountAggregateOutputType | null
-    _avg: SyncOperationAvgAggregateOutputType | null
-    _sum: SyncOperationSumAggregateOutputType | null
-    _min: SyncOperationMinAggregateOutputType | null
-    _max: SyncOperationMaxAggregateOutputType | null
+    createdAt: Date
+    _count: TripCountAggregateOutputType | null
+    _avg: TripAvgAggregateOutputType | null
+    _sum: TripSumAggregateOutputType | null
+    _min: TripMinAggregateOutputType | null
+    _max: TripMaxAggregateOutputType | null
   }
 
-  type GetSyncOperationGroupByPayload<T extends SyncOperationGroupByArgs> = Prisma.PrismaPromise<
+  type GetTripGroupByPayload<T extends TripGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<SyncOperationGroupByOutputType, T['by']> &
+      PickEnumerable<TripGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof SyncOperationGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof TripGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], SyncOperationGroupByOutputType[P]>
-            : GetScalarType<T[P], SyncOperationGroupByOutputType[P]>
+              : GetScalarType<T[P], TripGroupByOutputType[P]>
+            : GetScalarType<T[P], TripGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type SyncOperationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TripSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    stationId?: boolean
-    tableName?: boolean
-    recordId?: boolean
-    operation?: boolean
-    data?: boolean
+    vehicleId?: boolean
+    licensePlate?: boolean
+    destinationId?: boolean
+    destinationName?: boolean
+    queueId?: boolean
+    seatsBooked?: boolean
+    startTime?: boolean
     syncStatus?: boolean
-    sequenceNumber?: boolean
-    clientRequestId?: boolean
-    transactionId?: boolean
-    retryCount?: boolean
-    error?: boolean
-    syncLogId?: boolean
-    createdAt?: boolean
     syncedAt?: boolean
-    resolvedAt?: boolean
-  }, ExtArgs["result"]["syncOperation"]>
+    createdAt?: boolean
+    vehicle?: boolean | VehicleDefaultArgs<ExtArgs>
+    queue?: boolean | VehicleQueueDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["trip"]>
 
-  export type SyncOperationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TripSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    stationId?: boolean
-    tableName?: boolean
-    recordId?: boolean
-    operation?: boolean
-    data?: boolean
+    vehicleId?: boolean
+    licensePlate?: boolean
+    destinationId?: boolean
+    destinationName?: boolean
+    queueId?: boolean
+    seatsBooked?: boolean
+    startTime?: boolean
     syncStatus?: boolean
-    sequenceNumber?: boolean
-    clientRequestId?: boolean
-    transactionId?: boolean
-    retryCount?: boolean
-    error?: boolean
-    syncLogId?: boolean
-    createdAt?: boolean
     syncedAt?: boolean
-    resolvedAt?: boolean
-  }, ExtArgs["result"]["syncOperation"]>
+    createdAt?: boolean
+    vehicle?: boolean | VehicleDefaultArgs<ExtArgs>
+    queue?: boolean | VehicleQueueDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["trip"]>
 
-  export type SyncOperationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TripSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    stationId?: boolean
-    tableName?: boolean
-    recordId?: boolean
-    operation?: boolean
-    data?: boolean
+    vehicleId?: boolean
+    licensePlate?: boolean
+    destinationId?: boolean
+    destinationName?: boolean
+    queueId?: boolean
+    seatsBooked?: boolean
+    startTime?: boolean
     syncStatus?: boolean
-    sequenceNumber?: boolean
-    clientRequestId?: boolean
-    transactionId?: boolean
-    retryCount?: boolean
-    error?: boolean
-    syncLogId?: boolean
-    createdAt?: boolean
     syncedAt?: boolean
-    resolvedAt?: boolean
-  }, ExtArgs["result"]["syncOperation"]>
+    createdAt?: boolean
+    vehicle?: boolean | VehicleDefaultArgs<ExtArgs>
+    queue?: boolean | VehicleQueueDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["trip"]>
 
-  export type SyncOperationSelectScalar = {
+  export type TripSelectScalar = {
     id?: boolean
-    stationId?: boolean
-    tableName?: boolean
-    recordId?: boolean
-    operation?: boolean
-    data?: boolean
+    vehicleId?: boolean
+    licensePlate?: boolean
+    destinationId?: boolean
+    destinationName?: boolean
+    queueId?: boolean
+    seatsBooked?: boolean
+    startTime?: boolean
     syncStatus?: boolean
-    sequenceNumber?: boolean
-    clientRequestId?: boolean
-    transactionId?: boolean
-    retryCount?: boolean
-    error?: boolean
-    syncLogId?: boolean
-    createdAt?: boolean
     syncedAt?: boolean
-    resolvedAt?: boolean
+    createdAt?: boolean
   }
 
-  export type SyncOperationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "stationId" | "tableName" | "recordId" | "operation" | "data" | "syncStatus" | "sequenceNumber" | "clientRequestId" | "transactionId" | "retryCount" | "error" | "syncLogId" | "createdAt" | "syncedAt" | "resolvedAt", ExtArgs["result"]["syncOperation"]>
+  export type TripOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vehicleId" | "licensePlate" | "destinationId" | "destinationName" | "queueId" | "seatsBooked" | "startTime" | "syncStatus" | "syncedAt" | "createdAt", ExtArgs["result"]["trip"]>
+  export type TripInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vehicle?: boolean | VehicleDefaultArgs<ExtArgs>
+    queue?: boolean | VehicleQueueDefaultArgs<ExtArgs>
+  }
+  export type TripIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vehicle?: boolean | VehicleDefaultArgs<ExtArgs>
+    queue?: boolean | VehicleQueueDefaultArgs<ExtArgs>
+  }
+  export type TripIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vehicle?: boolean | VehicleDefaultArgs<ExtArgs>
+    queue?: boolean | VehicleQueueDefaultArgs<ExtArgs>
+  }
 
-  export type $SyncOperationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "SyncOperation"
-    objects: {}
+  export type $TripPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Trip"
+    objects: {
+      vehicle: Prisma.$VehiclePayload<ExtArgs>
+      queue: Prisma.$VehicleQueuePayload<ExtArgs>
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      stationId: string
-      tableName: string
-      recordId: string
-      operation: string
-      data: Prisma.JsonValue
+      vehicleId: string
+      licensePlate: string
+      destinationId: string
+      destinationName: string
+      queueId: string
+      seatsBooked: number
+      startTime: Date
       syncStatus: string
-      sequenceNumber: number
-      clientRequestId: string
-      transactionId: string | null
-      retryCount: number
-      error: string | null
-      syncLogId: string | null
-      createdAt: Date
       syncedAt: Date | null
-      resolvedAt: Date | null
-    }, ExtArgs["result"]["syncOperation"]>
+      createdAt: Date
+    }, ExtArgs["result"]["trip"]>
     composites: {}
   }
 
-  type SyncOperationGetPayload<S extends boolean | null | undefined | SyncOperationDefaultArgs> = $Result.GetResult<Prisma.$SyncOperationPayload, S>
+  type TripGetPayload<S extends boolean | null | undefined | TripDefaultArgs> = $Result.GetResult<Prisma.$TripPayload, S>
 
-  type SyncOperationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<SyncOperationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: SyncOperationCountAggregateInputType | true
+  type TripCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TripFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TripCountAggregateInputType | true
     }
 
-  export interface SyncOperationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SyncOperation'], meta: { name: 'SyncOperation' } }
+  export interface TripDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Trip'], meta: { name: 'Trip' } }
     /**
-     * Find zero or one SyncOperation that matches the filter.
-     * @param {SyncOperationFindUniqueArgs} args - Arguments to find a SyncOperation
+     * Find zero or one Trip that matches the filter.
+     * @param {TripFindUniqueArgs} args - Arguments to find a Trip
      * @example
-     * // Get one SyncOperation
-     * const syncOperation = await prisma.syncOperation.findUnique({
+     * // Get one Trip
+     * const trip = await prisma.trip.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends SyncOperationFindUniqueArgs>(args: SelectSubset<T, SyncOperationFindUniqueArgs<ExtArgs>>): Prisma__SyncOperationClient<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends TripFindUniqueArgs>(args: SelectSubset<T, TripFindUniqueArgs<ExtArgs>>): Prisma__TripClient<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one SyncOperation that matches the filter or throw an error with `error.code='P2025'`
+     * Find one Trip that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {SyncOperationFindUniqueOrThrowArgs} args - Arguments to find a SyncOperation
+     * @param {TripFindUniqueOrThrowArgs} args - Arguments to find a Trip
      * @example
-     * // Get one SyncOperation
-     * const syncOperation = await prisma.syncOperation.findUniqueOrThrow({
+     * // Get one Trip
+     * const trip = await prisma.trip.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends SyncOperationFindUniqueOrThrowArgs>(args: SelectSubset<T, SyncOperationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SyncOperationClient<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends TripFindUniqueOrThrowArgs>(args: SelectSubset<T, TripFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TripClient<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first SyncOperation that matches the filter.
+     * Find the first Trip that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SyncOperationFindFirstArgs} args - Arguments to find a SyncOperation
+     * @param {TripFindFirstArgs} args - Arguments to find a Trip
      * @example
-     * // Get one SyncOperation
-     * const syncOperation = await prisma.syncOperation.findFirst({
+     * // Get one Trip
+     * const trip = await prisma.trip.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends SyncOperationFindFirstArgs>(args?: SelectSubset<T, SyncOperationFindFirstArgs<ExtArgs>>): Prisma__SyncOperationClient<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends TripFindFirstArgs>(args?: SelectSubset<T, TripFindFirstArgs<ExtArgs>>): Prisma__TripClient<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first SyncOperation that matches the filter or
+     * Find the first Trip that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SyncOperationFindFirstOrThrowArgs} args - Arguments to find a SyncOperation
+     * @param {TripFindFirstOrThrowArgs} args - Arguments to find a Trip
      * @example
-     * // Get one SyncOperation
-     * const syncOperation = await prisma.syncOperation.findFirstOrThrow({
+     * // Get one Trip
+     * const trip = await prisma.trip.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends SyncOperationFindFirstOrThrowArgs>(args?: SelectSubset<T, SyncOperationFindFirstOrThrowArgs<ExtArgs>>): Prisma__SyncOperationClient<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends TripFindFirstOrThrowArgs>(args?: SelectSubset<T, TripFindFirstOrThrowArgs<ExtArgs>>): Prisma__TripClient<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more SyncOperations that matches the filter.
+     * Find zero or more Trips that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SyncOperationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {TripFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all SyncOperations
-     * const syncOperations = await prisma.syncOperation.findMany()
+     * // Get all Trips
+     * const trips = await prisma.trip.findMany()
      * 
-     * // Get first 10 SyncOperations
-     * const syncOperations = await prisma.syncOperation.findMany({ take: 10 })
+     * // Get first 10 Trips
+     * const trips = await prisma.trip.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const syncOperationWithIdOnly = await prisma.syncOperation.findMany({ select: { id: true } })
+     * const tripWithIdOnly = await prisma.trip.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends SyncOperationFindManyArgs>(args?: SelectSubset<T, SyncOperationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends TripFindManyArgs>(args?: SelectSubset<T, TripFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a SyncOperation.
-     * @param {SyncOperationCreateArgs} args - Arguments to create a SyncOperation.
+     * Create a Trip.
+     * @param {TripCreateArgs} args - Arguments to create a Trip.
      * @example
-     * // Create one SyncOperation
-     * const SyncOperation = await prisma.syncOperation.create({
+     * // Create one Trip
+     * const Trip = await prisma.trip.create({
      *   data: {
-     *     // ... data to create a SyncOperation
+     *     // ... data to create a Trip
      *   }
      * })
      * 
      */
-    create<T extends SyncOperationCreateArgs>(args: SelectSubset<T, SyncOperationCreateArgs<ExtArgs>>): Prisma__SyncOperationClient<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends TripCreateArgs>(args: SelectSubset<T, TripCreateArgs<ExtArgs>>): Prisma__TripClient<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many SyncOperations.
-     * @param {SyncOperationCreateManyArgs} args - Arguments to create many SyncOperations.
+     * Create many Trips.
+     * @param {TripCreateManyArgs} args - Arguments to create many Trips.
      * @example
-     * // Create many SyncOperations
-     * const syncOperation = await prisma.syncOperation.createMany({
+     * // Create many Trips
+     * const trip = await prisma.trip.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends SyncOperationCreateManyArgs>(args?: SelectSubset<T, SyncOperationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends TripCreateManyArgs>(args?: SelectSubset<T, TripCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many SyncOperations and returns the data saved in the database.
-     * @param {SyncOperationCreateManyAndReturnArgs} args - Arguments to create many SyncOperations.
+     * Create many Trips and returns the data saved in the database.
+     * @param {TripCreateManyAndReturnArgs} args - Arguments to create many Trips.
      * @example
-     * // Create many SyncOperations
-     * const syncOperation = await prisma.syncOperation.createManyAndReturn({
+     * // Create many Trips
+     * const trip = await prisma.trip.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many SyncOperations and only return the `id`
-     * const syncOperationWithIdOnly = await prisma.syncOperation.createManyAndReturn({
+     * // Create many Trips and only return the `id`
+     * const tripWithIdOnly = await prisma.trip.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -17575,28 +17610,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends SyncOperationCreateManyAndReturnArgs>(args?: SelectSubset<T, SyncOperationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends TripCreateManyAndReturnArgs>(args?: SelectSubset<T, TripCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a SyncOperation.
-     * @param {SyncOperationDeleteArgs} args - Arguments to delete one SyncOperation.
+     * Delete a Trip.
+     * @param {TripDeleteArgs} args - Arguments to delete one Trip.
      * @example
-     * // Delete one SyncOperation
-     * const SyncOperation = await prisma.syncOperation.delete({
+     * // Delete one Trip
+     * const Trip = await prisma.trip.delete({
      *   where: {
-     *     // ... filter to delete one SyncOperation
+     *     // ... filter to delete one Trip
      *   }
      * })
      * 
      */
-    delete<T extends SyncOperationDeleteArgs>(args: SelectSubset<T, SyncOperationDeleteArgs<ExtArgs>>): Prisma__SyncOperationClient<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends TripDeleteArgs>(args: SelectSubset<T, TripDeleteArgs<ExtArgs>>): Prisma__TripClient<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one SyncOperation.
-     * @param {SyncOperationUpdateArgs} args - Arguments to update one SyncOperation.
+     * Update one Trip.
+     * @param {TripUpdateArgs} args - Arguments to update one Trip.
      * @example
-     * // Update one SyncOperation
-     * const syncOperation = await prisma.syncOperation.update({
+     * // Update one Trip
+     * const trip = await prisma.trip.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -17606,30 +17641,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends SyncOperationUpdateArgs>(args: SelectSubset<T, SyncOperationUpdateArgs<ExtArgs>>): Prisma__SyncOperationClient<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends TripUpdateArgs>(args: SelectSubset<T, TripUpdateArgs<ExtArgs>>): Prisma__TripClient<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more SyncOperations.
-     * @param {SyncOperationDeleteManyArgs} args - Arguments to filter SyncOperations to delete.
+     * Delete zero or more Trips.
+     * @param {TripDeleteManyArgs} args - Arguments to filter Trips to delete.
      * @example
-     * // Delete a few SyncOperations
-     * const { count } = await prisma.syncOperation.deleteMany({
+     * // Delete a few Trips
+     * const { count } = await prisma.trip.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends SyncOperationDeleteManyArgs>(args?: SelectSubset<T, SyncOperationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends TripDeleteManyArgs>(args?: SelectSubset<T, TripDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more SyncOperations.
+     * Update zero or more Trips.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SyncOperationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {TripUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many SyncOperations
-     * const syncOperation = await prisma.syncOperation.updateMany({
+     * // Update many Trips
+     * const trip = await prisma.trip.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -17639,14 +17674,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends SyncOperationUpdateManyArgs>(args: SelectSubset<T, SyncOperationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends TripUpdateManyArgs>(args: SelectSubset<T, TripUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more SyncOperations and returns the data updated in the database.
-     * @param {SyncOperationUpdateManyAndReturnArgs} args - Arguments to update many SyncOperations.
+     * Update zero or more Trips and returns the data updated in the database.
+     * @param {TripUpdateManyAndReturnArgs} args - Arguments to update many Trips.
      * @example
-     * // Update many SyncOperations
-     * const syncOperation = await prisma.syncOperation.updateManyAndReturn({
+     * // Update many Trips
+     * const trip = await prisma.trip.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -17655,8 +17690,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more SyncOperations and only return the `id`
-     * const syncOperationWithIdOnly = await prisma.syncOperation.updateManyAndReturn({
+     * // Update zero or more Trips and only return the `id`
+     * const tripWithIdOnly = await prisma.trip.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -17669,56 +17704,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends SyncOperationUpdateManyAndReturnArgs>(args: SelectSubset<T, SyncOperationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends TripUpdateManyAndReturnArgs>(args: SelectSubset<T, TripUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one SyncOperation.
-     * @param {SyncOperationUpsertArgs} args - Arguments to update or create a SyncOperation.
+     * Create or update one Trip.
+     * @param {TripUpsertArgs} args - Arguments to update or create a Trip.
      * @example
-     * // Update or create a SyncOperation
-     * const syncOperation = await prisma.syncOperation.upsert({
+     * // Update or create a Trip
+     * const trip = await prisma.trip.upsert({
      *   create: {
-     *     // ... data to create a SyncOperation
+     *     // ... data to create a Trip
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the SyncOperation we want to update
+     *     // ... the filter for the Trip we want to update
      *   }
      * })
      */
-    upsert<T extends SyncOperationUpsertArgs>(args: SelectSubset<T, SyncOperationUpsertArgs<ExtArgs>>): Prisma__SyncOperationClient<$Result.GetResult<Prisma.$SyncOperationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends TripUpsertArgs>(args: SelectSubset<T, TripUpsertArgs<ExtArgs>>): Prisma__TripClient<$Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of SyncOperations.
+     * Count the number of Trips.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SyncOperationCountArgs} args - Arguments to filter SyncOperations to count.
+     * @param {TripCountArgs} args - Arguments to filter Trips to count.
      * @example
-     * // Count the number of SyncOperations
-     * const count = await prisma.syncOperation.count({
+     * // Count the number of Trips
+     * const count = await prisma.trip.count({
      *   where: {
-     *     // ... the filter for the SyncOperations we want to count
+     *     // ... the filter for the Trips we want to count
      *   }
      * })
     **/
-    count<T extends SyncOperationCountArgs>(
-      args?: Subset<T, SyncOperationCountArgs>,
+    count<T extends TripCountArgs>(
+      args?: Subset<T, TripCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], SyncOperationCountAggregateOutputType>
+          : GetScalarType<T['select'], TripCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a SyncOperation.
+     * Allows you to perform aggregations operations on a Trip.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SyncOperationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {TripAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -17738,13 +17773,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends SyncOperationAggregateArgs>(args: Subset<T, SyncOperationAggregateArgs>): Prisma.PrismaPromise<GetSyncOperationAggregateType<T>>
+    aggregate<T extends TripAggregateArgs>(args: Subset<T, TripAggregateArgs>): Prisma.PrismaPromise<GetTripAggregateType<T>>
 
     /**
-     * Group by SyncOperation.
+     * Group by Trip.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SyncOperationGroupByArgs} args - Group by arguments.
+     * @param {TripGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -17759,14 +17794,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends SyncOperationGroupByArgs,
+      T extends TripGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: SyncOperationGroupByArgs['orderBy'] }
-        : { orderBy?: SyncOperationGroupByArgs['orderBy'] },
+        ? { orderBy: TripGroupByArgs['orderBy'] }
+        : { orderBy?: TripGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -17815,21 +17850,23 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, SyncOperationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSyncOperationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, TripGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTripGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the SyncOperation model
+   * Fields of the Trip model
    */
-  readonly fields: SyncOperationFieldRefs;
+  readonly fields: TripFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for SyncOperation.
+   * The delegate class that acts as a "Promise-like" for Trip.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__SyncOperationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__TripClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    vehicle<T extends VehicleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VehicleDefaultArgs<ExtArgs>>): Prisma__VehicleClient<$Result.GetResult<Prisma.$VehiclePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    queue<T extends VehicleQueueDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VehicleQueueDefaultArgs<ExtArgs>>): Prisma__VehicleQueueClient<$Result.GetResult<Prisma.$VehicleQueuePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -17856,388 +17893,431 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the SyncOperation model
+   * Fields of the Trip model
    */
-  interface SyncOperationFieldRefs {
-    readonly id: FieldRef<"SyncOperation", 'String'>
-    readonly stationId: FieldRef<"SyncOperation", 'String'>
-    readonly tableName: FieldRef<"SyncOperation", 'String'>
-    readonly recordId: FieldRef<"SyncOperation", 'String'>
-    readonly operation: FieldRef<"SyncOperation", 'String'>
-    readonly data: FieldRef<"SyncOperation", 'Json'>
-    readonly syncStatus: FieldRef<"SyncOperation", 'String'>
-    readonly sequenceNumber: FieldRef<"SyncOperation", 'Int'>
-    readonly clientRequestId: FieldRef<"SyncOperation", 'String'>
-    readonly transactionId: FieldRef<"SyncOperation", 'String'>
-    readonly retryCount: FieldRef<"SyncOperation", 'Int'>
-    readonly error: FieldRef<"SyncOperation", 'String'>
-    readonly syncLogId: FieldRef<"SyncOperation", 'String'>
-    readonly createdAt: FieldRef<"SyncOperation", 'DateTime'>
-    readonly syncedAt: FieldRef<"SyncOperation", 'DateTime'>
-    readonly resolvedAt: FieldRef<"SyncOperation", 'DateTime'>
+  interface TripFieldRefs {
+    readonly id: FieldRef<"Trip", 'String'>
+    readonly vehicleId: FieldRef<"Trip", 'String'>
+    readonly licensePlate: FieldRef<"Trip", 'String'>
+    readonly destinationId: FieldRef<"Trip", 'String'>
+    readonly destinationName: FieldRef<"Trip", 'String'>
+    readonly queueId: FieldRef<"Trip", 'String'>
+    readonly seatsBooked: FieldRef<"Trip", 'Int'>
+    readonly startTime: FieldRef<"Trip", 'DateTime'>
+    readonly syncStatus: FieldRef<"Trip", 'String'>
+    readonly syncedAt: FieldRef<"Trip", 'DateTime'>
+    readonly createdAt: FieldRef<"Trip", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * SyncOperation findUnique
+   * Trip findUnique
    */
-  export type SyncOperationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelect<ExtArgs> | null
+    select?: TripSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * Filter, which SyncOperation to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where: SyncOperationWhereUniqueInput
+    include?: TripInclude<ExtArgs> | null
+    /**
+     * Filter, which Trip to fetch.
+     */
+    where: TripWhereUniqueInput
   }
 
   /**
-   * SyncOperation findUniqueOrThrow
+   * Trip findUniqueOrThrow
    */
-  export type SyncOperationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelect<ExtArgs> | null
+    select?: TripSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * Filter, which SyncOperation to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where: SyncOperationWhereUniqueInput
+    include?: TripInclude<ExtArgs> | null
+    /**
+     * Filter, which Trip to fetch.
+     */
+    where: TripWhereUniqueInput
   }
 
   /**
-   * SyncOperation findFirst
+   * Trip findFirst
    */
-  export type SyncOperationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelect<ExtArgs> | null
+    select?: TripSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * Filter, which SyncOperation to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: SyncOperationWhereInput
+    include?: TripInclude<ExtArgs> | null
+    /**
+     * Filter, which Trip to fetch.
+     */
+    where?: TripWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of SyncOperations to fetch.
+     * Determine the order of Trips to fetch.
      */
-    orderBy?: SyncOperationOrderByWithRelationInput | SyncOperationOrderByWithRelationInput[]
+    orderBy?: TripOrderByWithRelationInput | TripOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for SyncOperations.
+     * Sets the position for searching for Trips.
      */
-    cursor?: SyncOperationWhereUniqueInput
+    cursor?: TripWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` SyncOperations from the position of the cursor.
+     * Take `±n` Trips from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` SyncOperations.
+     * Skip the first `n` Trips.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of SyncOperations.
+     * Filter by unique combinations of Trips.
      */
-    distinct?: SyncOperationScalarFieldEnum | SyncOperationScalarFieldEnum[]
+    distinct?: TripScalarFieldEnum | TripScalarFieldEnum[]
   }
 
   /**
-   * SyncOperation findFirstOrThrow
+   * Trip findFirstOrThrow
    */
-  export type SyncOperationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelect<ExtArgs> | null
+    select?: TripSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * Filter, which SyncOperation to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: SyncOperationWhereInput
+    include?: TripInclude<ExtArgs> | null
+    /**
+     * Filter, which Trip to fetch.
+     */
+    where?: TripWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of SyncOperations to fetch.
+     * Determine the order of Trips to fetch.
      */
-    orderBy?: SyncOperationOrderByWithRelationInput | SyncOperationOrderByWithRelationInput[]
+    orderBy?: TripOrderByWithRelationInput | TripOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for SyncOperations.
+     * Sets the position for searching for Trips.
      */
-    cursor?: SyncOperationWhereUniqueInput
+    cursor?: TripWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` SyncOperations from the position of the cursor.
+     * Take `±n` Trips from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` SyncOperations.
+     * Skip the first `n` Trips.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of SyncOperations.
+     * Filter by unique combinations of Trips.
      */
-    distinct?: SyncOperationScalarFieldEnum | SyncOperationScalarFieldEnum[]
+    distinct?: TripScalarFieldEnum | TripScalarFieldEnum[]
   }
 
   /**
-   * SyncOperation findMany
+   * Trip findMany
    */
-  export type SyncOperationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelect<ExtArgs> | null
+    select?: TripSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * Filter, which SyncOperations to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: SyncOperationWhereInput
+    include?: TripInclude<ExtArgs> | null
+    /**
+     * Filter, which Trips to fetch.
+     */
+    where?: TripWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of SyncOperations to fetch.
+     * Determine the order of Trips to fetch.
      */
-    orderBy?: SyncOperationOrderByWithRelationInput | SyncOperationOrderByWithRelationInput[]
+    orderBy?: TripOrderByWithRelationInput | TripOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing SyncOperations.
+     * Sets the position for listing Trips.
      */
-    cursor?: SyncOperationWhereUniqueInput
+    cursor?: TripWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` SyncOperations from the position of the cursor.
+     * Take `±n` Trips from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` SyncOperations.
+     * Skip the first `n` Trips.
      */
     skip?: number
-    distinct?: SyncOperationScalarFieldEnum | SyncOperationScalarFieldEnum[]
+    distinct?: TripScalarFieldEnum | TripScalarFieldEnum[]
   }
 
   /**
-   * SyncOperation create
+   * Trip create
    */
-  export type SyncOperationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelect<ExtArgs> | null
+    select?: TripSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * The data needed to create a SyncOperation.
+     * Choose, which related nodes to fetch as well
      */
-    data: XOR<SyncOperationCreateInput, SyncOperationUncheckedCreateInput>
+    include?: TripInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Trip.
+     */
+    data: XOR<TripCreateInput, TripUncheckedCreateInput>
   }
 
   /**
-   * SyncOperation createMany
+   * Trip createMany
    */
-  export type SyncOperationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many SyncOperations.
+     * The data used to create many Trips.
      */
-    data: SyncOperationCreateManyInput | SyncOperationCreateManyInput[]
+    data: TripCreateManyInput | TripCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * SyncOperation createManyAndReturn
+   * Trip createManyAndReturn
    */
-  export type SyncOperationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelectCreateManyAndReturn<ExtArgs> | null
+    select?: TripSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * The data used to create many SyncOperations.
+     * The data used to create many Trips.
      */
-    data: SyncOperationCreateManyInput | SyncOperationCreateManyInput[]
+    data: TripCreateManyInput | TripCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TripIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * SyncOperation update
+   * Trip update
    */
-  export type SyncOperationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelect<ExtArgs> | null
+    select?: TripSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * The data needed to update a SyncOperation.
+     * Choose, which related nodes to fetch as well
      */
-    data: XOR<SyncOperationUpdateInput, SyncOperationUncheckedUpdateInput>
+    include?: TripInclude<ExtArgs> | null
     /**
-     * Choose, which SyncOperation to update.
+     * The data needed to update a Trip.
      */
-    where: SyncOperationWhereUniqueInput
+    data: XOR<TripUpdateInput, TripUncheckedUpdateInput>
+    /**
+     * Choose, which Trip to update.
+     */
+    where: TripWhereUniqueInput
   }
 
   /**
-   * SyncOperation updateMany
+   * Trip updateMany
    */
-  export type SyncOperationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update SyncOperations.
+     * The data used to update Trips.
      */
-    data: XOR<SyncOperationUpdateManyMutationInput, SyncOperationUncheckedUpdateManyInput>
+    data: XOR<TripUpdateManyMutationInput, TripUncheckedUpdateManyInput>
     /**
-     * Filter which SyncOperations to update
+     * Filter which Trips to update
      */
-    where?: SyncOperationWhereInput
+    where?: TripWhereInput
     /**
-     * Limit how many SyncOperations to update.
+     * Limit how many Trips to update.
      */
     limit?: number
   }
 
   /**
-   * SyncOperation updateManyAndReturn
+   * Trip updateManyAndReturn
    */
-  export type SyncOperationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: TripSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * The data used to update SyncOperations.
+     * The data used to update Trips.
      */
-    data: XOR<SyncOperationUpdateManyMutationInput, SyncOperationUncheckedUpdateManyInput>
+    data: XOR<TripUpdateManyMutationInput, TripUncheckedUpdateManyInput>
     /**
-     * Filter which SyncOperations to update
+     * Filter which Trips to update
      */
-    where?: SyncOperationWhereInput
+    where?: TripWhereInput
     /**
-     * Limit how many SyncOperations to update.
+     * Limit how many Trips to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TripIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Trip upsert
+   */
+  export type TripUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Trip
+     */
+    select?: TripSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Trip
+     */
+    omit?: TripOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TripInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Trip to update in case it exists.
+     */
+    where: TripWhereUniqueInput
+    /**
+     * In case the Trip found by the `where` argument doesn't exist, create a new Trip with this data.
+     */
+    create: XOR<TripCreateInput, TripUncheckedCreateInput>
+    /**
+     * In case the Trip was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TripUpdateInput, TripUncheckedUpdateInput>
+  }
+
+  /**
+   * Trip delete
+   */
+  export type TripDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Trip
+     */
+    select?: TripSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Trip
+     */
+    omit?: TripOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TripInclude<ExtArgs> | null
+    /**
+     * Filter which Trip to delete.
+     */
+    where: TripWhereUniqueInput
+  }
+
+  /**
+   * Trip deleteMany
+   */
+  export type TripDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Trips to delete
+     */
+    where?: TripWhereInput
+    /**
+     * Limit how many Trips to delete.
      */
     limit?: number
   }
 
   /**
-   * SyncOperation upsert
+   * Trip without action
    */
-  export type SyncOperationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TripDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SyncOperation
+     * Select specific fields to fetch from the Trip
      */
-    select?: SyncOperationSelect<ExtArgs> | null
+    select?: TripSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SyncOperation
+     * Omit specific fields from the Trip
      */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    omit?: TripOmit<ExtArgs> | null
     /**
-     * The filter to search for the SyncOperation to update in case it exists.
+     * Choose, which related nodes to fetch as well
      */
-    where: SyncOperationWhereUniqueInput
-    /**
-     * In case the SyncOperation found by the `where` argument doesn't exist, create a new SyncOperation with this data.
-     */
-    create: XOR<SyncOperationCreateInput, SyncOperationUncheckedCreateInput>
-    /**
-     * In case the SyncOperation was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<SyncOperationUpdateInput, SyncOperationUncheckedUpdateInput>
-  }
-
-  /**
-   * SyncOperation delete
-   */
-  export type SyncOperationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the SyncOperation
-     */
-    select?: SyncOperationSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the SyncOperation
-     */
-    omit?: SyncOperationOmit<ExtArgs> | null
-    /**
-     * Filter which SyncOperation to delete.
-     */
-    where: SyncOperationWhereUniqueInput
-  }
-
-  /**
-   * SyncOperation deleteMany
-   */
-  export type SyncOperationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which SyncOperations to delete
-     */
-    where?: SyncOperationWhereInput
-    /**
-     * Limit how many SyncOperations to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * SyncOperation without action
-   */
-  export type SyncOperationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the SyncOperation
-     */
-    select?: SyncOperationSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the SyncOperation
-     */
-    omit?: SyncOperationOmit<ExtArgs> | null
+    include?: TripInclude<ExtArgs> | null
   }
 
 
@@ -18401,13 +18481,13 @@ export namespace Prisma {
     totalAmount: 'totalAmount',
     bookingSource: 'bookingSource',
     bookingType: 'bookingType',
-    customerName: 'customerName',
+    userId: 'userId',
     customerPhone: 'customerPhone',
     onlineTicketId: 'onlineTicketId',
     paymentStatus: 'paymentStatus',
     paymentMethod: 'paymentMethod',
+    paymentProcessedAt: 'paymentProcessedAt',
     verificationCode: 'verificationCode',
-    qrCode: 'qrCode',
     isVerified: 'isVerified',
     verifiedAt: 'verifiedAt',
     verifiedById: 'verifiedById',
@@ -18461,26 +18541,21 @@ export namespace Prisma {
   export type OfflineCustomerScalarFieldEnum = (typeof OfflineCustomerScalarFieldEnum)[keyof typeof OfflineCustomerScalarFieldEnum]
 
 
-  export const SyncOperationScalarFieldEnum: {
+  export const TripScalarFieldEnum: {
     id: 'id',
-    stationId: 'stationId',
-    tableName: 'tableName',
-    recordId: 'recordId',
-    operation: 'operation',
-    data: 'data',
+    vehicleId: 'vehicleId',
+    licensePlate: 'licensePlate',
+    destinationId: 'destinationId',
+    destinationName: 'destinationName',
+    queueId: 'queueId',
+    seatsBooked: 'seatsBooked',
+    startTime: 'startTime',
     syncStatus: 'syncStatus',
-    sequenceNumber: 'sequenceNumber',
-    clientRequestId: 'clientRequestId',
-    transactionId: 'transactionId',
-    retryCount: 'retryCount',
-    error: 'error',
-    syncLogId: 'syncLogId',
-    createdAt: 'createdAt',
     syncedAt: 'syncedAt',
-    resolvedAt: 'resolvedAt'
+    createdAt: 'createdAt'
   };
 
-  export type SyncOperationScalarFieldEnum = (typeof SyncOperationScalarFieldEnum)[keyof typeof SyncOperationScalarFieldEnum]
+  export type TripScalarFieldEnum = (typeof TripScalarFieldEnum)[keyof typeof TripScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -18489,13 +18564,6 @@ export namespace Prisma {
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
-
-
-  export const JsonNullValueInput: {
-    JsonNull: typeof JsonNull
-  };
-
-  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const QueryMode: {
@@ -18512,15 +18580,6 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
-  export const JsonNullValueFilter: {
-    DbNull: typeof DbNull,
-    JsonNull: typeof JsonNull,
-    AnyNull: typeof AnyNull
-  };
-
-  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -18588,20 +18647,6 @@ export namespace Prisma {
    * Reference to a field of type 'Float[]'
    */
   export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Json'
-   */
-  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-  /**
-   * Reference to a field of type 'QueryMode'
-   */
-  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
   /**
    * Deep Input Types
@@ -18952,6 +18997,7 @@ export namespace Prisma {
     driver?: XOR<DriverNullableScalarRelationFilter, DriverWhereInput> | null
     queueEntries?: VehicleQueueListRelationFilter
     authorizedStations?: VehicleAuthorizedStationListRelationFilter
+    trips?: TripListRelationFilter
   }
 
   export type VehicleOrderByWithRelationInput = {
@@ -18967,6 +19013,7 @@ export namespace Prisma {
     driver?: DriverOrderByWithRelationInput
     queueEntries?: VehicleQueueOrderByRelationAggregateInput
     authorizedStations?: VehicleAuthorizedStationOrderByRelationAggregateInput
+    trips?: TripOrderByRelationAggregateInput
   }
 
   export type VehicleWhereUniqueInput = Prisma.AtLeast<{
@@ -18985,6 +19032,7 @@ export namespace Prisma {
     driver?: XOR<DriverNullableScalarRelationFilter, DriverWhereInput> | null
     queueEntries?: VehicleQueueListRelationFilter
     authorizedStations?: VehicleAuthorizedStationListRelationFilter
+    trips?: TripListRelationFilter
   }, "id" | "licensePlate">
 
   export type VehicleOrderByWithAggregationInput = {
@@ -19095,6 +19143,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFilter<"VehicleQueue"> | Date | string
     vehicle?: XOR<VehicleScalarRelationFilter, VehicleWhereInput>
     bookings?: BookingListRelationFilter
+    trips?: TripListRelationFilter
   }
 
   export type VehicleQueueOrderByWithRelationInput = {
@@ -19114,6 +19163,7 @@ export namespace Prisma {
     syncedAt?: SortOrder
     vehicle?: VehicleOrderByWithRelationInput
     bookings?: BookingOrderByRelationAggregateInput
+    trips?: TripOrderByRelationAggregateInput
   }
 
   export type VehicleQueueWhereUniqueInput = Prisma.AtLeast<{
@@ -19136,6 +19186,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFilter<"VehicleQueue"> | Date | string
     vehicle?: XOR<VehicleScalarRelationFilter, VehicleWhereInput>
     bookings?: BookingListRelationFilter
+    trips?: TripListRelationFilter
   }, "id">
 
   export type VehicleQueueOrderByWithAggregationInput = {
@@ -19334,13 +19385,13 @@ export namespace Prisma {
     totalAmount?: FloatFilter<"Booking"> | number
     bookingSource?: StringFilter<"Booking"> | string
     bookingType?: StringFilter<"Booking"> | string
-    customerName?: StringNullableFilter<"Booking"> | string | null
+    userId?: StringNullableFilter<"Booking"> | string | null
     customerPhone?: StringNullableFilter<"Booking"> | string | null
     onlineTicketId?: StringNullableFilter<"Booking"> | string | null
     paymentStatus?: StringFilter<"Booking"> | string
     paymentMethod?: StringFilter<"Booking"> | string
+    paymentProcessedAt?: DateTimeNullableFilter<"Booking"> | Date | string | null
     verificationCode?: StringFilter<"Booking"> | string
-    qrCode?: StringNullableFilter<"Booking"> | string | null
     isVerified?: BoolFilter<"Booking"> | boolean
     verifiedAt?: DateTimeNullableFilter<"Booking"> | Date | string | null
     verifiedById?: StringNullableFilter<"Booking"> | string | null
@@ -19361,13 +19412,13 @@ export namespace Prisma {
     totalAmount?: SortOrder
     bookingSource?: SortOrder
     bookingType?: SortOrder
-    customerName?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
     customerPhone?: SortOrderInput | SortOrder
     onlineTicketId?: SortOrderInput | SortOrder
     paymentStatus?: SortOrder
     paymentMethod?: SortOrder
+    paymentProcessedAt?: SortOrderInput | SortOrder
     verificationCode?: SortOrder
-    qrCode?: SortOrderInput | SortOrder
     isVerified?: SortOrder
     verifiedAt?: SortOrderInput | SortOrder
     verifiedById?: SortOrderInput | SortOrder
@@ -19394,11 +19445,11 @@ export namespace Prisma {
     totalAmount?: FloatFilter<"Booking"> | number
     bookingSource?: StringFilter<"Booking"> | string
     bookingType?: StringFilter<"Booking"> | string
-    customerName?: StringNullableFilter<"Booking"> | string | null
+    userId?: StringNullableFilter<"Booking"> | string | null
     customerPhone?: StringNullableFilter<"Booking"> | string | null
     paymentStatus?: StringFilter<"Booking"> | string
     paymentMethod?: StringFilter<"Booking"> | string
-    qrCode?: StringNullableFilter<"Booking"> | string | null
+    paymentProcessedAt?: DateTimeNullableFilter<"Booking"> | Date | string | null
     isVerified?: BoolFilter<"Booking"> | boolean
     verifiedAt?: DateTimeNullableFilter<"Booking"> | Date | string | null
     verifiedById?: StringNullableFilter<"Booking"> | string | null
@@ -19418,13 +19469,13 @@ export namespace Prisma {
     totalAmount?: SortOrder
     bookingSource?: SortOrder
     bookingType?: SortOrder
-    customerName?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
     customerPhone?: SortOrderInput | SortOrder
     onlineTicketId?: SortOrderInput | SortOrder
     paymentStatus?: SortOrder
     paymentMethod?: SortOrder
+    paymentProcessedAt?: SortOrderInput | SortOrder
     verificationCode?: SortOrder
-    qrCode?: SortOrderInput | SortOrder
     isVerified?: SortOrder
     verifiedAt?: SortOrderInput | SortOrder
     verifiedById?: SortOrderInput | SortOrder
@@ -19450,13 +19501,13 @@ export namespace Prisma {
     totalAmount?: FloatWithAggregatesFilter<"Booking"> | number
     bookingSource?: StringWithAggregatesFilter<"Booking"> | string
     bookingType?: StringWithAggregatesFilter<"Booking"> | string
-    customerName?: StringNullableWithAggregatesFilter<"Booking"> | string | null
+    userId?: StringNullableWithAggregatesFilter<"Booking"> | string | null
     customerPhone?: StringNullableWithAggregatesFilter<"Booking"> | string | null
     onlineTicketId?: StringNullableWithAggregatesFilter<"Booking"> | string | null
     paymentStatus?: StringWithAggregatesFilter<"Booking"> | string
     paymentMethod?: StringWithAggregatesFilter<"Booking"> | string
+    paymentProcessedAt?: DateTimeNullableWithAggregatesFilter<"Booking"> | Date | string | null
     verificationCode?: StringWithAggregatesFilter<"Booking"> | string
-    qrCode?: StringNullableWithAggregatesFilter<"Booking"> | string | null
     isVerified?: BoolWithAggregatesFilter<"Booking"> | boolean
     verifiedAt?: DateTimeNullableWithAggregatesFilter<"Booking"> | Date | string | null
     verifiedById?: StringNullableWithAggregatesFilter<"Booking"> | string | null
@@ -19664,113 +19715,94 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"OfflineCustomer"> | Date | string
   }
 
-  export type SyncOperationWhereInput = {
-    AND?: SyncOperationWhereInput | SyncOperationWhereInput[]
-    OR?: SyncOperationWhereInput[]
-    NOT?: SyncOperationWhereInput | SyncOperationWhereInput[]
-    id?: StringFilter<"SyncOperation"> | string
-    stationId?: StringFilter<"SyncOperation"> | string
-    tableName?: StringFilter<"SyncOperation"> | string
-    recordId?: StringFilter<"SyncOperation"> | string
-    operation?: StringFilter<"SyncOperation"> | string
-    data?: JsonFilter<"SyncOperation">
-    syncStatus?: StringFilter<"SyncOperation"> | string
-    sequenceNumber?: IntFilter<"SyncOperation"> | number
-    clientRequestId?: StringFilter<"SyncOperation"> | string
-    transactionId?: StringNullableFilter<"SyncOperation"> | string | null
-    retryCount?: IntFilter<"SyncOperation"> | number
-    error?: StringNullableFilter<"SyncOperation"> | string | null
-    syncLogId?: StringNullableFilter<"SyncOperation"> | string | null
-    createdAt?: DateTimeFilter<"SyncOperation"> | Date | string
-    syncedAt?: DateTimeNullableFilter<"SyncOperation"> | Date | string | null
-    resolvedAt?: DateTimeNullableFilter<"SyncOperation"> | Date | string | null
+  export type TripWhereInput = {
+    AND?: TripWhereInput | TripWhereInput[]
+    OR?: TripWhereInput[]
+    NOT?: TripWhereInput | TripWhereInput[]
+    id?: StringFilter<"Trip"> | string
+    vehicleId?: StringFilter<"Trip"> | string
+    licensePlate?: StringFilter<"Trip"> | string
+    destinationId?: StringFilter<"Trip"> | string
+    destinationName?: StringFilter<"Trip"> | string
+    queueId?: StringFilter<"Trip"> | string
+    seatsBooked?: IntFilter<"Trip"> | number
+    startTime?: DateTimeFilter<"Trip"> | Date | string
+    syncStatus?: StringFilter<"Trip"> | string
+    syncedAt?: DateTimeNullableFilter<"Trip"> | Date | string | null
+    createdAt?: DateTimeFilter<"Trip"> | Date | string
+    vehicle?: XOR<VehicleScalarRelationFilter, VehicleWhereInput>
+    queue?: XOR<VehicleQueueScalarRelationFilter, VehicleQueueWhereInput>
   }
 
-  export type SyncOperationOrderByWithRelationInput = {
+  export type TripOrderByWithRelationInput = {
     id?: SortOrder
-    stationId?: SortOrder
-    tableName?: SortOrder
-    recordId?: SortOrder
-    operation?: SortOrder
-    data?: SortOrder
+    vehicleId?: SortOrder
+    licensePlate?: SortOrder
+    destinationId?: SortOrder
+    destinationName?: SortOrder
+    queueId?: SortOrder
+    seatsBooked?: SortOrder
+    startTime?: SortOrder
     syncStatus?: SortOrder
-    sequenceNumber?: SortOrder
-    clientRequestId?: SortOrder
-    transactionId?: SortOrderInput | SortOrder
-    retryCount?: SortOrder
-    error?: SortOrderInput | SortOrder
-    syncLogId?: SortOrderInput | SortOrder
-    createdAt?: SortOrder
     syncedAt?: SortOrderInput | SortOrder
-    resolvedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    vehicle?: VehicleOrderByWithRelationInput
+    queue?: VehicleQueueOrderByWithRelationInput
   }
 
-  export type SyncOperationWhereUniqueInput = Prisma.AtLeast<{
+  export type TripWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    clientRequestId?: string
-    AND?: SyncOperationWhereInput | SyncOperationWhereInput[]
-    OR?: SyncOperationWhereInput[]
-    NOT?: SyncOperationWhereInput | SyncOperationWhereInput[]
-    stationId?: StringFilter<"SyncOperation"> | string
-    tableName?: StringFilter<"SyncOperation"> | string
-    recordId?: StringFilter<"SyncOperation"> | string
-    operation?: StringFilter<"SyncOperation"> | string
-    data?: JsonFilter<"SyncOperation">
-    syncStatus?: StringFilter<"SyncOperation"> | string
-    sequenceNumber?: IntFilter<"SyncOperation"> | number
-    transactionId?: StringNullableFilter<"SyncOperation"> | string | null
-    retryCount?: IntFilter<"SyncOperation"> | number
-    error?: StringNullableFilter<"SyncOperation"> | string | null
-    syncLogId?: StringNullableFilter<"SyncOperation"> | string | null
-    createdAt?: DateTimeFilter<"SyncOperation"> | Date | string
-    syncedAt?: DateTimeNullableFilter<"SyncOperation"> | Date | string | null
-    resolvedAt?: DateTimeNullableFilter<"SyncOperation"> | Date | string | null
-  }, "id" | "clientRequestId">
+    AND?: TripWhereInput | TripWhereInput[]
+    OR?: TripWhereInput[]
+    NOT?: TripWhereInput | TripWhereInput[]
+    vehicleId?: StringFilter<"Trip"> | string
+    licensePlate?: StringFilter<"Trip"> | string
+    destinationId?: StringFilter<"Trip"> | string
+    destinationName?: StringFilter<"Trip"> | string
+    queueId?: StringFilter<"Trip"> | string
+    seatsBooked?: IntFilter<"Trip"> | number
+    startTime?: DateTimeFilter<"Trip"> | Date | string
+    syncStatus?: StringFilter<"Trip"> | string
+    syncedAt?: DateTimeNullableFilter<"Trip"> | Date | string | null
+    createdAt?: DateTimeFilter<"Trip"> | Date | string
+    vehicle?: XOR<VehicleScalarRelationFilter, VehicleWhereInput>
+    queue?: XOR<VehicleQueueScalarRelationFilter, VehicleQueueWhereInput>
+  }, "id">
 
-  export type SyncOperationOrderByWithAggregationInput = {
+  export type TripOrderByWithAggregationInput = {
     id?: SortOrder
-    stationId?: SortOrder
-    tableName?: SortOrder
-    recordId?: SortOrder
-    operation?: SortOrder
-    data?: SortOrder
+    vehicleId?: SortOrder
+    licensePlate?: SortOrder
+    destinationId?: SortOrder
+    destinationName?: SortOrder
+    queueId?: SortOrder
+    seatsBooked?: SortOrder
+    startTime?: SortOrder
     syncStatus?: SortOrder
-    sequenceNumber?: SortOrder
-    clientRequestId?: SortOrder
-    transactionId?: SortOrderInput | SortOrder
-    retryCount?: SortOrder
-    error?: SortOrderInput | SortOrder
-    syncLogId?: SortOrderInput | SortOrder
-    createdAt?: SortOrder
     syncedAt?: SortOrderInput | SortOrder
-    resolvedAt?: SortOrderInput | SortOrder
-    _count?: SyncOperationCountOrderByAggregateInput
-    _avg?: SyncOperationAvgOrderByAggregateInput
-    _max?: SyncOperationMaxOrderByAggregateInput
-    _min?: SyncOperationMinOrderByAggregateInput
-    _sum?: SyncOperationSumOrderByAggregateInput
+    createdAt?: SortOrder
+    _count?: TripCountOrderByAggregateInput
+    _avg?: TripAvgOrderByAggregateInput
+    _max?: TripMaxOrderByAggregateInput
+    _min?: TripMinOrderByAggregateInput
+    _sum?: TripSumOrderByAggregateInput
   }
 
-  export type SyncOperationScalarWhereWithAggregatesInput = {
-    AND?: SyncOperationScalarWhereWithAggregatesInput | SyncOperationScalarWhereWithAggregatesInput[]
-    OR?: SyncOperationScalarWhereWithAggregatesInput[]
-    NOT?: SyncOperationScalarWhereWithAggregatesInput | SyncOperationScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"SyncOperation"> | string
-    stationId?: StringWithAggregatesFilter<"SyncOperation"> | string
-    tableName?: StringWithAggregatesFilter<"SyncOperation"> | string
-    recordId?: StringWithAggregatesFilter<"SyncOperation"> | string
-    operation?: StringWithAggregatesFilter<"SyncOperation"> | string
-    data?: JsonWithAggregatesFilter<"SyncOperation">
-    syncStatus?: StringWithAggregatesFilter<"SyncOperation"> | string
-    sequenceNumber?: IntWithAggregatesFilter<"SyncOperation"> | number
-    clientRequestId?: StringWithAggregatesFilter<"SyncOperation"> | string
-    transactionId?: StringNullableWithAggregatesFilter<"SyncOperation"> | string | null
-    retryCount?: IntWithAggregatesFilter<"SyncOperation"> | number
-    error?: StringNullableWithAggregatesFilter<"SyncOperation"> | string | null
-    syncLogId?: StringNullableWithAggregatesFilter<"SyncOperation"> | string | null
-    createdAt?: DateTimeWithAggregatesFilter<"SyncOperation"> | Date | string
-    syncedAt?: DateTimeNullableWithAggregatesFilter<"SyncOperation"> | Date | string | null
-    resolvedAt?: DateTimeNullableWithAggregatesFilter<"SyncOperation"> | Date | string | null
+  export type TripScalarWhereWithAggregatesInput = {
+    AND?: TripScalarWhereWithAggregatesInput | TripScalarWhereWithAggregatesInput[]
+    OR?: TripScalarWhereWithAggregatesInput[]
+    NOT?: TripScalarWhereWithAggregatesInput | TripScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Trip"> | string
+    vehicleId?: StringWithAggregatesFilter<"Trip"> | string
+    licensePlate?: StringWithAggregatesFilter<"Trip"> | string
+    destinationId?: StringWithAggregatesFilter<"Trip"> | string
+    destinationName?: StringWithAggregatesFilter<"Trip"> | string
+    queueId?: StringWithAggregatesFilter<"Trip"> | string
+    seatsBooked?: IntWithAggregatesFilter<"Trip"> | number
+    startTime?: DateTimeWithAggregatesFilter<"Trip"> | Date | string
+    syncStatus?: StringWithAggregatesFilter<"Trip"> | string
+    syncedAt?: DateTimeNullableWithAggregatesFilter<"Trip"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Trip"> | Date | string
   }
 
   export type StationConfigCreateInput = {
@@ -20167,6 +20199,7 @@ export namespace Prisma {
     driver?: DriverCreateNestedOneWithoutVehicleInput
     queueEntries?: VehicleQueueCreateNestedManyWithoutVehicleInput
     authorizedStations?: VehicleAuthorizedStationCreateNestedManyWithoutVehicleInput
+    trips?: TripCreateNestedManyWithoutVehicleInput
   }
 
   export type VehicleUncheckedCreateInput = {
@@ -20182,6 +20215,7 @@ export namespace Prisma {
     driver?: DriverUncheckedCreateNestedOneWithoutVehicleInput
     queueEntries?: VehicleQueueUncheckedCreateNestedManyWithoutVehicleInput
     authorizedStations?: VehicleAuthorizedStationUncheckedCreateNestedManyWithoutVehicleInput
+    trips?: TripUncheckedCreateNestedManyWithoutVehicleInput
   }
 
   export type VehicleUpdateInput = {
@@ -20197,6 +20231,7 @@ export namespace Prisma {
     driver?: DriverUpdateOneWithoutVehicleNestedInput
     queueEntries?: VehicleQueueUpdateManyWithoutVehicleNestedInput
     authorizedStations?: VehicleAuthorizedStationUpdateManyWithoutVehicleNestedInput
+    trips?: TripUpdateManyWithoutVehicleNestedInput
   }
 
   export type VehicleUncheckedUpdateInput = {
@@ -20212,6 +20247,7 @@ export namespace Prisma {
     driver?: DriverUncheckedUpdateOneWithoutVehicleNestedInput
     queueEntries?: VehicleQueueUncheckedUpdateManyWithoutVehicleNestedInput
     authorizedStations?: VehicleAuthorizedStationUncheckedUpdateManyWithoutVehicleNestedInput
+    trips?: TripUncheckedUpdateManyWithoutVehicleNestedInput
   }
 
   export type VehicleCreateManyInput = {
@@ -20321,6 +20357,7 @@ export namespace Prisma {
     syncedAt: Date | string
     vehicle: VehicleCreateNestedOneWithoutQueueEntriesInput
     bookings?: BookingCreateNestedManyWithoutQueueInput
+    trips?: TripCreateNestedManyWithoutQueueInput
   }
 
   export type VehicleQueueUncheckedCreateInput = {
@@ -20339,6 +20376,7 @@ export namespace Prisma {
     actualDeparture?: Date | string | null
     syncedAt: Date | string
     bookings?: BookingUncheckedCreateNestedManyWithoutQueueInput
+    trips?: TripUncheckedCreateNestedManyWithoutQueueInput
   }
 
   export type VehicleQueueUpdateInput = {
@@ -20357,6 +20395,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     vehicle?: VehicleUpdateOneRequiredWithoutQueueEntriesNestedInput
     bookings?: BookingUpdateManyWithoutQueueNestedInput
+    trips?: TripUpdateManyWithoutQueueNestedInput
   }
 
   export type VehicleQueueUncheckedUpdateInput = {
@@ -20375,6 +20414,7 @@ export namespace Prisma {
     actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookings?: BookingUncheckedUpdateManyWithoutQueueNestedInput
+    trips?: TripUncheckedUpdateManyWithoutQueueNestedInput
   }
 
   export type VehicleQueueCreateManyInput = {
@@ -20590,13 +20630,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     createdOffline?: boolean
@@ -20615,13 +20655,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     verifiedById?: string | null
@@ -20638,13 +20678,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdOffline?: BoolFieldUpdateOperationsInput | boolean
@@ -20663,13 +20703,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifiedById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20687,13 +20727,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     verifiedById?: string | null
@@ -20710,13 +20750,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdOffline?: BoolFieldUpdateOperationsInput | boolean
@@ -20732,13 +20772,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifiedById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20957,137 +20997,100 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type SyncOperationCreateInput = {
+  export type TripCreateInput = {
     id?: string
-    stationId: string
-    tableName: string
-    recordId: string
-    operation: string
-    data: JsonNullValueInput | InputJsonValue
-    syncStatus: string
-    sequenceNumber: number
-    clientRequestId: string
-    transactionId?: string | null
-    retryCount?: number
-    error?: string | null
-    syncLogId?: string | null
-    createdAt?: Date | string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
     syncedAt?: Date | string | null
-    resolvedAt?: Date | string | null
+    createdAt?: Date | string
+    vehicle: VehicleCreateNestedOneWithoutTripsInput
+    queue: VehicleQueueCreateNestedOneWithoutTripsInput
   }
 
-  export type SyncOperationUncheckedCreateInput = {
+  export type TripUncheckedCreateInput = {
     id?: string
-    stationId: string
-    tableName: string
-    recordId: string
-    operation: string
-    data: JsonNullValueInput | InputJsonValue
-    syncStatus: string
-    sequenceNumber: number
-    clientRequestId: string
-    transactionId?: string | null
-    retryCount?: number
-    error?: string | null
-    syncLogId?: string | null
-    createdAt?: Date | string
+    vehicleId: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    queueId: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
     syncedAt?: Date | string | null
-    resolvedAt?: Date | string | null
+    createdAt?: Date | string
   }
 
-  export type SyncOperationUpdateInput = {
+  export type TripUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    stationId?: StringFieldUpdateOperationsInput | string
-    tableName?: StringFieldUpdateOperationsInput | string
-    recordId?: StringFieldUpdateOperationsInput | string
-    operation?: StringFieldUpdateOperationsInput | string
-    data?: JsonNullValueInput | InputJsonValue
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     syncStatus?: StringFieldUpdateOperationsInput | string
-    sequenceNumber?: IntFieldUpdateOperationsInput | number
-    clientRequestId?: StringFieldUpdateOperationsInput | string
-    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
-    retryCount?: IntFieldUpdateOperationsInput | number
-    error?: NullableStringFieldUpdateOperationsInput | string | null
-    syncLogId?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    vehicle?: VehicleUpdateOneRequiredWithoutTripsNestedInput
+    queue?: VehicleQueueUpdateOneRequiredWithoutTripsNestedInput
   }
 
-  export type SyncOperationUncheckedUpdateInput = {
+  export type TripUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    stationId?: StringFieldUpdateOperationsInput | string
-    tableName?: StringFieldUpdateOperationsInput | string
-    recordId?: StringFieldUpdateOperationsInput | string
-    operation?: StringFieldUpdateOperationsInput | string
-    data?: JsonNullValueInput | InputJsonValue
+    vehicleId?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    queueId?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     syncStatus?: StringFieldUpdateOperationsInput | string
-    sequenceNumber?: IntFieldUpdateOperationsInput | number
-    clientRequestId?: StringFieldUpdateOperationsInput | string
-    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
-    retryCount?: IntFieldUpdateOperationsInput | number
-    error?: NullableStringFieldUpdateOperationsInput | string | null
-    syncLogId?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type SyncOperationCreateManyInput = {
+  export type TripCreateManyInput = {
     id?: string
-    stationId: string
-    tableName: string
-    recordId: string
-    operation: string
-    data: JsonNullValueInput | InputJsonValue
-    syncStatus: string
-    sequenceNumber: number
-    clientRequestId: string
-    transactionId?: string | null
-    retryCount?: number
-    error?: string | null
-    syncLogId?: string | null
-    createdAt?: Date | string
+    vehicleId: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    queueId: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
     syncedAt?: Date | string | null
-    resolvedAt?: Date | string | null
+    createdAt?: Date | string
   }
 
-  export type SyncOperationUpdateManyMutationInput = {
+  export type TripUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    stationId?: StringFieldUpdateOperationsInput | string
-    tableName?: StringFieldUpdateOperationsInput | string
-    recordId?: StringFieldUpdateOperationsInput | string
-    operation?: StringFieldUpdateOperationsInput | string
-    data?: JsonNullValueInput | InputJsonValue
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     syncStatus?: StringFieldUpdateOperationsInput | string
-    sequenceNumber?: IntFieldUpdateOperationsInput | number
-    clientRequestId?: StringFieldUpdateOperationsInput | string
-    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
-    retryCount?: IntFieldUpdateOperationsInput | number
-    error?: NullableStringFieldUpdateOperationsInput | string | null
-    syncLogId?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type SyncOperationUncheckedUpdateManyInput = {
+  export type TripUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    stationId?: StringFieldUpdateOperationsInput | string
-    tableName?: StringFieldUpdateOperationsInput | string
-    recordId?: StringFieldUpdateOperationsInput | string
-    operation?: StringFieldUpdateOperationsInput | string
-    data?: JsonNullValueInput | InputJsonValue
+    vehicleId?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    queueId?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     syncStatus?: StringFieldUpdateOperationsInput | string
-    sequenceNumber?: IntFieldUpdateOperationsInput | number
-    clientRequestId?: StringFieldUpdateOperationsInput | string
-    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
-    retryCount?: IntFieldUpdateOperationsInput | number
-    error?: NullableStringFieldUpdateOperationsInput | string | null
-    syncLogId?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -21452,11 +21455,21 @@ export namespace Prisma {
     none?: VehicleAuthorizedStationWhereInput
   }
 
+  export type TripListRelationFilter = {
+    every?: TripWhereInput
+    some?: TripWhereInput
+    none?: TripWhereInput
+  }
+
   export type VehicleQueueOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type VehicleAuthorizedStationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type TripOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -21780,13 +21793,13 @@ export namespace Prisma {
     totalAmount?: SortOrder
     bookingSource?: SortOrder
     bookingType?: SortOrder
-    customerName?: SortOrder
+    userId?: SortOrder
     customerPhone?: SortOrder
     onlineTicketId?: SortOrder
     paymentStatus?: SortOrder
     paymentMethod?: SortOrder
+    paymentProcessedAt?: SortOrder
     verificationCode?: SortOrder
-    qrCode?: SortOrder
     isVerified?: SortOrder
     verifiedAt?: SortOrder
     verifiedById?: SortOrder
@@ -21809,13 +21822,13 @@ export namespace Prisma {
     totalAmount?: SortOrder
     bookingSource?: SortOrder
     bookingType?: SortOrder
-    customerName?: SortOrder
+    userId?: SortOrder
     customerPhone?: SortOrder
     onlineTicketId?: SortOrder
     paymentStatus?: SortOrder
     paymentMethod?: SortOrder
+    paymentProcessedAt?: SortOrder
     verificationCode?: SortOrder
-    qrCode?: SortOrder
     isVerified?: SortOrder
     verifiedAt?: SortOrder
     verifiedById?: SortOrder
@@ -21833,13 +21846,13 @@ export namespace Prisma {
     totalAmount?: SortOrder
     bookingSource?: SortOrder
     bookingType?: SortOrder
-    customerName?: SortOrder
+    userId?: SortOrder
     customerPhone?: SortOrder
     onlineTicketId?: SortOrder
     paymentStatus?: SortOrder
     paymentMethod?: SortOrder
+    paymentProcessedAt?: SortOrder
     verificationCode?: SortOrder
-    qrCode?: SortOrder
     isVerified?: SortOrder
     verifiedAt?: SortOrder
     verifiedById?: SortOrder
@@ -21973,119 +21986,55 @@ export namespace Prisma {
   export type OfflineCustomerSumOrderByAggregateInput = {
     id?: SortOrder
   }
-  export type JsonFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
 
-  export type JsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
-
-  export type SyncOperationCountOrderByAggregateInput = {
+  export type TripCountOrderByAggregateInput = {
     id?: SortOrder
-    stationId?: SortOrder
-    tableName?: SortOrder
-    recordId?: SortOrder
-    operation?: SortOrder
-    data?: SortOrder
+    vehicleId?: SortOrder
+    licensePlate?: SortOrder
+    destinationId?: SortOrder
+    destinationName?: SortOrder
+    queueId?: SortOrder
+    seatsBooked?: SortOrder
+    startTime?: SortOrder
     syncStatus?: SortOrder
-    sequenceNumber?: SortOrder
-    clientRequestId?: SortOrder
-    transactionId?: SortOrder
-    retryCount?: SortOrder
-    error?: SortOrder
-    syncLogId?: SortOrder
-    createdAt?: SortOrder
     syncedAt?: SortOrder
-    resolvedAt?: SortOrder
+    createdAt?: SortOrder
   }
 
-  export type SyncOperationAvgOrderByAggregateInput = {
-    sequenceNumber?: SortOrder
-    retryCount?: SortOrder
+  export type TripAvgOrderByAggregateInput = {
+    seatsBooked?: SortOrder
   }
 
-  export type SyncOperationMaxOrderByAggregateInput = {
+  export type TripMaxOrderByAggregateInput = {
     id?: SortOrder
-    stationId?: SortOrder
-    tableName?: SortOrder
-    recordId?: SortOrder
-    operation?: SortOrder
+    vehicleId?: SortOrder
+    licensePlate?: SortOrder
+    destinationId?: SortOrder
+    destinationName?: SortOrder
+    queueId?: SortOrder
+    seatsBooked?: SortOrder
+    startTime?: SortOrder
     syncStatus?: SortOrder
-    sequenceNumber?: SortOrder
-    clientRequestId?: SortOrder
-    transactionId?: SortOrder
-    retryCount?: SortOrder
-    error?: SortOrder
-    syncLogId?: SortOrder
-    createdAt?: SortOrder
     syncedAt?: SortOrder
-    resolvedAt?: SortOrder
+    createdAt?: SortOrder
   }
 
-  export type SyncOperationMinOrderByAggregateInput = {
+  export type TripMinOrderByAggregateInput = {
     id?: SortOrder
-    stationId?: SortOrder
-    tableName?: SortOrder
-    recordId?: SortOrder
-    operation?: SortOrder
+    vehicleId?: SortOrder
+    licensePlate?: SortOrder
+    destinationId?: SortOrder
+    destinationName?: SortOrder
+    queueId?: SortOrder
+    seatsBooked?: SortOrder
+    startTime?: SortOrder
     syncStatus?: SortOrder
-    sequenceNumber?: SortOrder
-    clientRequestId?: SortOrder
-    transactionId?: SortOrder
-    retryCount?: SortOrder
-    error?: SortOrder
-    syncLogId?: SortOrder
-    createdAt?: SortOrder
     syncedAt?: SortOrder
-    resolvedAt?: SortOrder
+    createdAt?: SortOrder
   }
 
-  export type SyncOperationSumOrderByAggregateInput = {
-    sequenceNumber?: SortOrder
-    retryCount?: SortOrder
-  }
-  export type JsonWithAggregatesFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedJsonFilter<$PrismaModel>
-    _max?: NestedJsonFilter<$PrismaModel>
+  export type TripSumOrderByAggregateInput = {
+    seatsBooked?: SortOrder
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -22284,6 +22233,13 @@ export namespace Prisma {
     connect?: VehicleAuthorizedStationWhereUniqueInput | VehicleAuthorizedStationWhereUniqueInput[]
   }
 
+  export type TripCreateNestedManyWithoutVehicleInput = {
+    create?: XOR<TripCreateWithoutVehicleInput, TripUncheckedCreateWithoutVehicleInput> | TripCreateWithoutVehicleInput[] | TripUncheckedCreateWithoutVehicleInput[]
+    connectOrCreate?: TripCreateOrConnectWithoutVehicleInput | TripCreateOrConnectWithoutVehicleInput[]
+    createMany?: TripCreateManyVehicleInputEnvelope
+    connect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+  }
+
   export type DriverUncheckedCreateNestedOneWithoutVehicleInput = {
     create?: XOR<DriverCreateWithoutVehicleInput, DriverUncheckedCreateWithoutVehicleInput>
     connectOrCreate?: DriverCreateOrConnectWithoutVehicleInput
@@ -22302,6 +22258,13 @@ export namespace Prisma {
     connectOrCreate?: VehicleAuthorizedStationCreateOrConnectWithoutVehicleInput | VehicleAuthorizedStationCreateOrConnectWithoutVehicleInput[]
     createMany?: VehicleAuthorizedStationCreateManyVehicleInputEnvelope
     connect?: VehicleAuthorizedStationWhereUniqueInput | VehicleAuthorizedStationWhereUniqueInput[]
+  }
+
+  export type TripUncheckedCreateNestedManyWithoutVehicleInput = {
+    create?: XOR<TripCreateWithoutVehicleInput, TripUncheckedCreateWithoutVehicleInput> | TripCreateWithoutVehicleInput[] | TripUncheckedCreateWithoutVehicleInput[]
+    connectOrCreate?: TripCreateOrConnectWithoutVehicleInput | TripCreateOrConnectWithoutVehicleInput[]
+    createMany?: TripCreateManyVehicleInputEnvelope
+    connect?: TripWhereUniqueInput | TripWhereUniqueInput[]
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -22358,6 +22321,20 @@ export namespace Prisma {
     deleteMany?: VehicleAuthorizedStationScalarWhereInput | VehicleAuthorizedStationScalarWhereInput[]
   }
 
+  export type TripUpdateManyWithoutVehicleNestedInput = {
+    create?: XOR<TripCreateWithoutVehicleInput, TripUncheckedCreateWithoutVehicleInput> | TripCreateWithoutVehicleInput[] | TripUncheckedCreateWithoutVehicleInput[]
+    connectOrCreate?: TripCreateOrConnectWithoutVehicleInput | TripCreateOrConnectWithoutVehicleInput[]
+    upsert?: TripUpsertWithWhereUniqueWithoutVehicleInput | TripUpsertWithWhereUniqueWithoutVehicleInput[]
+    createMany?: TripCreateManyVehicleInputEnvelope
+    set?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    disconnect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    delete?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    connect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    update?: TripUpdateWithWhereUniqueWithoutVehicleInput | TripUpdateWithWhereUniqueWithoutVehicleInput[]
+    updateMany?: TripUpdateManyWithWhereWithoutVehicleInput | TripUpdateManyWithWhereWithoutVehicleInput[]
+    deleteMany?: TripScalarWhereInput | TripScalarWhereInput[]
+  }
+
   export type DriverUncheckedUpdateOneWithoutVehicleNestedInput = {
     create?: XOR<DriverCreateWithoutVehicleInput, DriverUncheckedCreateWithoutVehicleInput>
     connectOrCreate?: DriverCreateOrConnectWithoutVehicleInput
@@ -22396,6 +22373,20 @@ export namespace Prisma {
     deleteMany?: VehicleAuthorizedStationScalarWhereInput | VehicleAuthorizedStationScalarWhereInput[]
   }
 
+  export type TripUncheckedUpdateManyWithoutVehicleNestedInput = {
+    create?: XOR<TripCreateWithoutVehicleInput, TripUncheckedCreateWithoutVehicleInput> | TripCreateWithoutVehicleInput[] | TripUncheckedCreateWithoutVehicleInput[]
+    connectOrCreate?: TripCreateOrConnectWithoutVehicleInput | TripCreateOrConnectWithoutVehicleInput[]
+    upsert?: TripUpsertWithWhereUniqueWithoutVehicleInput | TripUpsertWithWhereUniqueWithoutVehicleInput[]
+    createMany?: TripCreateManyVehicleInputEnvelope
+    set?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    disconnect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    delete?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    connect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    update?: TripUpdateWithWhereUniqueWithoutVehicleInput | TripUpdateWithWhereUniqueWithoutVehicleInput[]
+    updateMany?: TripUpdateManyWithWhereWithoutVehicleInput | TripUpdateManyWithWhereWithoutVehicleInput[]
+    deleteMany?: TripScalarWhereInput | TripScalarWhereInput[]
+  }
+
   export type VehicleCreateNestedOneWithoutAuthorizedStationsInput = {
     create?: XOR<VehicleCreateWithoutAuthorizedStationsInput, VehicleUncheckedCreateWithoutAuthorizedStationsInput>
     connectOrCreate?: VehicleCreateOrConnectWithoutAuthorizedStationsInput
@@ -22423,11 +22414,25 @@ export namespace Prisma {
     connect?: BookingWhereUniqueInput | BookingWhereUniqueInput[]
   }
 
+  export type TripCreateNestedManyWithoutQueueInput = {
+    create?: XOR<TripCreateWithoutQueueInput, TripUncheckedCreateWithoutQueueInput> | TripCreateWithoutQueueInput[] | TripUncheckedCreateWithoutQueueInput[]
+    connectOrCreate?: TripCreateOrConnectWithoutQueueInput | TripCreateOrConnectWithoutQueueInput[]
+    createMany?: TripCreateManyQueueInputEnvelope
+    connect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+  }
+
   export type BookingUncheckedCreateNestedManyWithoutQueueInput = {
     create?: XOR<BookingCreateWithoutQueueInput, BookingUncheckedCreateWithoutQueueInput> | BookingCreateWithoutQueueInput[] | BookingUncheckedCreateWithoutQueueInput[]
     connectOrCreate?: BookingCreateOrConnectWithoutQueueInput | BookingCreateOrConnectWithoutQueueInput[]
     createMany?: BookingCreateManyQueueInputEnvelope
     connect?: BookingWhereUniqueInput | BookingWhereUniqueInput[]
+  }
+
+  export type TripUncheckedCreateNestedManyWithoutQueueInput = {
+    create?: XOR<TripCreateWithoutQueueInput, TripUncheckedCreateWithoutQueueInput> | TripCreateWithoutQueueInput[] | TripUncheckedCreateWithoutQueueInput[]
+    connectOrCreate?: TripCreateOrConnectWithoutQueueInput | TripCreateOrConnectWithoutQueueInput[]
+    createMany?: TripCreateManyQueueInputEnvelope
+    connect?: TripWhereUniqueInput | TripWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -22460,6 +22465,20 @@ export namespace Prisma {
     deleteMany?: BookingScalarWhereInput | BookingScalarWhereInput[]
   }
 
+  export type TripUpdateManyWithoutQueueNestedInput = {
+    create?: XOR<TripCreateWithoutQueueInput, TripUncheckedCreateWithoutQueueInput> | TripCreateWithoutQueueInput[] | TripUncheckedCreateWithoutQueueInput[]
+    connectOrCreate?: TripCreateOrConnectWithoutQueueInput | TripCreateOrConnectWithoutQueueInput[]
+    upsert?: TripUpsertWithWhereUniqueWithoutQueueInput | TripUpsertWithWhereUniqueWithoutQueueInput[]
+    createMany?: TripCreateManyQueueInputEnvelope
+    set?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    disconnect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    delete?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    connect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    update?: TripUpdateWithWhereUniqueWithoutQueueInput | TripUpdateWithWhereUniqueWithoutQueueInput[]
+    updateMany?: TripUpdateManyWithWhereWithoutQueueInput | TripUpdateManyWithWhereWithoutQueueInput[]
+    deleteMany?: TripScalarWhereInput | TripScalarWhereInput[]
+  }
+
   export type BookingUncheckedUpdateManyWithoutQueueNestedInput = {
     create?: XOR<BookingCreateWithoutQueueInput, BookingUncheckedCreateWithoutQueueInput> | BookingCreateWithoutQueueInput[] | BookingUncheckedCreateWithoutQueueInput[]
     connectOrCreate?: BookingCreateOrConnectWithoutQueueInput | BookingCreateOrConnectWithoutQueueInput[]
@@ -22472,6 +22491,20 @@ export namespace Prisma {
     update?: BookingUpdateWithWhereUniqueWithoutQueueInput | BookingUpdateWithWhereUniqueWithoutQueueInput[]
     updateMany?: BookingUpdateManyWithWhereWithoutQueueInput | BookingUpdateManyWithWhereWithoutQueueInput[]
     deleteMany?: BookingScalarWhereInput | BookingScalarWhereInput[]
+  }
+
+  export type TripUncheckedUpdateManyWithoutQueueNestedInput = {
+    create?: XOR<TripCreateWithoutQueueInput, TripUncheckedCreateWithoutQueueInput> | TripCreateWithoutQueueInput[] | TripUncheckedCreateWithoutQueueInput[]
+    connectOrCreate?: TripCreateOrConnectWithoutQueueInput | TripCreateOrConnectWithoutQueueInput[]
+    upsert?: TripUpsertWithWhereUniqueWithoutQueueInput | TripUpsertWithWhereUniqueWithoutQueueInput[]
+    createMany?: TripCreateManyQueueInputEnvelope
+    set?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    disconnect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    delete?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    connect?: TripWhereUniqueInput | TripWhereUniqueInput[]
+    update?: TripUpdateWithWhereUniqueWithoutQueueInput | TripUpdateWithWhereUniqueWithoutQueueInput[]
+    updateMany?: TripUpdateManyWithWhereWithoutQueueInput | TripUpdateManyWithWhereWithoutQueueInput[]
+    deleteMany?: TripScalarWhereInput | TripScalarWhereInput[]
   }
 
   export type VehicleScheduleCreateNestedManyWithoutRouteInput = {
@@ -22574,6 +22607,34 @@ export namespace Prisma {
     delete?: StaffWhereInput | boolean
     connect?: StaffWhereUniqueInput
     update?: XOR<XOR<StaffUpdateToOneWithWhereWithoutVerificationsInput, StaffUpdateWithoutVerificationsInput>, StaffUncheckedUpdateWithoutVerificationsInput>
+  }
+
+  export type VehicleCreateNestedOneWithoutTripsInput = {
+    create?: XOR<VehicleCreateWithoutTripsInput, VehicleUncheckedCreateWithoutTripsInput>
+    connectOrCreate?: VehicleCreateOrConnectWithoutTripsInput
+    connect?: VehicleWhereUniqueInput
+  }
+
+  export type VehicleQueueCreateNestedOneWithoutTripsInput = {
+    create?: XOR<VehicleQueueCreateWithoutTripsInput, VehicleQueueUncheckedCreateWithoutTripsInput>
+    connectOrCreate?: VehicleQueueCreateOrConnectWithoutTripsInput
+    connect?: VehicleQueueWhereUniqueInput
+  }
+
+  export type VehicleUpdateOneRequiredWithoutTripsNestedInput = {
+    create?: XOR<VehicleCreateWithoutTripsInput, VehicleUncheckedCreateWithoutTripsInput>
+    connectOrCreate?: VehicleCreateOrConnectWithoutTripsInput
+    upsert?: VehicleUpsertWithoutTripsInput
+    connect?: VehicleWhereUniqueInput
+    update?: XOR<XOR<VehicleUpdateToOneWithWhereWithoutTripsInput, VehicleUpdateWithoutTripsInput>, VehicleUncheckedUpdateWithoutTripsInput>
+  }
+
+  export type VehicleQueueUpdateOneRequiredWithoutTripsNestedInput = {
+    create?: XOR<VehicleQueueCreateWithoutTripsInput, VehicleQueueUncheckedCreateWithoutTripsInput>
+    connectOrCreate?: VehicleQueueCreateOrConnectWithoutTripsInput
+    upsert?: VehicleQueueUpsertWithoutTripsInput
+    connect?: VehicleQueueWhereUniqueInput
+    update?: XOR<XOR<VehicleQueueUpdateToOneWithWhereWithoutTripsInput, VehicleQueueUpdateWithoutTripsInput>, VehicleQueueUncheckedUpdateWithoutTripsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -22792,29 +22853,6 @@ export namespace Prisma {
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
   }
-  export type NestedJsonFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
-
-  export type NestedJsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type BookingCreateWithoutCreatedByStaffInput = {
     id: string
@@ -22822,13 +22860,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     createdOffline?: boolean
@@ -22846,13 +22884,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     verifiedById?: string | null
@@ -22878,13 +22916,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     createdOffline?: boolean
@@ -22902,13 +22940,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     createdOffline?: boolean
@@ -22988,13 +23026,13 @@ export namespace Prisma {
     totalAmount?: FloatFilter<"Booking"> | number
     bookingSource?: StringFilter<"Booking"> | string
     bookingType?: StringFilter<"Booking"> | string
-    customerName?: StringNullableFilter<"Booking"> | string | null
+    userId?: StringNullableFilter<"Booking"> | string | null
     customerPhone?: StringNullableFilter<"Booking"> | string | null
     onlineTicketId?: StringNullableFilter<"Booking"> | string | null
     paymentStatus?: StringFilter<"Booking"> | string
     paymentMethod?: StringFilter<"Booking"> | string
+    paymentProcessedAt?: DateTimeNullableFilter<"Booking"> | Date | string | null
     verificationCode?: StringFilter<"Booking"> | string
-    qrCode?: StringNullableFilter<"Booking"> | string | null
     isVerified?: BoolFilter<"Booking"> | boolean
     verifiedAt?: DateTimeNullableFilter<"Booking"> | Date | string | null
     verifiedById?: StringNullableFilter<"Booking"> | string | null
@@ -23137,6 +23175,7 @@ export namespace Prisma {
     syncedAt: Date | string
     queueEntries?: VehicleQueueCreateNestedManyWithoutVehicleInput
     authorizedStations?: VehicleAuthorizedStationCreateNestedManyWithoutVehicleInput
+    trips?: TripCreateNestedManyWithoutVehicleInput
   }
 
   export type VehicleUncheckedCreateWithoutDriverInput = {
@@ -23151,6 +23190,7 @@ export namespace Prisma {
     syncedAt: Date | string
     queueEntries?: VehicleQueueUncheckedCreateNestedManyWithoutVehicleInput
     authorizedStations?: VehicleAuthorizedStationUncheckedCreateNestedManyWithoutVehicleInput
+    trips?: TripUncheckedCreateNestedManyWithoutVehicleInput
   }
 
   export type VehicleCreateOrConnectWithoutDriverInput = {
@@ -23181,6 +23221,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     queueEntries?: VehicleQueueUpdateManyWithoutVehicleNestedInput
     authorizedStations?: VehicleAuthorizedStationUpdateManyWithoutVehicleNestedInput
+    trips?: TripUpdateManyWithoutVehicleNestedInput
   }
 
   export type VehicleUncheckedUpdateWithoutDriverInput = {
@@ -23195,6 +23236,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     queueEntries?: VehicleQueueUncheckedUpdateManyWithoutVehicleNestedInput
     authorizedStations?: VehicleAuthorizedStationUncheckedUpdateManyWithoutVehicleNestedInput
+    trips?: TripUncheckedUpdateManyWithoutVehicleNestedInput
   }
 
   export type DriverCreateWithoutVehicleInput = {
@@ -23245,6 +23287,7 @@ export namespace Prisma {
     actualDeparture?: Date | string | null
     syncedAt: Date | string
     bookings?: BookingCreateNestedManyWithoutQueueInput
+    trips?: TripCreateNestedManyWithoutQueueInput
   }
 
   export type VehicleQueueUncheckedCreateWithoutVehicleInput = {
@@ -23262,6 +23305,7 @@ export namespace Prisma {
     actualDeparture?: Date | string | null
     syncedAt: Date | string
     bookings?: BookingUncheckedCreateNestedManyWithoutQueueInput
+    trips?: TripUncheckedCreateNestedManyWithoutQueueInput
   }
 
   export type VehicleQueueCreateOrConnectWithoutVehicleInput = {
@@ -23295,6 +23339,42 @@ export namespace Prisma {
 
   export type VehicleAuthorizedStationCreateManyVehicleInputEnvelope = {
     data: VehicleAuthorizedStationCreateManyVehicleInput | VehicleAuthorizedStationCreateManyVehicleInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TripCreateWithoutVehicleInput = {
+    id?: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
+    syncedAt?: Date | string | null
+    createdAt?: Date | string
+    queue: VehicleQueueCreateNestedOneWithoutTripsInput
+  }
+
+  export type TripUncheckedCreateWithoutVehicleInput = {
+    id?: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    queueId: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
+    syncedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type TripCreateOrConnectWithoutVehicleInput = {
+    where: TripWhereUniqueInput
+    create: XOR<TripCreateWithoutVehicleInput, TripUncheckedCreateWithoutVehicleInput>
+  }
+
+  export type TripCreateManyVehicleInputEnvelope = {
+    data: TripCreateManyVehicleInput | TripCreateManyVehicleInput[]
     skipDuplicates?: boolean
   }
 
@@ -23400,6 +23480,39 @@ export namespace Prisma {
     syncedAt?: DateTimeFilter<"VehicleAuthorizedStation"> | Date | string
   }
 
+  export type TripUpsertWithWhereUniqueWithoutVehicleInput = {
+    where: TripWhereUniqueInput
+    update: XOR<TripUpdateWithoutVehicleInput, TripUncheckedUpdateWithoutVehicleInput>
+    create: XOR<TripCreateWithoutVehicleInput, TripUncheckedCreateWithoutVehicleInput>
+  }
+
+  export type TripUpdateWithWhereUniqueWithoutVehicleInput = {
+    where: TripWhereUniqueInput
+    data: XOR<TripUpdateWithoutVehicleInput, TripUncheckedUpdateWithoutVehicleInput>
+  }
+
+  export type TripUpdateManyWithWhereWithoutVehicleInput = {
+    where: TripScalarWhereInput
+    data: XOR<TripUpdateManyMutationInput, TripUncheckedUpdateManyWithoutVehicleInput>
+  }
+
+  export type TripScalarWhereInput = {
+    AND?: TripScalarWhereInput | TripScalarWhereInput[]
+    OR?: TripScalarWhereInput[]
+    NOT?: TripScalarWhereInput | TripScalarWhereInput[]
+    id?: StringFilter<"Trip"> | string
+    vehicleId?: StringFilter<"Trip"> | string
+    licensePlate?: StringFilter<"Trip"> | string
+    destinationId?: StringFilter<"Trip"> | string
+    destinationName?: StringFilter<"Trip"> | string
+    queueId?: StringFilter<"Trip"> | string
+    seatsBooked?: IntFilter<"Trip"> | number
+    startTime?: DateTimeFilter<"Trip"> | Date | string
+    syncStatus?: StringFilter<"Trip"> | string
+    syncedAt?: DateTimeNullableFilter<"Trip"> | Date | string | null
+    createdAt?: DateTimeFilter<"Trip"> | Date | string
+  }
+
   export type VehicleCreateWithoutAuthorizedStationsInput = {
     id: string
     licensePlate: string
@@ -23412,6 +23525,7 @@ export namespace Prisma {
     syncedAt: Date | string
     driver?: DriverCreateNestedOneWithoutVehicleInput
     queueEntries?: VehicleQueueCreateNestedManyWithoutVehicleInput
+    trips?: TripCreateNestedManyWithoutVehicleInput
   }
 
   export type VehicleUncheckedCreateWithoutAuthorizedStationsInput = {
@@ -23426,6 +23540,7 @@ export namespace Prisma {
     syncedAt: Date | string
     driver?: DriverUncheckedCreateNestedOneWithoutVehicleInput
     queueEntries?: VehicleQueueUncheckedCreateNestedManyWithoutVehicleInput
+    trips?: TripUncheckedCreateNestedManyWithoutVehicleInput
   }
 
   export type VehicleCreateOrConnectWithoutAuthorizedStationsInput = {
@@ -23456,6 +23571,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     driver?: DriverUpdateOneWithoutVehicleNestedInput
     queueEntries?: VehicleQueueUpdateManyWithoutVehicleNestedInput
+    trips?: TripUpdateManyWithoutVehicleNestedInput
   }
 
   export type VehicleUncheckedUpdateWithoutAuthorizedStationsInput = {
@@ -23470,6 +23586,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     driver?: DriverUncheckedUpdateOneWithoutVehicleNestedInput
     queueEntries?: VehicleQueueUncheckedUpdateManyWithoutVehicleNestedInput
+    trips?: TripUncheckedUpdateManyWithoutVehicleNestedInput
   }
 
   export type VehicleCreateWithoutQueueEntriesInput = {
@@ -23484,6 +23601,7 @@ export namespace Prisma {
     syncedAt: Date | string
     driver?: DriverCreateNestedOneWithoutVehicleInput
     authorizedStations?: VehicleAuthorizedStationCreateNestedManyWithoutVehicleInput
+    trips?: TripCreateNestedManyWithoutVehicleInput
   }
 
   export type VehicleUncheckedCreateWithoutQueueEntriesInput = {
@@ -23498,6 +23616,7 @@ export namespace Prisma {
     syncedAt: Date | string
     driver?: DriverUncheckedCreateNestedOneWithoutVehicleInput
     authorizedStations?: VehicleAuthorizedStationUncheckedCreateNestedManyWithoutVehicleInput
+    trips?: TripUncheckedCreateNestedManyWithoutVehicleInput
   }
 
   export type VehicleCreateOrConnectWithoutQueueEntriesInput = {
@@ -23511,13 +23630,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     createdOffline?: boolean
@@ -23534,13 +23653,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     verifiedById?: string | null
@@ -23558,6 +23677,42 @@ export namespace Prisma {
 
   export type BookingCreateManyQueueInputEnvelope = {
     data: BookingCreateManyQueueInput | BookingCreateManyQueueInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TripCreateWithoutQueueInput = {
+    id?: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
+    syncedAt?: Date | string | null
+    createdAt?: Date | string
+    vehicle: VehicleCreateNestedOneWithoutTripsInput
+  }
+
+  export type TripUncheckedCreateWithoutQueueInput = {
+    id?: string
+    vehicleId: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
+    syncedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type TripCreateOrConnectWithoutQueueInput = {
+    where: TripWhereUniqueInput
+    create: XOR<TripCreateWithoutQueueInput, TripUncheckedCreateWithoutQueueInput>
+  }
+
+  export type TripCreateManyQueueInputEnvelope = {
+    data: TripCreateManyQueueInput | TripCreateManyQueueInput[]
     skipDuplicates?: boolean
   }
 
@@ -23584,6 +23739,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     driver?: DriverUpdateOneWithoutVehicleNestedInput
     authorizedStations?: VehicleAuthorizedStationUpdateManyWithoutVehicleNestedInput
+    trips?: TripUpdateManyWithoutVehicleNestedInput
   }
 
   export type VehicleUncheckedUpdateWithoutQueueEntriesInput = {
@@ -23598,6 +23754,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     driver?: DriverUncheckedUpdateOneWithoutVehicleNestedInput
     authorizedStations?: VehicleAuthorizedStationUncheckedUpdateManyWithoutVehicleNestedInput
+    trips?: TripUncheckedUpdateManyWithoutVehicleNestedInput
   }
 
   export type BookingUpsertWithWhereUniqueWithoutQueueInput = {
@@ -23614,6 +23771,22 @@ export namespace Prisma {
   export type BookingUpdateManyWithWhereWithoutQueueInput = {
     where: BookingScalarWhereInput
     data: XOR<BookingUpdateManyMutationInput, BookingUncheckedUpdateManyWithoutQueueInput>
+  }
+
+  export type TripUpsertWithWhereUniqueWithoutQueueInput = {
+    where: TripWhereUniqueInput
+    update: XOR<TripUpdateWithoutQueueInput, TripUncheckedUpdateWithoutQueueInput>
+    create: XOR<TripCreateWithoutQueueInput, TripUncheckedCreateWithoutQueueInput>
+  }
+
+  export type TripUpdateWithWhereUniqueWithoutQueueInput = {
+    where: TripWhereUniqueInput
+    data: XOR<TripUpdateWithoutQueueInput, TripUncheckedUpdateWithoutQueueInput>
+  }
+
+  export type TripUpdateManyWithWhereWithoutQueueInput = {
+    where: TripScalarWhereInput
+    data: XOR<TripUpdateManyMutationInput, TripUncheckedUpdateManyWithoutQueueInput>
   }
 
   export type VehicleScheduleCreateWithoutRouteInput = {
@@ -23750,6 +23923,7 @@ export namespace Prisma {
     actualDeparture?: Date | string | null
     syncedAt: Date | string
     vehicle: VehicleCreateNestedOneWithoutQueueEntriesInput
+    trips?: TripCreateNestedManyWithoutQueueInput
   }
 
   export type VehicleQueueUncheckedCreateWithoutBookingsInput = {
@@ -23767,6 +23941,7 @@ export namespace Prisma {
     estimatedDeparture?: Date | string | null
     actualDeparture?: Date | string | null
     syncedAt: Date | string
+    trips?: TripUncheckedCreateNestedManyWithoutQueueInput
   }
 
   export type VehicleQueueCreateOrConnectWithoutBookingsInput = {
@@ -23866,6 +24041,7 @@ export namespace Prisma {
     actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     vehicle?: VehicleUpdateOneRequiredWithoutQueueEntriesNestedInput
+    trips?: TripUpdateManyWithoutQueueNestedInput
   }
 
   export type VehicleQueueUncheckedUpdateWithoutBookingsInput = {
@@ -23883,6 +24059,7 @@ export namespace Prisma {
     estimatedDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    trips?: TripUncheckedUpdateManyWithoutQueueNestedInput
   }
 
   export type StaffUpsertWithoutBookingsInput = {
@@ -23963,6 +24140,170 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutStaffNestedInput
   }
 
+  export type VehicleCreateWithoutTripsInput = {
+    id: string
+    licensePlate: string
+    capacity: number
+    model?: string | null
+    year?: number | null
+    color?: string | null
+    isActive?: boolean
+    isAvailable?: boolean
+    syncedAt: Date | string
+    driver?: DriverCreateNestedOneWithoutVehicleInput
+    queueEntries?: VehicleQueueCreateNestedManyWithoutVehicleInput
+    authorizedStations?: VehicleAuthorizedStationCreateNestedManyWithoutVehicleInput
+  }
+
+  export type VehicleUncheckedCreateWithoutTripsInput = {
+    id: string
+    licensePlate: string
+    capacity: number
+    model?: string | null
+    year?: number | null
+    color?: string | null
+    isActive?: boolean
+    isAvailable?: boolean
+    syncedAt: Date | string
+    driver?: DriverUncheckedCreateNestedOneWithoutVehicleInput
+    queueEntries?: VehicleQueueUncheckedCreateNestedManyWithoutVehicleInput
+    authorizedStations?: VehicleAuthorizedStationUncheckedCreateNestedManyWithoutVehicleInput
+  }
+
+  export type VehicleCreateOrConnectWithoutTripsInput = {
+    where: VehicleWhereUniqueInput
+    create: XOR<VehicleCreateWithoutTripsInput, VehicleUncheckedCreateWithoutTripsInput>
+  }
+
+  export type VehicleQueueCreateWithoutTripsInput = {
+    id: string
+    destinationId: string
+    destinationName: string
+    queueType?: string
+    queuePosition: number
+    status?: string
+    enteredAt: Date | string
+    availableSeats: number
+    totalSeats: number
+    basePrice: number
+    estimatedDeparture?: Date | string | null
+    actualDeparture?: Date | string | null
+    syncedAt: Date | string
+    vehicle: VehicleCreateNestedOneWithoutQueueEntriesInput
+    bookings?: BookingCreateNestedManyWithoutQueueInput
+  }
+
+  export type VehicleQueueUncheckedCreateWithoutTripsInput = {
+    id: string
+    vehicleId: string
+    destinationId: string
+    destinationName: string
+    queueType?: string
+    queuePosition: number
+    status?: string
+    enteredAt: Date | string
+    availableSeats: number
+    totalSeats: number
+    basePrice: number
+    estimatedDeparture?: Date | string | null
+    actualDeparture?: Date | string | null
+    syncedAt: Date | string
+    bookings?: BookingUncheckedCreateNestedManyWithoutQueueInput
+  }
+
+  export type VehicleQueueCreateOrConnectWithoutTripsInput = {
+    where: VehicleQueueWhereUniqueInput
+    create: XOR<VehicleQueueCreateWithoutTripsInput, VehicleQueueUncheckedCreateWithoutTripsInput>
+  }
+
+  export type VehicleUpsertWithoutTripsInput = {
+    update: XOR<VehicleUpdateWithoutTripsInput, VehicleUncheckedUpdateWithoutTripsInput>
+    create: XOR<VehicleCreateWithoutTripsInput, VehicleUncheckedCreateWithoutTripsInput>
+    where?: VehicleWhereInput
+  }
+
+  export type VehicleUpdateToOneWithWhereWithoutTripsInput = {
+    where?: VehicleWhereInput
+    data: XOR<VehicleUpdateWithoutTripsInput, VehicleUncheckedUpdateWithoutTripsInput>
+  }
+
+  export type VehicleUpdateWithoutTripsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    driver?: DriverUpdateOneWithoutVehicleNestedInput
+    queueEntries?: VehicleQueueUpdateManyWithoutVehicleNestedInput
+    authorizedStations?: VehicleAuthorizedStationUpdateManyWithoutVehicleNestedInput
+  }
+
+  export type VehicleUncheckedUpdateWithoutTripsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    driver?: DriverUncheckedUpdateOneWithoutVehicleNestedInput
+    queueEntries?: VehicleQueueUncheckedUpdateManyWithoutVehicleNestedInput
+    authorizedStations?: VehicleAuthorizedStationUncheckedUpdateManyWithoutVehicleNestedInput
+  }
+
+  export type VehicleQueueUpsertWithoutTripsInput = {
+    update: XOR<VehicleQueueUpdateWithoutTripsInput, VehicleQueueUncheckedUpdateWithoutTripsInput>
+    create: XOR<VehicleQueueCreateWithoutTripsInput, VehicleQueueUncheckedCreateWithoutTripsInput>
+    where?: VehicleQueueWhereInput
+  }
+
+  export type VehicleQueueUpdateToOneWithWhereWithoutTripsInput = {
+    where?: VehicleQueueWhereInput
+    data: XOR<VehicleQueueUpdateWithoutTripsInput, VehicleQueueUncheckedUpdateWithoutTripsInput>
+  }
+
+  export type VehicleQueueUpdateWithoutTripsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    queueType?: StringFieldUpdateOperationsInput | string
+    queuePosition?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    enteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    availableSeats?: IntFieldUpdateOperationsInput | number
+    totalSeats?: IntFieldUpdateOperationsInput | number
+    basePrice?: FloatFieldUpdateOperationsInput | number
+    estimatedDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    vehicle?: VehicleUpdateOneRequiredWithoutQueueEntriesNestedInput
+    bookings?: BookingUpdateManyWithoutQueueNestedInput
+  }
+
+  export type VehicleQueueUncheckedUpdateWithoutTripsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vehicleId?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    queueType?: StringFieldUpdateOperationsInput | string
+    queuePosition?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    enteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    availableSeats?: IntFieldUpdateOperationsInput | number
+    totalSeats?: IntFieldUpdateOperationsInput | number
+    basePrice?: FloatFieldUpdateOperationsInput | number
+    estimatedDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bookings?: BookingUncheckedUpdateManyWithoutQueueNestedInput
+  }
+
   export type BookingCreateManyCreatedByStaffInput = {
     id: string
     queueId: string
@@ -23970,13 +24311,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     verifiedById?: string | null
@@ -23993,13 +24334,13 @@ export namespace Prisma {
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     createdOffline?: boolean
@@ -24027,13 +24368,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdOffline?: BoolFieldUpdateOperationsInput | boolean
@@ -24051,13 +24392,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifiedById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24074,13 +24415,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifiedById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24096,13 +24437,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdOffline?: BoolFieldUpdateOperationsInput | boolean
@@ -24120,13 +24461,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdOffline?: BoolFieldUpdateOperationsInput | boolean
@@ -24143,13 +24484,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdOffline?: BoolFieldUpdateOperationsInput | boolean
@@ -24218,6 +24559,19 @@ export namespace Prisma {
     syncedAt: Date | string
   }
 
+  export type TripCreateManyVehicleInput = {
+    id?: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    queueId: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
+    syncedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
   export type VehicleQueueUpdateWithoutVehicleInput = {
     id?: StringFieldUpdateOperationsInput | string
     destinationId?: StringFieldUpdateOperationsInput | string
@@ -24233,6 +24587,7 @@ export namespace Prisma {
     actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookings?: BookingUpdateManyWithoutQueueNestedInput
+    trips?: TripUpdateManyWithoutQueueNestedInput
   }
 
   export type VehicleQueueUncheckedUpdateWithoutVehicleInput = {
@@ -24250,6 +24605,7 @@ export namespace Prisma {
     actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookings?: BookingUncheckedUpdateManyWithoutQueueNestedInput
+    trips?: TripUncheckedUpdateManyWithoutQueueNestedInput
   }
 
   export type VehicleQueueUncheckedUpdateManyWithoutVehicleInput = {
@@ -24289,19 +24645,58 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type TripUpdateWithoutVehicleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    syncStatus?: StringFieldUpdateOperationsInput | string
+    syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queue?: VehicleQueueUpdateOneRequiredWithoutTripsNestedInput
+  }
+
+  export type TripUncheckedUpdateWithoutVehicleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    queueId?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    syncStatus?: StringFieldUpdateOperationsInput | string
+    syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TripUncheckedUpdateManyWithoutVehicleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    queueId?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    syncStatus?: StringFieldUpdateOperationsInput | string
+    syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type BookingCreateManyQueueInput = {
     id: string
     seatsBooked: number
     totalAmount: number
     bookingSource: string
     bookingType?: string
-    customerName?: string | null
+    userId?: string | null
     customerPhone?: string | null
     onlineTicketId?: string | null
     paymentStatus?: string
     paymentMethod?: string
+    paymentProcessedAt?: Date | string | null
     verificationCode: string
-    qrCode?: string | null
     isVerified?: boolean
     verifiedAt?: Date | string | null
     verifiedById?: string | null
@@ -24312,19 +24707,32 @@ export namespace Prisma {
     syncStatus?: string
   }
 
+  export type TripCreateManyQueueInput = {
+    id?: string
+    vehicleId: string
+    licensePlate: string
+    destinationId: string
+    destinationName: string
+    seatsBooked: number
+    startTime?: Date | string
+    syncStatus?: string
+    syncedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
   export type BookingUpdateWithoutQueueInput = {
     id?: StringFieldUpdateOperationsInput | string
     seatsBooked?: IntFieldUpdateOperationsInput | number
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdOffline?: BoolFieldUpdateOperationsInput | boolean
@@ -24341,13 +24749,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifiedById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24364,13 +24772,13 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     bookingSource?: StringFieldUpdateOperationsInput | string
     bookingType?: StringFieldUpdateOperationsInput | string
-    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     onlineTicketId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentProcessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verificationCode?: StringFieldUpdateOperationsInput | string
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifiedById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24379,6 +24787,45 @@ export namespace Prisma {
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     syncStatus?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type TripUpdateWithoutQueueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    syncStatus?: StringFieldUpdateOperationsInput | string
+    syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    vehicle?: VehicleUpdateOneRequiredWithoutTripsNestedInput
+  }
+
+  export type TripUncheckedUpdateWithoutQueueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vehicleId?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    syncStatus?: StringFieldUpdateOperationsInput | string
+    syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TripUncheckedUpdateManyWithoutQueueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    vehicleId?: StringFieldUpdateOperationsInput | string
+    licensePlate?: StringFieldUpdateOperationsInput | string
+    destinationId?: StringFieldUpdateOperationsInput | string
+    destinationName?: StringFieldUpdateOperationsInput | string
+    seatsBooked?: IntFieldUpdateOperationsInput | number
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    syncStatus?: StringFieldUpdateOperationsInput | string
+    syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type VehicleScheduleCreateManyRouteInput = {

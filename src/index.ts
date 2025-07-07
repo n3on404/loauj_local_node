@@ -11,6 +11,7 @@ import createQueueRouter from './routes/queue';
 import createOvernightQueueRouter from './routes/overnightQueue';
 import createQueueBookingRouter from './routes/queueBooking';
 import createCashBookingRouter from './routes/cashBooking';
+import createWebSocketRouter from './routes/websocket';
 import bookingRoutes from './routes/booking';
 import vehicleRoutes from './routes/vehicle';
 import stationRoutes from './routes/station';
@@ -24,6 +25,8 @@ import { requestLogger } from './middleware/requestLogger';
 // Import services
 import { SyncService } from './services/syncService';
 import { WebSocketService } from './websocket/webSocketService';
+import { AutoTripSyncService } from './services/autoTripSyncService';
+import { createAutoTripSyncRouter } from './routes/autoTripSync';
 
 const app = express();
 
@@ -52,6 +55,11 @@ if (env.ENABLE_REQUEST_LOGGING) {
 // Custom request logger
 app.use(requestLogger);
 
+// Initialize services
+let syncService: SyncService;
+let webSocketService: WebSocketService;
+let autoTripSyncService: AutoTripSyncService;
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   const dbHealth = await import('./config/database').then(db => db.healthCheck());
@@ -65,39 +73,6 @@ app.get('/health', async (req, res) => {
     uptime: process.uptime(),
   });
 });
-
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/station', stationRoutes);
-app.use('/api/sync', syncRoutes);
-
-// Initialize queue routes (without WebSocket service initially)
-const queueRoutes = createQueueRouter();
-app.use('/api/queue', queueRoutes);
-
-// Initialize overnight queue routes (without WebSocket service initially)
-const overnightQueueRoutes = createOvernightQueueRouter();
-app.use('/api/overnight-queue', overnightQueueRoutes);
-
-// Initialize queue booking routes (without WebSocket service initially)
-const queueBookingRoutes = createQueueBookingRouter();
-app.use('/api/queue-booking', queueBookingRoutes);
-
-// Initialize simplified cash booking routes (without WebSocket service initially)
-const cashBookingRoutes = createCashBookingRouter();
-app.use('/api/cash-booking', cashBookingRoutes);
-
-// 404 handler
-app.use(notFound);
-
-// Error handling middleware
-app.use(errorHandler);
-
-// Initialize services
-let syncService: SyncService;
-let webSocketService: WebSocketService;
 
 const startServer = async () => {
   try {
@@ -115,9 +90,49 @@ const startServer = async () => {
     // Initialize WebSocket service for central server communication
     webSocketService = new WebSocketService();
     await webSocketService.connect();
+    
+    // Initialize auto trip sync service
+    autoTripSyncService = new AutoTripSyncService(webSocketService);
+    await autoTripSyncService.start();
+    
+    // Create and register WebSocket routes
+    const websocketRoutes = createWebSocketRouter(webSocketService);
+    app.use('/api/websocket', websocketRoutes);
+    console.log('✅ WebSocket routes registered successfully');
 
-    // Update queue routes with WebSocket service for real-time updates
-    // Note: Routes are already registered, this just updates the WebSocket reference
+    // Create and register auto trip sync routes
+    const autoTripSyncRoutes = createAutoTripSyncRouter(autoTripSyncService);
+    app.use('/api/auto-sync', autoTripSyncRoutes);
+    console.log('✅ Auto trip sync routes registered successfully');
+
+    // API routes - register after WebSocket is initialized
+    app.use('/api/auth', authRoutes);
+    app.use('/api/bookings', bookingRoutes);
+    app.use('/api/vehicles', vehicleRoutes);
+    app.use('/api/station', stationRoutes);
+    app.use('/api/sync', syncRoutes);
+
+    // Initialize queue routes
+    const queueRoutes = createQueueRouter();
+    app.use('/api/queue', queueRoutes);
+
+    // Initialize overnight queue routes
+    const overnightQueueRoutes = createOvernightQueueRouter();
+    app.use('/api/overnight-queue', overnightQueueRoutes);
+
+    // Initialize queue booking routes
+    const queueBookingRoutes = createQueueBookingRouter();
+    app.use('/api/queue-booking', queueBookingRoutes);
+
+    // Initialize simplified cash booking routes
+    const cashBookingRoutes = createCashBookingRouter();
+    app.use('/api/cash-booking', cashBookingRoutes);
+
+    // 404 handler - add after all routes
+    app.use(notFound);
+
+    // Error handling middleware - must be last
+    app.use(errorHandler);
 
     // Start HTTP server
     const server = app.listen(env.PORT, () => {
@@ -126,6 +141,7 @@ const startServer = async () => {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 Server: http://localhost:${env.PORT}
 🏥 Health: http://localhost:${env.PORT}/health
+🔌 WebSocket: http://localhost:${env.PORT}/api/websocket/status
 🗄️  Database: ${env.DATABASE_URL}
 ⚙️  Environment: ${env.NODE_ENV}
 📍 Station: ${env.STATION_NAME || 'Not configured'}
@@ -145,6 +161,11 @@ const startServer = async () => {
         if (syncService) {
           await syncService.stop();
           console.log('🔄 Sync service stopped');
+        }
+        
+        if (autoTripSyncService) {
+          await autoTripSyncService.stop();
+          console.log('🔄 Auto trip sync service stopped');
         }
         
         if (webSocketService) {

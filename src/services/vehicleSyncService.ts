@@ -134,12 +134,39 @@ export class VehicleSyncService {
 
       console.log(`📊 Sync summary: ${vehiclesToSync.length} to sync, ${skipped} to skip`);
 
-      // Process vehicles that need syncing
+      // Process vehicles that need syncing (individually to prevent rollback issues)
       if (vehiclesToSync.length > 0) {
-        await prisma.$transaction(async (tx) => {
-          for (const vehicleData of vehiclesToSync) {
-            try {
-              // Sync vehicle FIRST (no foreign key dependencies)
+        for (const vehicleData of vehiclesToSync) {
+          try {
+            await prisma.$transaction(async (tx) => {
+              // Check if vehicle exists by license plate first
+              const existingByLicense = await tx.vehicle.findUnique({
+                where: { licensePlate: vehicleData.licensePlate }
+              });
+
+              const existingById = await tx.vehicle.findUnique({
+                where: { id: vehicleData.id }
+              });
+
+              // If there's a conflict (different ID but same license plate), handle it
+              if (existingByLicense && existingByLicense.id !== vehicleData.id) {
+                console.log(`🔄 License plate conflict detected for ${vehicleData.licensePlate}`);
+                console.log(`   Existing ID: ${existingByLicense.id}, New ID: ${vehicleData.id}`);
+                
+                // Delete the old vehicle and create the new one
+                await tx.vehicle.delete({
+                  where: { id: existingByLicense.id }
+                });
+                console.log(`🗑️ Removed old vehicle with ID: ${existingByLicense.id}`);
+              }
+
+              // If there's an existing vehicle by ID but different license plate, update it
+              if (existingById && existingById.licensePlate !== vehicleData.licensePlate) {
+                console.log(`🔄 Vehicle ID exists with different license plate`);
+                console.log(`   ID: ${vehicleData.id}, Old LP: ${existingById.licensePlate}, New LP: ${vehicleData.licensePlate}`);
+              }
+
+              // Now safely upsert the vehicle
               await tx.vehicle.upsert({
                 where: { id: vehicleData.id },
                 create: {
@@ -167,6 +194,34 @@ export class VehicleSyncService {
 
               // Sync driver AFTER vehicle exists (has foreign key to vehicle)
               if (vehicleData.driver) {
+                // Check for existing driver with same CIN
+                const existingDriverByCin = await tx.driver.findUnique({
+                  where: { cin: vehicleData.driver.cin }
+                });
+
+                const existingDriverById = await tx.driver.findUnique({
+                  where: { id: vehicleData.driver.id }
+                });
+
+                // Handle CIN conflict - if different driver ID has same CIN, we need to handle it
+                if (existingDriverByCin && existingDriverByCin.id !== vehicleData.driver.id) {
+                  console.log(`🔄 Driver CIN conflict detected for ${vehicleData.driver.cin}`);
+                  console.log(`   Existing ID: ${existingDriverByCin.id}, New ID: ${vehicleData.driver.id}`);
+                  
+                  // Delete the old driver record
+                  await tx.driver.delete({
+                    where: { id: existingDriverByCin.id }
+                  });
+                  console.log(`🗑️ Removed old driver with ID: ${existingDriverByCin.id}`);
+                }
+
+                // If there's an existing driver by ID but different CIN, update it
+                if (existingDriverById && existingDriverById.cin !== vehicleData.driver.cin) {
+                  console.log(`🔄 Driver ID exists with different CIN`);
+                  console.log(`   ID: ${vehicleData.driver.id}, Old CIN: ${existingDriverById.cin}, New CIN: ${vehicleData.driver.cin}`);
+                }
+
+                // Now safely upsert the driver
                 await tx.driver.upsert({
                   where: { id: vehicleData.driver.id },
                   create: {
@@ -220,17 +275,17 @@ export class VehicleSyncService {
               await tx.vehicleAuthorizedStation.createMany({
                 data: authorizedStationData
               });
+            });
 
-              processed++;
-              console.log(`✅ Synced vehicle: ${vehicleData.licensePlate} (${vehicleData.id})`);
+            processed++;
+            console.log(`✅ Synced vehicle: ${vehicleData.licensePlate} (${vehicleData.id})`);
 
-            } catch (error) {
-              const errorMsg = `Failed to sync vehicle ${vehicleData.licensePlate}: ${error instanceof Error ? error.message : 'Unknown error'}`;
-              console.error(`❌ ${errorMsg}`);
-              errors.push(errorMsg);
-            }
+          } catch (error) {
+            const errorMsg = `Failed to sync vehicle ${vehicleData.licensePlate}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            console.error(`❌ ${errorMsg}`);
+            errors.push(errorMsg);
           }
-        });
+        }
       }
 
       console.log(`✅ Full vehicle sync completed: ${processed} processed, ${skipped} skipped, ${errors.length} errors`);

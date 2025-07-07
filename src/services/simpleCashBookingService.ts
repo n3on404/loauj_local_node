@@ -28,7 +28,6 @@ export interface SimpleCashBooking {
   totalAmount: number;
   routeId?: string | undefined; // Route ID if available
   ticketId: string; // This is the verification code
-  qrCode: string;
   bookingTime: Date; // Time when booking was created
   createdAt: Date;
   queuePosition: number;
@@ -206,12 +205,10 @@ export class SimpleCashBookingService {
             seatsBooked: seatsToBook,
             totalAmount: bookingAmount,
             bookingSource: 'STATION',
-            customerName: 'Cash Customer',
             customerPhone: null,
             paymentStatus: 'PAID',
             paymentMethod: 'CASH',
             verificationCode: ticketId,
-            qrCode,
             createdBy: bookingRequest.staffId
           }
         });
@@ -253,7 +250,6 @@ export class SimpleCashBookingService {
           totalAmount: booking.totalAmount,
           routeId: route?.id,
           ticketId: booking.verificationCode,
-          qrCode: booking.qrCode || '',
           bookingTime: new Date(),
           createdAt: booking.createdAt,
           queuePosition: queueInfo?.queuePosition || 0,
@@ -368,7 +364,6 @@ export class SimpleCashBookingService {
         totalAmount: updatedBooking.totalAmount,
         routeId: route?.id,
         ticketId: updatedBooking.verificationCode,
-        qrCode: updatedBooking.qrCode || '',
         bookingTime: new Date(),
         createdAt: updatedBooking.createdAt,
         queuePosition: updatedBooking.queue.queuePosition,

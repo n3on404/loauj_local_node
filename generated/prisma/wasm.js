@@ -239,13 +239,13 @@ exports.Prisma.BookingScalarFieldEnum = {
   totalAmount: 'totalAmount',
   bookingSource: 'bookingSource',
   bookingType: 'bookingType',
-  customerName: 'customerName',
+  userId: 'userId',
   customerPhone: 'customerPhone',
   onlineTicketId: 'onlineTicketId',
   paymentStatus: 'paymentStatus',
   paymentMethod: 'paymentMethod',
+  paymentProcessedAt: 'paymentProcessedAt',
   verificationCode: 'verificationCode',
-  qrCode: 'qrCode',
   isVerified: 'isVerified',
   verifiedAt: 'verifiedAt',
   verifiedById: 'verifiedById',
@@ -287,32 +287,23 @@ exports.Prisma.OfflineCustomerScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.SyncOperationScalarFieldEnum = {
+exports.Prisma.TripScalarFieldEnum = {
   id: 'id',
-  stationId: 'stationId',
-  tableName: 'tableName',
-  recordId: 'recordId',
-  operation: 'operation',
-  data: 'data',
+  vehicleId: 'vehicleId',
+  licensePlate: 'licensePlate',
+  destinationId: 'destinationId',
+  destinationName: 'destinationName',
+  queueId: 'queueId',
+  seatsBooked: 'seatsBooked',
+  startTime: 'startTime',
   syncStatus: 'syncStatus',
-  sequenceNumber: 'sequenceNumber',
-  clientRequestId: 'clientRequestId',
-  transactionId: 'transactionId',
-  retryCount: 'retryCount',
-  error: 'error',
-  syncLogId: 'syncLogId',
-  createdAt: 'createdAt',
   syncedAt: 'syncedAt',
-  resolvedAt: 'resolvedAt'
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
-};
-
-exports.Prisma.JsonNullValueInput = {
-  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -323,12 +314,6 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
-};
-
-exports.Prisma.JsonNullValueFilter = {
-  DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull,
-  AnyNull: Prisma.AnyNull
 };
 
 
@@ -346,7 +331,7 @@ exports.Prisma.ModelName = {
   SyncQueue: 'SyncQueue',
   OperationLog: 'OperationLog',
   OfflineCustomer: 'OfflineCustomer',
-  SyncOperation: 'SyncOperation'
+  Trip: 'Trip'
 };
 
 /**
