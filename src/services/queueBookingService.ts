@@ -1,5 +1,7 @@
 import { prisma } from '../config/database';
 import { WebSocketService } from '../websocket/webSocketService';
+import * as dashboardController from '../controllers/dashboardController';
+import { env } from '../config/environment';
 
 export interface BookingRequest {
   destinationId: string;
@@ -27,6 +29,7 @@ export interface QueueBooking {
   queueId: string;
   vehicleLicensePlate: string;
   destinationName: string;
+  startStationName: string; // Add current station name
   seatsBooked: number;
   totalAmount: number;
   verificationCode: string;
@@ -99,6 +102,23 @@ export class QueueBookingService {
         };
       }
 
+      // Get the base price from route table for this destination
+      let basePrice = 0;
+      try {
+        const route = await prisma.route.findUnique({
+          where: { stationId: destinationId }
+        });
+        
+        if (route && route.basePrice > 0) {
+          basePrice = route.basePrice;
+          console.log(`✅ Found base price for destination ${destinationId}: ${basePrice} TND`);
+        } else {
+          console.warn(`⚠️ No route found for destination ${destinationId}, using default price`);
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching route price for ${destinationId}:`, error);
+      }
+
       const vehicles: VehicleSeatingInfo[] = [];
       let totalAvailableSeats = 0;
 
@@ -110,7 +130,7 @@ export class QueueBookingService {
           queuePosition: entry.queuePosition,
           availableSeats: entry.availableSeats,
           totalSeats: entry.totalSeats,
-          basePrice: entry.basePrice,
+          basePrice: basePrice || entry.basePrice,
           status: entry.status,
           estimatedDeparture: entry.estimatedDeparture
         };
@@ -244,6 +264,7 @@ export class QueueBookingService {
           queueId: booking.queueId,
           vehicleLicensePlate: queueInfo?.vehicle.licensePlate || '',
           destinationName: queueInfo?.destinationName || '',
+          startStationName: env.STATION_NAME,
           seatsBooked: booking.seatsBooked,
           totalAmount: booking.totalAmount,
           verificationCode: booking.verificationCode,
@@ -355,6 +376,7 @@ export class QueueBookingService {
         queueId: booking.queueId,
         vehicleLicensePlate: booking.queue.vehicle.licensePlate,
         destinationName: booking.queue.destinationName,
+        startStationName: env.STATION_NAME,
         seatsBooked: booking.seatsBooked,
         totalAmount: booking.totalAmount,
         verificationCode: booking.verificationCode,
@@ -436,6 +458,7 @@ export class QueueBookingService {
         queueId: updatedBooking.queueId,
         vehicleLicensePlate: updatedBooking.queue.vehicle.licensePlate,
         destinationName: updatedBooking.queue.destinationName,
+        startStationName: env.STATION_NAME,
         seatsBooked: updatedBooking.seatsBooked,
         totalAmount: updatedBooking.totalAmount,
         verificationCode: updatedBooking.verificationCode,
@@ -446,8 +469,6 @@ export class QueueBookingService {
         queuePosition: updatedBooking.queue.queuePosition,
         estimatedDeparture: updatedBooking.queue.estimatedDeparture
       };
-
-      console.log(`✅ Ticket verified: ${verificationCode} by staff ${staffId}`);
 
       return {
         success: true,
@@ -605,6 +626,7 @@ export class QueueBookingService {
           queueId: booking.queueId,
           vehicleLicensePlate: queueInfo.vehicle.licensePlate,
           destinationName: queueInfo.destinationName,
+          startStationName: env.STATION_NAME,
           seatsBooked: booking.seatsBooked,
           totalAmount: booking.totalAmount,
           verificationCode: booking.verificationCode,
@@ -701,25 +723,51 @@ export class QueueBookingService {
   }
 
   /**
-   * Broadcast booking update via WebSocket
+   * Broadcast booking update and financial updates
    */
   private broadcastBookingUpdate(destinationId: string): void {
     try {
-      this.webSocketService.emit('booking_updated', {
+      // Emit queue update for real-time queue management
+      this.webSocketService.emit('queue_updated', {
         destinationId,
         timestamp: new Date().toISOString()
       });
 
-      // Add WebSocket method for booking updates
-      if (typeof (this.webSocketService as any).sendBookingUpdate === 'function') {
-        (this.webSocketService as any).sendBookingUpdate({
-          destinationId,
-          stationId: this.currentStationId,
-          timestamp: new Date().toISOString()
-        });
-      }
+      // Send queue update to central server
+      this.webSocketService.sendQueueUpdate({
+        destinationId,
+        stationId: this.currentStationId,
+        timestamp: new Date().toISOString()
+      });
+
+      console.log(`📡 Broadcast queue update for destination: ${destinationId}`);
+      
+      // Emit financial update for supervisor dashboard
+      this.emitFinancialUpdate();
     } catch (error) {
       console.error('❌ Error broadcasting booking update:', error);
+    }
+  }
+
+  /**
+   * Emit financial updates for real-time supervisor dashboard
+   */
+  private async emitFinancialUpdate(): Promise<void> {
+    try {
+      // Get updated financial stats
+      const financialStats = await dashboardController.getFinancialStats();
+      const recentTransactions = await dashboardController.getTransactionHistory(10);
+      
+      // Emit via WebSocket service for broadcasting to clients
+      this.webSocketService.emit('financial_update', {
+        financial: financialStats,
+        recentTransactions,
+        timestamp: new Date().toISOString()
+      });
+      
+      console.log('📊 Sent real-time financial update from queue booking');
+    } catch (error) {
+      console.error('❌ Error sending financial update:', error);
     }
   }
 

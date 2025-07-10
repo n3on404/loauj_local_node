@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { env } from './config/environment';
-import { testConnection } from './config/database';
+import { getConnectionInfo, testConnection } from './config/database';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -16,6 +16,11 @@ import bookingRoutes from './routes/booking';
 import vehicleRoutes from './routes/vehicle';
 import stationRoutes from './routes/station';
 import syncRoutes from './routes/sync';
+import createDashboardRouter from './routes/dashboard';
+import staffRoutes from './routes/staff';
+import dashboardRouter from './routes/dashboard';
+import routeRoutes from './routes/route';
+import driverTicketsRoutes from './routes/driverTickets';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -25,8 +30,14 @@ import { requestLogger } from './middleware/requestLogger';
 // Import services
 import { SyncService } from './services/syncService';
 import { WebSocketService } from './websocket/webSocketService';
+import { EnhancedLocalWebSocketServer } from './websocket/LocalWebSocketServer';
 import { AutoTripSyncService } from './services/autoTripSyncService';
 import { createAutoTripSyncRouter } from './routes/autoTripSync';
+import { setLocalWebSocketServer as setQueueLocalWebSocketServer } from './services/queueService';
+import { setLocalWebSocketServer as setBookingLocalWebSocketServer } from './services/simpleCashBookingService';
+import { setLocalWebSocketServer as setWebSocketRouterServer } from './routes/websocket';
+
+import * as dashboardController from './controllers/dashboardController';
 
 const app = express();
 
@@ -36,10 +47,10 @@ app.use(helmet());
 // CORS configuration
 if (env.ENABLE_CORS) {
   app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'], // Desktop app ports
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    origin: true, // Allow all origins for Tauri app compatibility
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   }));
 }
 
@@ -58,6 +69,7 @@ app.use(requestLogger);
 // Initialize services
 let syncService: SyncService;
 let webSocketService: WebSocketService;
+let localWebSocketServer: EnhancedLocalWebSocketServer;
 let autoTripSyncService: AutoTripSyncService;
 
 // Health check endpoint
@@ -71,6 +83,7 @@ app.get('/health', async (req, res) => {
     database: dbHealth,
     environment: env.NODE_ENV,
     uptime: process.uptime(),
+    connectionInfo: await getConnectionInfo(),
   });
 });
 
@@ -111,6 +124,9 @@ const startServer = async () => {
     app.use('/api/vehicles', vehicleRoutes);
     app.use('/api/station', stationRoutes);
     app.use('/api/sync', syncRoutes);
+    app.use('/api/staff', staffRoutes);
+    app.use('/api/routes', routeRoutes);
+    app.use('/api/driver-tickets', driverTicketsRoutes);
 
     // Initialize queue routes
     const queueRoutes = createQueueRouter();
@@ -128,18 +144,23 @@ const startServer = async () => {
     const cashBookingRoutes = createCashBookingRouter();
     app.use('/api/cash-booking', cashBookingRoutes);
 
+    // Initialize dashboard routes
+    const dashboardRoutes = createDashboardRouter();
+    app.use('/api/dashboard', dashboardRoutes);
+
     // 404 handler - add after all routes
     app.use(notFound);
 
     // Error handling middleware - must be last
     app.use(errorHandler);
 
-    // Start HTTP server
-    const server = app.listen(env.PORT, () => {
+    // Start HTTP server - listen on all interfaces for public access
+    const server = app.listen(env.PORT, '0.0.0.0', () => {
       console.log(`
 🚀 Louaj Local Node Server Started
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 Server: http://localhost:${env.PORT}
+🌐 Public: http://0.0.0.0:${env.PORT}
 🏥 Health: http://localhost:${env.PORT}/health
 🔌 WebSocket: http://localhost:${env.PORT}/api/websocket/status
 🗄️  Database: ${env.DATABASE_URL}
@@ -150,9 +171,30 @@ const startServer = async () => {
       `);
     });
 
+    // Initialize enhanced local WebSocket server for desktop app communication
+    localWebSocketServer = new EnhancedLocalWebSocketServer(server, webSocketService);
+    console.log('✅ Enhanced Local WebSocket Server initialized successfully');
+
+    // Set the LocalWebSocketServer instance in services and routes
+    setQueueLocalWebSocketServer(localWebSocketServer);
+    setBookingLocalWebSocketServer(localWebSocketServer);
+    setWebSocketRouterServer(localWebSocketServer);
+
+    // Set up periodic dashboard data updates (every 5 seconds)
+    const dashboardUpdateInterval = setInterval(async () => {
+      try {
+        await dashboardController.updateDashboardData(localWebSocketServer);
+      } catch (error) {
+        console.error('❌ Error updating dashboard data:', error);
+      }
+    }, 5000);
+
     // Graceful shutdown
     const gracefulShutdown = async (signal: string) => {
       console.log(`\n🛑 Received ${signal}. Shutting down gracefully...`);
+      
+      // Clear dashboard update interval
+      clearInterval(dashboardUpdateInterval);
       
       server.close(async () => {
         console.log('📡 HTTP server closed');
@@ -171,6 +213,11 @@ const startServer = async () => {
         if (webSocketService) {
           webSocketService.disconnect();
           console.log('🔌 WebSocket connection closed');
+        }
+
+        if (localWebSocketServer) {
+          await localWebSocketServer.close();
+          console.log('🔌 Local WebSocket Server closed');
         }
         
         // Close database connection

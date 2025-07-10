@@ -1,5 +1,66 @@
 import { prisma } from '../config/database';
 import { WebSocketService } from '../websocket/webSocketService';
+import { EnhancedLocalWebSocketServer } from '../websocket/LocalWebSocketServer';
+import * as dashboardController from '../controllers/dashboardController';
+
+// Add a reference to the EnhancedLocalWebSocketServer
+let localWebSocketServer: EnhancedLocalWebSocketServer | null = null;
+
+// Function to set the EnhancedLocalWebSocketServer instance
+export function setLocalWebSocketServer(wsServer: EnhancedLocalWebSocketServer) {
+  localWebSocketServer = wsServer;
+}
+
+// Enhanced notification function with financial updates
+async function notifyBookingUpdate(booking: any) {
+  try {
+    // Notify WebSocket clients about the booking update
+    if (localWebSocketServer) {
+      localWebSocketServer.notifyBookingUpdate({
+        type: 'booking_created',
+        bookingId: booking.id,
+        seatsBooked: booking.seatsBooked,
+        totalAmount: booking.totalAmount,
+        destinationName: booking.queue?.destinationName,
+        vehicleLicensePlate: booking.queue?.vehicle?.licensePlate,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Emit financial update for real-time supervisor dashboard
+    await emitFinancialUpdate();
+    
+    console.log(`📡 Sent booking update notification for booking ${booking.id}`);
+  } catch (error) {
+    console.error('❌ Error sending booking update notification:', error);
+  }
+}
+
+// New function to emit financial updates for supervisor dashboard
+async function emitFinancialUpdate() {
+  try {
+    if (localWebSocketServer) {
+      // Get updated financial stats
+      const financialStats = await dashboardController.getFinancialStats();
+      const recentTransactions = await dashboardController.getTransactionHistory(10);
+      
+      // Emit financial update event
+      localWebSocketServer.broadcast({
+        type: 'financial_update',
+        payload: {
+          financial: financialStats,
+          recentTransactions,
+          timestamp: new Date().toISOString()
+        },
+        timestamp: Date.now()
+      });
+      
+      console.log('📊 Sent real-time financial update');
+    }
+  } catch (error) {
+    console.error('❌ Error sending financial update:', error);
+  }
+}
 
 export interface SimpleCashBookingRequest {
   destinationId: string;
@@ -183,12 +244,11 @@ export class SimpleCashBookingService {
         // Get station config for start station information
         const stationConfig = await prisma.stationConfig.findFirst();
         const startStationId = stationConfig?.stationId || this.currentStationId;
-
+        
         // Find the route to get correct pricing
         const route = await prisma.route.findFirst({
           where: {
-            departureStationId: startStationId,
-            destinationStationId: bookingRequest.destinationId,
+            stationId: bookingRequest.destinationId,
             isActive: true
           }
         });
@@ -229,6 +289,17 @@ export class SimpleCashBookingService {
             data: { status: 'READY' }
           });
           console.log(`🚐 Vehicle ${vehicle.licensePlate} is now READY (fully booked)`);
+          
+          // Get queue info for trip record
+          const queueInfo = await prisma.vehicleQueue.findUnique({
+            where: { id: vehicle.queueId },
+            include: { vehicle: true }
+          });
+          
+          if (queueInfo) {
+            // Create trip record when vehicle is ready to start
+            await this.createTripRecord(vehicle.queueId, queueInfo);
+          }
         }
 
         // Get queue info for response
@@ -248,7 +319,7 @@ export class SimpleCashBookingService {
           seatsBooked: booking.seatsBooked,
           pricePerSeat: pricePerSeat,
           totalAmount: booking.totalAmount,
-          routeId: route?.id,
+          
           ticketId: booking.verificationCode,
           bookingTime: new Date(),
           createdAt: booking.createdAt,
@@ -342,8 +413,7 @@ export class SimpleCashBookingService {
       // Find the route to get correct pricing
       const route = await prisma.route.findFirst({
         where: {
-          departureStationId: startStationId,
-          destinationStationId: updatedBooking.queue.destinationId,
+          stationId: updatedBooking.queue.destinationId,
           isActive: true
         }
       });
@@ -507,6 +577,47 @@ export class SimpleCashBookingService {
       }
     } catch (error) {
       console.error('❌ Error broadcasting booking update:', error);
+    }
+  }
+
+  /**
+   * Create a trip record when a vehicle becomes READY (fully booked)
+   */
+  private async createTripRecord(queueId: string, queueInfo: any): Promise<void> {
+    try {
+      console.log(`🚛 Creating trip record for vehicle ${queueInfo.vehicle.licensePlate}`);
+      
+      // Count total booked seats for this queue
+      const bookedSeatsCount = await prisma.booking.aggregate({
+        where: { 
+          queueId: queueId,
+          paymentStatus: { in: ['PAID', 'PENDING'] } // Include both paid and pending bookings
+        },
+        _sum: {
+          seatsBooked: true
+        }
+      });
+
+      const totalSeatsBooked = bookedSeatsCount._sum.seatsBooked || 0;
+
+      const trip = await prisma.trip.create({
+        data: {
+          vehicleId: queueInfo.vehicleId,
+          licensePlate: queueInfo.vehicle.licensePlate,
+          destinationId: queueInfo.destinationId,
+          destinationName: queueInfo.destinationName,
+          queueId: queueId,
+          seatsBooked: totalSeatsBooked,
+          startTime: new Date(),
+          syncStatus: 'PENDING'
+        }
+      });
+
+      console.log(`✅ Trip record created: ${trip.id} for vehicle ${queueInfo.vehicle.licensePlate} to ${queueInfo.destinationName}`);
+      console.log(`🎫 Total seats booked: ${totalSeatsBooked}`);
+
+    } catch (error) {
+      console.error('❌ Error creating trip record:', error);
     }
   }
 }

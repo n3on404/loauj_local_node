@@ -1,4 +1,6 @@
+import axios from 'axios';
 import { prisma } from '../config/database';
+import { env } from '../config/environment';
 
 export interface VehicleData {
   id: string;
@@ -474,6 +476,173 @@ export class VehicleSyncService {
       const errorMsg = `Failed to delete vehicle ${vehicleId}: ${error instanceof Error ? error.message : 'Unknown error'}`;
       console.error(`❌ ${errorMsg}`);
       return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * Ban a vehicle locally and sync to central server
+   */
+  async banVehicle(vehicleId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Update local DB
+      await prisma.vehicle.update({
+        where: { id: vehicleId },
+        data: { isBanned: true, isActive: false, syncedAt: new Date() }
+      });
+      // Sync ban status to central server
+      try {
+        await axios.post(`${env.CENTRAL_SERVER_URL}/api/v1/vehicles/${vehicleId}/ban`);
+      } catch (err: any) {
+        // Log but do not fail the local ban if central sync fails
+        console.error('Failed to sync ban to central server:', err.message || err);
+      }
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to ban vehicle' };
+    }
+  }
+
+  /**
+   * Forward driver account request to central server
+   */
+  async forwardDriverRequest(data: any): Promise<any> {
+    try {
+      const response = await axios.post(`${env.CENTRAL_SERVER_URL}/api/v1/vehicles/request`, data);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  }
+
+  /**
+   * Forward fetch pending requests to central server
+   */
+  async forwardPendingRequests(authHeader?: string): Promise<any> {
+    try {
+      const response = await axios.get(
+        `${env.CENTRAL_SERVER_URL}/api/v1/vehicles/pending`,
+        authHeader ? { headers: { Authorization: authHeader } } : undefined
+      );
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  }
+
+  /**
+   * Forward approve request to central server
+   */
+  async forwardApproveRequest(id: string, authHeader?: string): Promise<any> {
+    try {
+      const response = await axios.post(
+        `${env.CENTRAL_SERVER_URL}/api/v1/vehicles/${id}/approve`,
+        {},
+        authHeader ? { headers: { Authorization: authHeader } } : undefined
+      );
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  }
+
+  /**
+   * Forward deny request to central server
+   */
+  async forwardDenyRequest(id: string, authHeader?: string): Promise<any> {
+    try {
+      const response = await axios.post(
+        `${env.CENTRAL_SERVER_URL}/api/v1/vehicles/${id}/deny`,
+        {},
+        authHeader ? { headers: { Authorization: authHeader } } : undefined
+      );
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  }
+
+  /**
+   * Forward governorates request to central server
+   */
+  async forwardGovernorates(): Promise<any> {
+    try {
+      const response = await axios.get(`${env.CENTRAL_SERVER_URL}/api/v1/vehicles/governorates`);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  }
+
+  /**
+   * Forward delegations request to central server
+   */
+  async forwardDelegations(governorateId: string): Promise<any> {
+    try {
+      const response = await axios.get(`${env.CENTRAL_SERVER_URL}/api/v1/vehicles/delegations/${governorateId}`);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  }
+
+  /**
+   * Forward stations request to central server
+   */
+  async forwardStations(): Promise<any> {
+    try {
+      const response = await axios.get(`${env.CENTRAL_SERVER_URL}/api/v1/vehicles/stations`);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  }
+
+  /**
+   * Forward create station request to central server and sync local DB
+   */
+  async forwardCreateStation(data: any, authHeader?: string): Promise<any> {
+    try {
+      const headers = authHeader ? { headers: { Authorization: authHeader } } : undefined;
+      const response = await axios.post(`${env.CENTRAL_SERVER_URL}/api/v1/stations`, data, headers);
+      // If success, sync the new station to local DB
+      if (response.data && response.data.success && response.data.data) {
+        // Upsert the station in the local DB
+        const station = response.data.data;
+        await prisma.stationConfig.upsert({
+          where: { stationId: station.id },
+          create: {
+            stationId: station.id,
+            stationName: station.name,
+            governorate: station.governorate?.name || station.governorate || '',
+            delegation: station.delegation?.name || station.delegation || '',
+            address: station.address || '',
+            openingTime: station.operatingHours?.openingTime || '06:00',
+            closingTime: station.operatingHours?.closingTime || '22:00',
+            isOperational: station.isOperational ?? true,
+            isOnline: station.isOnline ?? true,
+            serverVersion: station.serverVersion || '',
+            lastSync: station.lastSync ? new Date(station.lastSync) : null,
+            createdAt: station.createdAt ? new Date(station.createdAt) : new Date(),
+            updatedAt: station.updatedAt ? new Date(station.updatedAt) : new Date(),
+          },
+          update: {
+            stationName: station.name,
+            governorate: station.governorate?.name || station.governorate || '',
+            delegation: station.delegation?.name || station.delegation || '',
+            address: station.address || '',
+            openingTime: station.operatingHours?.openingTime || '06:00',
+            closingTime: station.operatingHours?.closingTime || '22:00',
+            isOperational: station.isOperational ?? true,
+            isOnline: station.isOnline ?? true,
+            serverVersion: station.serverVersion || '',
+            lastSync: station.lastSync ? new Date(station.lastSync) : null,
+            updatedAt: station.updatedAt ? new Date(station.updatedAt) : new Date(),
+          }
+        });
+      }
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || error.message };
     }
   }
 

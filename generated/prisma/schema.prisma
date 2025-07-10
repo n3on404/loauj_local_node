@@ -19,6 +19,10 @@ model StationConfig {
   stationName   String    @map("station_name")
   governorate   String
   delegation    String
+  address       String?
+  openingTime   String    @default("06:00") @map("opening_time")
+  closingTime   String    @default("22:00") @map("closing_time")
+  isOperational Boolean   @default(true) @map("is_operational")
   serverVersion String    @map("server_version")
   lastSync      DateTime? @map("last_sync")
   isOnline      Boolean   @default(false) @map("is_online")
@@ -170,16 +174,15 @@ model VehicleQueue {
 // =============== ROUTES & SCHEDULES (LOCAL) ===============
 
 model Route {
-  id                   String   @id // Same ID as central
-  departureStationId   String   @map("departure_station_id")
-  destinationStationId String   @map("destination_station_id")
-  destinationName      String   @map("destination_name") // Cached for display
-  basePrice            Float    @map("base_price") // SQLite uses REAL for decimals
-  isActive             Boolean  @default(true) @map("is_active")
-  syncedAt             DateTime @map("synced_at")
+  id          String   @id
+  stationId   String   @map("station_id")
+  stationName String   @map("station_name")
+  basePrice   Float    @map("base_price")
+  isActive    Boolean  @default(true) @map("is_active")
+  syncedAt    DateTime @map("synced_at")
 
   // Relations
-  schedules VehicleSchedule[]
+  //schedules             VehicleSchedule[]
 
   @@map("routes")
 }
@@ -196,7 +199,7 @@ model VehicleSchedule {
   syncedAt        DateTime  @map("synced_at")
 
   // Relations
-  route Route @relation(fields: [routeId], references: [id])
+  //route             Route           @relation(fields: [routeId], references: [id])
 
   @@map("vehicle_schedules")
 }

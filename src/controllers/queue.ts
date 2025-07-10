@@ -15,7 +15,16 @@ export class QueueController {
    */
   async enterQueue(req: Request, res: Response): Promise<void> {
     try {
-      const { licensePlate } = req.body;
+      const { 
+        licensePlate, 
+        destinationId, 
+        destinationName, 
+        availableSeats, 
+        totalSeats,
+        basePrice,
+        driverInfo,
+        vehicleInfo
+      } = req.body;
 
       // Validate input
       if (!licensePlate) {
@@ -26,7 +35,19 @@ export class QueueController {
         return;
       }
 
-      const result = await this.queueService.enterQueue(licensePlate);
+      // Use the enhanced enterQueue method with additional parameters
+      const result = await this.queueService.enterQueue(
+        licensePlate, 
+        {
+          destinationId,
+          destinationName,
+          availableSeats,
+          totalSeats,
+          basePrice,
+          driverInfo,
+          vehicleInfo
+        }
+      );
 
       if (result.success) {
         res.status(200).json({

@@ -126,6 +126,10 @@ exports.Prisma.StationConfigScalarFieldEnum = {
   stationName: 'stationName',
   governorate: 'governorate',
   delegation: 'delegation',
+  address: 'address',
+  openingTime: 'openingTime',
+  closingTime: 'closingTime',
+  isOperational: 'isOperational',
   serverVersion: 'serverVersion',
   lastSync: 'lastSync',
   isOnline: 'isOnline',
@@ -212,9 +216,8 @@ exports.Prisma.VehicleQueueScalarFieldEnum = {
 
 exports.Prisma.RouteScalarFieldEnum = {
   id: 'id',
-  departureStationId: 'departureStationId',
-  destinationStationId: 'destinationStationId',
-  destinationName: 'destinationName',
+  stationId: 'stationId',
+  stationName: 'stationName',
   basePrice: 'basePrice',
   isActive: 'isActive',
   syncedAt: 'syncedAt'

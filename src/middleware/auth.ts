@@ -26,9 +26,21 @@ const getAuthServiceInstance = () => {
 /**
  * Middleware to authenticate requests using JWT tokens
  * Checks local database first, then falls back to central server if connected
+ * Allows central server requests to bypass authentication
  */
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    // Allow central server requests to bypass authentication
+    if (req.headers['x-central-server'] === 'true') {
+      console.log('🔐 Central server request - bypassing authentication');
+      req.staff = {
+        role: 'CENTRAL_SERVER',
+        station: { id: process.env.STATION_ID || 'monastir-main-station' }
+      };
+      next();
+      return;
+    }
+
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -135,9 +147,37 @@ export const requireSupervisor = requireRole(['SUPERVISOR', 'ADMIN']);
 export const requireAdmin = requireRole(['ADMIN']);
 
 /**
- * Require worker role or higher (anyone)
+ * Require worker role or higher (anyone) or central server
  */
-export const requireStaff = requireRole(['WORKER', 'SUPERVISOR', 'ADMIN']);
+export const requireStaff = (req: Request, res: Response, next: NextFunction): void => {
+  // Allow central server requests
+  if (req.staff?.role === 'CENTRAL_SERVER') {
+    next();
+    return;
+  }
+  
+  // For other requests, require staff role
+  if (!req.staff) {
+    res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+      code: 'AUTH_REQUIRED'
+    });
+    return;
+  }
+
+  const allowedRoles = ['WORKER', 'SUPERVISOR', 'ADMIN'];
+  if (!allowedRoles.includes(req.staff.role)) {
+    res.status(403).json({
+      success: false,
+      message: `Access denied. Required role: ${allowedRoles.join(' or ')}`,
+      code: 'INSUFFICIENT_PERMISSIONS'
+    });
+    return;
+  }
+
+  next();
+};
 
 /**
  * Check if station is connected to central server

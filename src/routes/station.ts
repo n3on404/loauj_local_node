@@ -1,43 +1,83 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import { getStationConfig, updateStationConfig } from '../controllers/stationController';
+import { TunisiaDataService } from '../utils/tunisiaData';
 
 const router = Router();
 
 // Get station configuration
-router.get('/config', async (req: Request, res: Response): Promise<void> => {
+router.get('/config', getStationConfig);
+
+// Update station configuration
+router.put('/config', updateStationConfig);
+
+// Get all governorates (public endpoint)
+router.get('/governorates', (req, res) => {
   try {
-    // TODO: Fetch station config from database
+    const tunisiaData = TunisiaDataService.getInstance();
+    const governorates = tunisiaData.getAllGovernorates();
+    
     res.json({
       success: true,
-      data: {
-        id: 'station_1',
-        name: 'Louaj Gafsa',
-        location: {
-          governorate: 'Gafsa',
-          delegation: 'Gafsa Ville',
-          address: '123 Avenue Habib Bourguiba, Gafsa'
-        },
-        operatingHours: {
-          open: '06:00',
-          close: '22:00'
-        },
-        capacity: 200,
-        facilities: ['wifi', 'parking', 'cafe', 'restrooms'],
-        contact: {
-          phone: '+216 76 123 456',
-          email: 'gafsa@louaj.tn'
-        }
-      }
+      data: governorates
     });
   } catch (error) {
+    console.error('Error fetching governorates:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Failed to fetch governorates'
+    });
+  }
+});
+
+// Get delegations by governorate (public endpoint)
+router.get('/delegations/:governorate', (req, res) => {
+  try {
+    const { governorate } = req.params;
+    const tunisiaData = TunisiaDataService.getInstance();
+    const delegations = tunisiaData.getDelegationsByGovernorate(governorate);
+    
+    if (delegations.length === 0) {
+      res.status(404).json({
+        success: false,
+        message: 'Governorate not found'
+      });
+      return;
+    }
+    
+    res.json({
+      success: true,
+      data: delegations
+    });
+  } catch (error) {
+    console.error('Error fetching delegations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch delegations'
+    });
+  }
+});
+
+// Get all governorates with their delegations (public endpoint)
+router.get('/locations', (req, res) => {
+  try {
+    const tunisiaData = TunisiaDataService.getInstance();
+    const governoratesData = tunisiaData.getGovernoratesData();
+    
+    res.json({
+      success: true,
+      data: governoratesData
+    });
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch locations'
     });
   }
 });
 
 // Get available destinations from this station
-router.get('/destinations', async (req: Request, res: Response): Promise<void> => {
+router.get('/destinations', async (req, res) => {
   try {
     // TODO: Fetch destinations from database
     res.json({
@@ -83,33 +123,8 @@ router.get('/destinations', async (req: Request, res: Response): Promise<void> =
   }
 });
 
-// Update station configuration
-router.put('/config', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { name, operatingHours, facilities, contact } = req.body;
-    
-    // TODO: Update station config in database
-    res.json({
-      success: true,
-      message: 'Station configuration updated',
-      data: {
-        name,
-        operatingHours,
-        facilities,
-        contact,
-        updatedAt: new Date().toISOString()
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-});
-
 // Get station statistics
-router.get('/stats', async (req: Request, res: Response): Promise<void> => {
+router.get('/stats', async (req, res) => {
   try {
     const { period = 'today' } = req.query;
     

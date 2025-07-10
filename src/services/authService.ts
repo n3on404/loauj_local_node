@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import { WebSocketService } from '../websocket/webSocketService';
 import jwt from 'jsonwebtoken';
 
@@ -173,6 +173,24 @@ export class LocalAuthService {
       // Decode token to get expiration
       const decoded = jwt.decode(token) as any;
       const expiresAt = decoded?.exp ? new Date(decoded.exp * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days default
+
+      // Check if staff with this CIN already exists but with a different ID
+      const existingStaff = await prisma.staff.findUnique({
+        where: { cin: staff.cin }
+      });
+
+      if (existingStaff && existingStaff.id !== staff.id) {
+        // Delete the existing staff record to avoid unique constraint violation
+        await prisma.session.deleteMany({
+          where: { staffId: existingStaff.id }
+        });
+        
+        await prisma.staff.delete({
+          where: { id: existingStaff.id }
+        });
+        
+        console.log(`⚠️ Removed conflicting staff record with CIN ${staff.cin} but different ID`);
+      }
 
       // Store or update staff info locally
       await prisma.staff.upsert({

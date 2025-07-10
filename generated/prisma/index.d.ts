@@ -2186,37 +2186,6 @@ export namespace Prisma {
 
 
   /**
-   * Count Type RouteCountOutputType
-   */
-
-  export type RouteCountOutputType = {
-    schedules: number
-  }
-
-  export type RouteCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    schedules?: boolean | RouteCountOutputTypeCountSchedulesArgs
-  }
-
-  // Custom InputTypes
-  /**
-   * RouteCountOutputType without action
-   */
-  export type RouteCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the RouteCountOutputType
-     */
-    select?: RouteCountOutputTypeSelect<ExtArgs> | null
-  }
-
-  /**
-   * RouteCountOutputType without action
-   */
-  export type RouteCountOutputTypeCountSchedulesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: VehicleScheduleWhereInput
-  }
-
-
-  /**
    * Models
    */
 
@@ -2236,6 +2205,10 @@ export namespace Prisma {
     stationName: string | null
     governorate: string | null
     delegation: string | null
+    address: string | null
+    openingTime: string | null
+    closingTime: string | null
+    isOperational: boolean | null
     serverVersion: string | null
     lastSync: Date | null
     isOnline: boolean | null
@@ -2249,6 +2222,10 @@ export namespace Prisma {
     stationName: string | null
     governorate: string | null
     delegation: string | null
+    address: string | null
+    openingTime: string | null
+    closingTime: string | null
+    isOperational: boolean | null
     serverVersion: string | null
     lastSync: Date | null
     isOnline: boolean | null
@@ -2262,6 +2239,10 @@ export namespace Prisma {
     stationName: number
     governorate: number
     delegation: number
+    address: number
+    openingTime: number
+    closingTime: number
+    isOperational: number
     serverVersion: number
     lastSync: number
     isOnline: number
@@ -2277,6 +2258,10 @@ export namespace Prisma {
     stationName?: true
     governorate?: true
     delegation?: true
+    address?: true
+    openingTime?: true
+    closingTime?: true
+    isOperational?: true
     serverVersion?: true
     lastSync?: true
     isOnline?: true
@@ -2290,6 +2275,10 @@ export namespace Prisma {
     stationName?: true
     governorate?: true
     delegation?: true
+    address?: true
+    openingTime?: true
+    closingTime?: true
+    isOperational?: true
     serverVersion?: true
     lastSync?: true
     isOnline?: true
@@ -2303,6 +2292,10 @@ export namespace Prisma {
     stationName?: true
     governorate?: true
     delegation?: true
+    address?: true
+    openingTime?: true
+    closingTime?: true
+    isOperational?: true
     serverVersion?: true
     lastSync?: true
     isOnline?: true
@@ -2389,6 +2382,10 @@ export namespace Prisma {
     stationName: string
     governorate: string
     delegation: string
+    address: string | null
+    openingTime: string
+    closingTime: string
+    isOperational: boolean
     serverVersion: string
     lastSync: Date | null
     isOnline: boolean
@@ -2419,6 +2416,10 @@ export namespace Prisma {
     stationName?: boolean
     governorate?: boolean
     delegation?: boolean
+    address?: boolean
+    openingTime?: boolean
+    closingTime?: boolean
+    isOperational?: boolean
     serverVersion?: boolean
     lastSync?: boolean
     isOnline?: boolean
@@ -2432,6 +2433,10 @@ export namespace Prisma {
     stationName?: boolean
     governorate?: boolean
     delegation?: boolean
+    address?: boolean
+    openingTime?: boolean
+    closingTime?: boolean
+    isOperational?: boolean
     serverVersion?: boolean
     lastSync?: boolean
     isOnline?: boolean
@@ -2445,6 +2450,10 @@ export namespace Prisma {
     stationName?: boolean
     governorate?: boolean
     delegation?: boolean
+    address?: boolean
+    openingTime?: boolean
+    closingTime?: boolean
+    isOperational?: boolean
     serverVersion?: boolean
     lastSync?: boolean
     isOnline?: boolean
@@ -2458,6 +2467,10 @@ export namespace Prisma {
     stationName?: boolean
     governorate?: boolean
     delegation?: boolean
+    address?: boolean
+    openingTime?: boolean
+    closingTime?: boolean
+    isOperational?: boolean
     serverVersion?: boolean
     lastSync?: boolean
     isOnline?: boolean
@@ -2465,7 +2478,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type StationConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "stationId" | "stationName" | "governorate" | "delegation" | "serverVersion" | "lastSync" | "isOnline" | "createdAt" | "updatedAt", ExtArgs["result"]["stationConfig"]>
+  export type StationConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "stationId" | "stationName" | "governorate" | "delegation" | "address" | "openingTime" | "closingTime" | "isOperational" | "serverVersion" | "lastSync" | "isOnline" | "createdAt" | "updatedAt", ExtArgs["result"]["stationConfig"]>
 
   export type $StationConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "StationConfig"
@@ -2476,6 +2489,10 @@ export namespace Prisma {
       stationName: string
       governorate: string
       delegation: string
+      address: string | null
+      openingTime: string
+      closingTime: string
+      isOperational: boolean
       serverVersion: string
       lastSync: Date | null
       isOnline: boolean
@@ -2909,6 +2926,10 @@ export namespace Prisma {
     readonly stationName: FieldRef<"StationConfig", 'String'>
     readonly governorate: FieldRef<"StationConfig", 'String'>
     readonly delegation: FieldRef<"StationConfig", 'String'>
+    readonly address: FieldRef<"StationConfig", 'String'>
+    readonly openingTime: FieldRef<"StationConfig", 'String'>
+    readonly closingTime: FieldRef<"StationConfig", 'String'>
+    readonly isOperational: FieldRef<"StationConfig", 'Boolean'>
     readonly serverVersion: FieldRef<"StationConfig", 'String'>
     readonly lastSync: FieldRef<"StationConfig", 'DateTime'>
     readonly isOnline: FieldRef<"StationConfig", 'Boolean'>
@@ -10347,9 +10368,8 @@ export namespace Prisma {
 
   export type RouteMinAggregateOutputType = {
     id: string | null
-    departureStationId: string | null
-    destinationStationId: string | null
-    destinationName: string | null
+    stationId: string | null
+    stationName: string | null
     basePrice: number | null
     isActive: boolean | null
     syncedAt: Date | null
@@ -10357,9 +10377,8 @@ export namespace Prisma {
 
   export type RouteMaxAggregateOutputType = {
     id: string | null
-    departureStationId: string | null
-    destinationStationId: string | null
-    destinationName: string | null
+    stationId: string | null
+    stationName: string | null
     basePrice: number | null
     isActive: boolean | null
     syncedAt: Date | null
@@ -10367,9 +10386,8 @@ export namespace Prisma {
 
   export type RouteCountAggregateOutputType = {
     id: number
-    departureStationId: number
-    destinationStationId: number
-    destinationName: number
+    stationId: number
+    stationName: number
     basePrice: number
     isActive: number
     syncedAt: number
@@ -10387,9 +10405,8 @@ export namespace Prisma {
 
   export type RouteMinAggregateInputType = {
     id?: true
-    departureStationId?: true
-    destinationStationId?: true
-    destinationName?: true
+    stationId?: true
+    stationName?: true
     basePrice?: true
     isActive?: true
     syncedAt?: true
@@ -10397,9 +10414,8 @@ export namespace Prisma {
 
   export type RouteMaxAggregateInputType = {
     id?: true
-    departureStationId?: true
-    destinationStationId?: true
-    destinationName?: true
+    stationId?: true
+    stationName?: true
     basePrice?: true
     isActive?: true
     syncedAt?: true
@@ -10407,9 +10423,8 @@ export namespace Prisma {
 
   export type RouteCountAggregateInputType = {
     id?: true
-    departureStationId?: true
-    destinationStationId?: true
-    destinationName?: true
+    stationId?: true
+    stationName?: true
     basePrice?: true
     isActive?: true
     syncedAt?: true
@@ -10504,9 +10519,8 @@ export namespace Prisma {
 
   export type RouteGroupByOutputType = {
     id: string
-    departureStationId: string
-    destinationStationId: string
-    destinationName: string
+    stationId: string
+    stationName: string
     basePrice: number
     isActive: boolean
     syncedAt: Date
@@ -10533,21 +10547,17 @@ export namespace Prisma {
 
   export type RouteSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    departureStationId?: boolean
-    destinationStationId?: boolean
-    destinationName?: boolean
+    stationId?: boolean
+    stationName?: boolean
     basePrice?: boolean
     isActive?: boolean
     syncedAt?: boolean
-    schedules?: boolean | Route$schedulesArgs<ExtArgs>
-    _count?: boolean | RouteCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["route"]>
 
   export type RouteSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    departureStationId?: boolean
-    destinationStationId?: boolean
-    destinationName?: boolean
+    stationId?: boolean
+    stationName?: boolean
     basePrice?: boolean
     isActive?: boolean
     syncedAt?: boolean
@@ -10555,9 +10565,8 @@ export namespace Prisma {
 
   export type RouteSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    departureStationId?: boolean
-    destinationStationId?: boolean
-    destinationName?: boolean
+    stationId?: boolean
+    stationName?: boolean
     basePrice?: boolean
     isActive?: boolean
     syncedAt?: boolean
@@ -10565,32 +10574,22 @@ export namespace Prisma {
 
   export type RouteSelectScalar = {
     id?: boolean
-    departureStationId?: boolean
-    destinationStationId?: boolean
-    destinationName?: boolean
+    stationId?: boolean
+    stationName?: boolean
     basePrice?: boolean
     isActive?: boolean
     syncedAt?: boolean
   }
 
-  export type RouteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "departureStationId" | "destinationStationId" | "destinationName" | "basePrice" | "isActive" | "syncedAt", ExtArgs["result"]["route"]>
-  export type RouteInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    schedules?: boolean | Route$schedulesArgs<ExtArgs>
-    _count?: boolean | RouteCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type RouteIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type RouteIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type RouteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "stationId" | "stationName" | "basePrice" | "isActive" | "syncedAt", ExtArgs["result"]["route"]>
 
   export type $RoutePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Route"
-    objects: {
-      schedules: Prisma.$VehicleSchedulePayload<ExtArgs>[]
-    }
+    objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      departureStationId: string
-      destinationStationId: string
-      destinationName: string
+      stationId: string
+      stationName: string
       basePrice: number
       isActive: boolean
       syncedAt: Date
@@ -10988,7 +10987,6 @@ export namespace Prisma {
    */
   export interface Prisma__RouteClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    schedules<T extends Route$schedulesArgs<ExtArgs> = {}>(args?: Subset<T, Route$schedulesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleSchedulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -11019,9 +11017,8 @@ export namespace Prisma {
    */
   interface RouteFieldRefs {
     readonly id: FieldRef<"Route", 'String'>
-    readonly departureStationId: FieldRef<"Route", 'String'>
-    readonly destinationStationId: FieldRef<"Route", 'String'>
-    readonly destinationName: FieldRef<"Route", 'String'>
+    readonly stationId: FieldRef<"Route", 'String'>
+    readonly stationName: FieldRef<"Route", 'String'>
     readonly basePrice: FieldRef<"Route", 'Float'>
     readonly isActive: FieldRef<"Route", 'Boolean'>
     readonly syncedAt: FieldRef<"Route", 'DateTime'>
@@ -11042,10 +11039,6 @@ export namespace Prisma {
      */
     omit?: RouteOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
-    /**
      * Filter, which Route to fetch.
      */
     where: RouteWhereUniqueInput
@@ -11064,10 +11057,6 @@ export namespace Prisma {
      */
     omit?: RouteOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
-    /**
      * Filter, which Route to fetch.
      */
     where: RouteWhereUniqueInput
@@ -11085,10 +11074,6 @@ export namespace Prisma {
      * Omit specific fields from the Route
      */
     omit?: RouteOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
     /**
      * Filter, which Route to fetch.
      */
@@ -11138,10 +11123,6 @@ export namespace Prisma {
      */
     omit?: RouteOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
-    /**
      * Filter, which Route to fetch.
      */
     where?: RouteWhereInput
@@ -11190,10 +11171,6 @@ export namespace Prisma {
      */
     omit?: RouteOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
-    /**
      * Filter, which Routes to fetch.
      */
     where?: RouteWhereInput
@@ -11236,10 +11213,6 @@ export namespace Prisma {
      * Omit specific fields from the Route
      */
     omit?: RouteOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
     /**
      * The data needed to create a Route.
      */
@@ -11288,10 +11261,6 @@ export namespace Prisma {
      * Omit specific fields from the Route
      */
     omit?: RouteOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
     /**
      * The data needed to update a Route.
      */
@@ -11359,10 +11328,6 @@ export namespace Prisma {
      */
     omit?: RouteOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
-    /**
      * The filter to search for the Route to update in case it exists.
      */
     where: RouteWhereUniqueInput
@@ -11389,10 +11354,6 @@ export namespace Prisma {
      */
     omit?: RouteOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
-    /**
      * Filter which Route to delete.
      */
     where: RouteWhereUniqueInput
@@ -11413,30 +11374,6 @@ export namespace Prisma {
   }
 
   /**
-   * Route.schedules
-   */
-  export type Route$schedulesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehicleSchedule
-     */
-    select?: VehicleScheduleSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehicleSchedule
-     */
-    omit?: VehicleScheduleOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
-    where?: VehicleScheduleWhereInput
-    orderBy?: VehicleScheduleOrderByWithRelationInput | VehicleScheduleOrderByWithRelationInput[]
-    cursor?: VehicleScheduleWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: VehicleScheduleScalarFieldEnum | VehicleScheduleScalarFieldEnum[]
-  }
-
-  /**
    * Route without action
    */
   export type RouteDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -11448,10 +11385,6 @@ export namespace Prisma {
      * Omit specific fields from the Route
      */
     omit?: RouteOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RouteInclude<ExtArgs> | null
   }
 
 
@@ -11689,7 +11622,6 @@ export namespace Prisma {
     status?: boolean
     actualDeparture?: boolean
     syncedAt?: boolean
-    route?: boolean | RouteDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["vehicleSchedule"]>
 
   export type VehicleScheduleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -11702,7 +11634,6 @@ export namespace Prisma {
     status?: boolean
     actualDeparture?: boolean
     syncedAt?: boolean
-    route?: boolean | RouteDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["vehicleSchedule"]>
 
   export type VehicleScheduleSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -11715,7 +11646,6 @@ export namespace Prisma {
     status?: boolean
     actualDeparture?: boolean
     syncedAt?: boolean
-    route?: boolean | RouteDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["vehicleSchedule"]>
 
   export type VehicleScheduleSelectScalar = {
@@ -11731,21 +11661,10 @@ export namespace Prisma {
   }
 
   export type VehicleScheduleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vehicleId" | "routeId" | "departureTime" | "availableSeats" | "totalSeats" | "status" | "actualDeparture" | "syncedAt", ExtArgs["result"]["vehicleSchedule"]>
-  export type VehicleScheduleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    route?: boolean | RouteDefaultArgs<ExtArgs>
-  }
-  export type VehicleScheduleIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    route?: boolean | RouteDefaultArgs<ExtArgs>
-  }
-  export type VehicleScheduleIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    route?: boolean | RouteDefaultArgs<ExtArgs>
-  }
 
   export type $VehicleSchedulePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "VehicleSchedule"
-    objects: {
-      route: Prisma.$RoutePayload<ExtArgs>
-    }
+    objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
       vehicleId: string
@@ -12150,7 +12069,6 @@ export namespace Prisma {
    */
   export interface Prisma__VehicleScheduleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    route<T extends RouteDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RouteDefaultArgs<ExtArgs>>): Prisma__RouteClient<$Result.GetResult<Prisma.$RoutePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12206,10 +12124,6 @@ export namespace Prisma {
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
-    /**
      * Filter, which VehicleSchedule to fetch.
      */
     where: VehicleScheduleWhereUniqueInput
@@ -12228,10 +12142,6 @@ export namespace Prisma {
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
-    /**
      * Filter, which VehicleSchedule to fetch.
      */
     where: VehicleScheduleWhereUniqueInput
@@ -12249,10 +12159,6 @@ export namespace Prisma {
      * Omit specific fields from the VehicleSchedule
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
     /**
      * Filter, which VehicleSchedule to fetch.
      */
@@ -12302,10 +12208,6 @@ export namespace Prisma {
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
-    /**
      * Filter, which VehicleSchedule to fetch.
      */
     where?: VehicleScheduleWhereInput
@@ -12354,10 +12256,6 @@ export namespace Prisma {
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
-    /**
      * Filter, which VehicleSchedules to fetch.
      */
     where?: VehicleScheduleWhereInput
@@ -12401,10 +12299,6 @@ export namespace Prisma {
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
-    /**
      * The data needed to create a VehicleSchedule.
      */
     data: XOR<VehicleScheduleCreateInput, VehicleScheduleUncheckedCreateInput>
@@ -12438,10 +12332,6 @@ export namespace Prisma {
      */
     data: VehicleScheduleCreateManyInput | VehicleScheduleCreateManyInput[]
     skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -12456,10 +12346,6 @@ export namespace Prisma {
      * Omit specific fields from the VehicleSchedule
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
     /**
      * The data needed to update a VehicleSchedule.
      */
@@ -12512,10 +12398,6 @@ export namespace Prisma {
      * Limit how many VehicleSchedules to update.
      */
     limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -12530,10 +12412,6 @@ export namespace Prisma {
      * Omit specific fields from the VehicleSchedule
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
     /**
      * The filter to search for the VehicleSchedule to update in case it exists.
      */
@@ -12560,10 +12438,6 @@ export namespace Prisma {
      * Omit specific fields from the VehicleSchedule
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
     /**
      * Filter which VehicleSchedule to delete.
      */
@@ -12596,10 +12470,6 @@ export namespace Prisma {
      * Omit specific fields from the VehicleSchedule
      */
     omit?: VehicleScheduleOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleScheduleInclude<ExtArgs> | null
   }
 
 
@@ -18341,6 +18211,10 @@ export namespace Prisma {
     stationName: 'stationName',
     governorate: 'governorate',
     delegation: 'delegation',
+    address: 'address',
+    openingTime: 'openingTime',
+    closingTime: 'closingTime',
+    isOperational: 'isOperational',
     serverVersion: 'serverVersion',
     lastSync: 'lastSync',
     isOnline: 'isOnline',
@@ -18448,9 +18322,8 @@ export namespace Prisma {
 
   export const RouteScalarFieldEnum: {
     id: 'id',
-    departureStationId: 'departureStationId',
-    destinationStationId: 'destinationStationId',
-    destinationName: 'destinationName',
+    stationId: 'stationId',
+    stationName: 'stationName',
     basePrice: 'basePrice',
     isActive: 'isActive',
     syncedAt: 'syncedAt'
@@ -18602,6 +18475,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -18612,13 +18492,6 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -18662,6 +18535,10 @@ export namespace Prisma {
     stationName?: StringFilter<"StationConfig"> | string
     governorate?: StringFilter<"StationConfig"> | string
     delegation?: StringFilter<"StationConfig"> | string
+    address?: StringNullableFilter<"StationConfig"> | string | null
+    openingTime?: StringFilter<"StationConfig"> | string
+    closingTime?: StringFilter<"StationConfig"> | string
+    isOperational?: BoolFilter<"StationConfig"> | boolean
     serverVersion?: StringFilter<"StationConfig"> | string
     lastSync?: DateTimeNullableFilter<"StationConfig"> | Date | string | null
     isOnline?: BoolFilter<"StationConfig"> | boolean
@@ -18675,6 +18552,10 @@ export namespace Prisma {
     stationName?: SortOrder
     governorate?: SortOrder
     delegation?: SortOrder
+    address?: SortOrderInput | SortOrder
+    openingTime?: SortOrder
+    closingTime?: SortOrder
+    isOperational?: SortOrder
     serverVersion?: SortOrder
     lastSync?: SortOrderInput | SortOrder
     isOnline?: SortOrder
@@ -18691,6 +18572,10 @@ export namespace Prisma {
     stationName?: StringFilter<"StationConfig"> | string
     governorate?: StringFilter<"StationConfig"> | string
     delegation?: StringFilter<"StationConfig"> | string
+    address?: StringNullableFilter<"StationConfig"> | string | null
+    openingTime?: StringFilter<"StationConfig"> | string
+    closingTime?: StringFilter<"StationConfig"> | string
+    isOperational?: BoolFilter<"StationConfig"> | boolean
     serverVersion?: StringFilter<"StationConfig"> | string
     lastSync?: DateTimeNullableFilter<"StationConfig"> | Date | string | null
     isOnline?: BoolFilter<"StationConfig"> | boolean
@@ -18704,6 +18589,10 @@ export namespace Prisma {
     stationName?: SortOrder
     governorate?: SortOrder
     delegation?: SortOrder
+    address?: SortOrderInput | SortOrder
+    openingTime?: SortOrder
+    closingTime?: SortOrder
+    isOperational?: SortOrder
     serverVersion?: SortOrder
     lastSync?: SortOrderInput | SortOrder
     isOnline?: SortOrder
@@ -18723,6 +18612,10 @@ export namespace Prisma {
     stationName?: StringWithAggregatesFilter<"StationConfig"> | string
     governorate?: StringWithAggregatesFilter<"StationConfig"> | string
     delegation?: StringWithAggregatesFilter<"StationConfig"> | string
+    address?: StringNullableWithAggregatesFilter<"StationConfig"> | string | null
+    openingTime?: StringWithAggregatesFilter<"StationConfig"> | string
+    closingTime?: StringWithAggregatesFilter<"StationConfig"> | string
+    isOperational?: BoolWithAggregatesFilter<"StationConfig"> | boolean
     serverVersion?: StringWithAggregatesFilter<"StationConfig"> | string
     lastSync?: DateTimeNullableWithAggregatesFilter<"StationConfig"> | Date | string | null
     isOnline?: BoolWithAggregatesFilter<"StationConfig"> | boolean
@@ -19236,24 +19129,20 @@ export namespace Prisma {
     OR?: RouteWhereInput[]
     NOT?: RouteWhereInput | RouteWhereInput[]
     id?: StringFilter<"Route"> | string
-    departureStationId?: StringFilter<"Route"> | string
-    destinationStationId?: StringFilter<"Route"> | string
-    destinationName?: StringFilter<"Route"> | string
+    stationId?: StringFilter<"Route"> | string
+    stationName?: StringFilter<"Route"> | string
     basePrice?: FloatFilter<"Route"> | number
     isActive?: BoolFilter<"Route"> | boolean
     syncedAt?: DateTimeFilter<"Route"> | Date | string
-    schedules?: VehicleScheduleListRelationFilter
   }
 
   export type RouteOrderByWithRelationInput = {
     id?: SortOrder
-    departureStationId?: SortOrder
-    destinationStationId?: SortOrder
-    destinationName?: SortOrder
+    stationId?: SortOrder
+    stationName?: SortOrder
     basePrice?: SortOrder
     isActive?: SortOrder
     syncedAt?: SortOrder
-    schedules?: VehicleScheduleOrderByRelationAggregateInput
   }
 
   export type RouteWhereUniqueInput = Prisma.AtLeast<{
@@ -19261,20 +19150,17 @@ export namespace Prisma {
     AND?: RouteWhereInput | RouteWhereInput[]
     OR?: RouteWhereInput[]
     NOT?: RouteWhereInput | RouteWhereInput[]
-    departureStationId?: StringFilter<"Route"> | string
-    destinationStationId?: StringFilter<"Route"> | string
-    destinationName?: StringFilter<"Route"> | string
+    stationId?: StringFilter<"Route"> | string
+    stationName?: StringFilter<"Route"> | string
     basePrice?: FloatFilter<"Route"> | number
     isActive?: BoolFilter<"Route"> | boolean
     syncedAt?: DateTimeFilter<"Route"> | Date | string
-    schedules?: VehicleScheduleListRelationFilter
   }, "id">
 
   export type RouteOrderByWithAggregationInput = {
     id?: SortOrder
-    departureStationId?: SortOrder
-    destinationStationId?: SortOrder
-    destinationName?: SortOrder
+    stationId?: SortOrder
+    stationName?: SortOrder
     basePrice?: SortOrder
     isActive?: SortOrder
     syncedAt?: SortOrder
@@ -19290,9 +19176,8 @@ export namespace Prisma {
     OR?: RouteScalarWhereWithAggregatesInput[]
     NOT?: RouteScalarWhereWithAggregatesInput | RouteScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Route"> | string
-    departureStationId?: StringWithAggregatesFilter<"Route"> | string
-    destinationStationId?: StringWithAggregatesFilter<"Route"> | string
-    destinationName?: StringWithAggregatesFilter<"Route"> | string
+    stationId?: StringWithAggregatesFilter<"Route"> | string
+    stationName?: StringWithAggregatesFilter<"Route"> | string
     basePrice?: FloatWithAggregatesFilter<"Route"> | number
     isActive?: BoolWithAggregatesFilter<"Route"> | boolean
     syncedAt?: DateTimeWithAggregatesFilter<"Route"> | Date | string
@@ -19311,7 +19196,6 @@ export namespace Prisma {
     status?: StringFilter<"VehicleSchedule"> | string
     actualDeparture?: DateTimeNullableFilter<"VehicleSchedule"> | Date | string | null
     syncedAt?: DateTimeFilter<"VehicleSchedule"> | Date | string
-    route?: XOR<RouteScalarRelationFilter, RouteWhereInput>
   }
 
   export type VehicleScheduleOrderByWithRelationInput = {
@@ -19324,7 +19208,6 @@ export namespace Prisma {
     status?: SortOrder
     actualDeparture?: SortOrderInput | SortOrder
     syncedAt?: SortOrder
-    route?: RouteOrderByWithRelationInput
   }
 
   export type VehicleScheduleWhereUniqueInput = Prisma.AtLeast<{
@@ -19340,7 +19223,6 @@ export namespace Prisma {
     status?: StringFilter<"VehicleSchedule"> | string
     actualDeparture?: DateTimeNullableFilter<"VehicleSchedule"> | Date | string | null
     syncedAt?: DateTimeFilter<"VehicleSchedule"> | Date | string
-    route?: XOR<RouteScalarRelationFilter, RouteWhereInput>
   }, "id">
 
   export type VehicleScheduleOrderByWithAggregationInput = {
@@ -19811,6 +19693,10 @@ export namespace Prisma {
     stationName: string
     governorate: string
     delegation: string
+    address?: string | null
+    openingTime?: string
+    closingTime?: string
+    isOperational?: boolean
     serverVersion: string
     lastSync?: Date | string | null
     isOnline?: boolean
@@ -19824,6 +19710,10 @@ export namespace Prisma {
     stationName: string
     governorate: string
     delegation: string
+    address?: string | null
+    openingTime?: string
+    closingTime?: string
+    isOperational?: boolean
     serverVersion: string
     lastSync?: Date | string | null
     isOnline?: boolean
@@ -19837,6 +19727,10 @@ export namespace Prisma {
     stationName?: StringFieldUpdateOperationsInput | string
     governorate?: StringFieldUpdateOperationsInput | string
     delegation?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    openingTime?: StringFieldUpdateOperationsInput | string
+    closingTime?: StringFieldUpdateOperationsInput | string
+    isOperational?: BoolFieldUpdateOperationsInput | boolean
     serverVersion?: StringFieldUpdateOperationsInput | string
     lastSync?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isOnline?: BoolFieldUpdateOperationsInput | boolean
@@ -19850,6 +19744,10 @@ export namespace Prisma {
     stationName?: StringFieldUpdateOperationsInput | string
     governorate?: StringFieldUpdateOperationsInput | string
     delegation?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    openingTime?: StringFieldUpdateOperationsInput | string
+    closingTime?: StringFieldUpdateOperationsInput | string
+    isOperational?: BoolFieldUpdateOperationsInput | boolean
     serverVersion?: StringFieldUpdateOperationsInput | string
     lastSync?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isOnline?: BoolFieldUpdateOperationsInput | boolean
@@ -19863,6 +19761,10 @@ export namespace Prisma {
     stationName: string
     governorate: string
     delegation: string
+    address?: string | null
+    openingTime?: string
+    closingTime?: string
+    isOperational?: boolean
     serverVersion: string
     lastSync?: Date | string | null
     isOnline?: boolean
@@ -19876,6 +19778,10 @@ export namespace Prisma {
     stationName?: StringFieldUpdateOperationsInput | string
     governorate?: StringFieldUpdateOperationsInput | string
     delegation?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    openingTime?: StringFieldUpdateOperationsInput | string
+    closingTime?: StringFieldUpdateOperationsInput | string
+    isOperational?: BoolFieldUpdateOperationsInput | boolean
     serverVersion?: StringFieldUpdateOperationsInput | string
     lastSync?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isOnline?: BoolFieldUpdateOperationsInput | boolean
@@ -19889,6 +19795,10 @@ export namespace Prisma {
     stationName?: StringFieldUpdateOperationsInput | string
     governorate?: StringFieldUpdateOperationsInput | string
     delegation?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    openingTime?: StringFieldUpdateOperationsInput | string
+    closingTime?: StringFieldUpdateOperationsInput | string
+    isOperational?: BoolFieldUpdateOperationsInput | boolean
     serverVersion?: StringFieldUpdateOperationsInput | string
     lastSync?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isOnline?: BoolFieldUpdateOperationsInput | boolean
@@ -20469,53 +20379,44 @@ export namespace Prisma {
 
   export type RouteCreateInput = {
     id: string
-    departureStationId: string
-    destinationStationId: string
-    destinationName: string
+    stationId: string
+    stationName: string
     basePrice: number
     isActive?: boolean
     syncedAt: Date | string
-    schedules?: VehicleScheduleCreateNestedManyWithoutRouteInput
   }
 
   export type RouteUncheckedCreateInput = {
     id: string
-    departureStationId: string
-    destinationStationId: string
-    destinationName: string
+    stationId: string
+    stationName: string
     basePrice: number
     isActive?: boolean
     syncedAt: Date | string
-    schedules?: VehicleScheduleUncheckedCreateNestedManyWithoutRouteInput
   }
 
   export type RouteUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    departureStationId?: StringFieldUpdateOperationsInput | string
-    destinationStationId?: StringFieldUpdateOperationsInput | string
-    destinationName?: StringFieldUpdateOperationsInput | string
+    stationId?: StringFieldUpdateOperationsInput | string
+    stationName?: StringFieldUpdateOperationsInput | string
     basePrice?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    schedules?: VehicleScheduleUpdateManyWithoutRouteNestedInput
   }
 
   export type RouteUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    departureStationId?: StringFieldUpdateOperationsInput | string
-    destinationStationId?: StringFieldUpdateOperationsInput | string
-    destinationName?: StringFieldUpdateOperationsInput | string
+    stationId?: StringFieldUpdateOperationsInput | string
+    stationName?: StringFieldUpdateOperationsInput | string
     basePrice?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    schedules?: VehicleScheduleUncheckedUpdateManyWithoutRouteNestedInput
   }
 
   export type RouteCreateManyInput = {
     id: string
-    departureStationId: string
-    destinationStationId: string
-    destinationName: string
+    stationId: string
+    stationName: string
     basePrice: number
     isActive?: boolean
     syncedAt: Date | string
@@ -20523,9 +20424,8 @@ export namespace Prisma {
 
   export type RouteUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    departureStationId?: StringFieldUpdateOperationsInput | string
-    destinationStationId?: StringFieldUpdateOperationsInput | string
-    destinationName?: StringFieldUpdateOperationsInput | string
+    stationId?: StringFieldUpdateOperationsInput | string
+    stationName?: StringFieldUpdateOperationsInput | string
     basePrice?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20533,9 +20433,8 @@ export namespace Prisma {
 
   export type RouteUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    departureStationId?: StringFieldUpdateOperationsInput | string
-    destinationStationId?: StringFieldUpdateOperationsInput | string
-    destinationName?: StringFieldUpdateOperationsInput | string
+    stationId?: StringFieldUpdateOperationsInput | string
+    stationName?: StringFieldUpdateOperationsInput | string
     basePrice?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20544,13 +20443,13 @@ export namespace Prisma {
   export type VehicleScheduleCreateInput = {
     id: string
     vehicleId: string
+    routeId: string
     departureTime: Date | string
     availableSeats: number
     totalSeats: number
     status?: string
     actualDeparture?: Date | string | null
     syncedAt: Date | string
-    route: RouteCreateNestedOneWithoutSchedulesInput
   }
 
   export type VehicleScheduleUncheckedCreateInput = {
@@ -20568,13 +20467,13 @@ export namespace Prisma {
   export type VehicleScheduleUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     vehicleId?: StringFieldUpdateOperationsInput | string
+    routeId?: StringFieldUpdateOperationsInput | string
     departureTime?: DateTimeFieldUpdateOperationsInput | Date | string
     availableSeats?: IntFieldUpdateOperationsInput | number
     totalSeats?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    route?: RouteUpdateOneRequiredWithoutSchedulesNestedInput
   }
 
   export type VehicleScheduleUncheckedUpdateInput = {
@@ -20604,6 +20503,7 @@ export namespace Prisma {
   export type VehicleScheduleUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     vehicleId?: StringFieldUpdateOperationsInput | string
+    routeId?: StringFieldUpdateOperationsInput | string
     departureTime?: DateTimeFieldUpdateOperationsInput | Date | string
     availableSeats?: IntFieldUpdateOperationsInput | number
     totalSeats?: IntFieldUpdateOperationsInput | number
@@ -21108,6 +21008,26 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -21117,11 +21037,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type DateTimeFilter<$PrismaModel = never> = {
@@ -21146,6 +21061,10 @@ export namespace Prisma {
     stationName?: SortOrder
     governorate?: SortOrder
     delegation?: SortOrder
+    address?: SortOrder
+    openingTime?: SortOrder
+    closingTime?: SortOrder
+    isOperational?: SortOrder
     serverVersion?: SortOrder
     lastSync?: SortOrder
     isOnline?: SortOrder
@@ -21159,6 +21078,10 @@ export namespace Prisma {
     stationName?: SortOrder
     governorate?: SortOrder
     delegation?: SortOrder
+    address?: SortOrder
+    openingTime?: SortOrder
+    closingTime?: SortOrder
+    isOperational?: SortOrder
     serverVersion?: SortOrder
     lastSync?: SortOrder
     isOnline?: SortOrder
@@ -21172,6 +21095,10 @@ export namespace Prisma {
     stationName?: SortOrder
     governorate?: SortOrder
     delegation?: SortOrder
+    address?: SortOrder
+    openingTime?: SortOrder
+    closingTime?: SortOrder
+    isOperational?: SortOrder
     serverVersion?: SortOrder
     lastSync?: SortOrder
     isOnline?: SortOrder
@@ -21197,6 +21124,32 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -21209,14 +21162,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -21333,21 +21278,6 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
   export type VehicleNullableScalarRelationFilter = {
     is?: VehicleWhereInput | null
     isNot?: VehicleWhereInput | null
@@ -21396,24 +21326,6 @@ export namespace Prisma {
     accountStatus?: SortOrder
     isActive?: SortOrder
     syncedAt?: SortOrder
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -21677,21 +21589,10 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type VehicleScheduleListRelationFilter = {
-    every?: VehicleScheduleWhereInput
-    some?: VehicleScheduleWhereInput
-    none?: VehicleScheduleWhereInput
-  }
-
-  export type VehicleScheduleOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
   export type RouteCountOrderByAggregateInput = {
     id?: SortOrder
-    departureStationId?: SortOrder
-    destinationStationId?: SortOrder
-    destinationName?: SortOrder
+    stationId?: SortOrder
+    stationName?: SortOrder
     basePrice?: SortOrder
     isActive?: SortOrder
     syncedAt?: SortOrder
@@ -21703,9 +21604,8 @@ export namespace Prisma {
 
   export type RouteMaxOrderByAggregateInput = {
     id?: SortOrder
-    departureStationId?: SortOrder
-    destinationStationId?: SortOrder
-    destinationName?: SortOrder
+    stationId?: SortOrder
+    stationName?: SortOrder
     basePrice?: SortOrder
     isActive?: SortOrder
     syncedAt?: SortOrder
@@ -21713,9 +21613,8 @@ export namespace Prisma {
 
   export type RouteMinOrderByAggregateInput = {
     id?: SortOrder
-    departureStationId?: SortOrder
-    destinationStationId?: SortOrder
-    destinationName?: SortOrder
+    stationId?: SortOrder
+    stationName?: SortOrder
     basePrice?: SortOrder
     isActive?: SortOrder
     syncedAt?: SortOrder
@@ -21723,11 +21622,6 @@ export namespace Prisma {
 
   export type RouteSumOrderByAggregateInput = {
     basePrice?: SortOrder
-  }
-
-  export type RouteScalarRelationFilter = {
-    is?: RouteWhereInput
-    isNot?: RouteWhereInput
   }
 
   export type VehicleScheduleCountOrderByAggregateInput = {
@@ -22041,12 +21935,16 @@ export namespace Prisma {
     set?: string
   }
 
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
   }
 
   export type BoolFieldUpdateOperationsInput = {
     set?: boolean
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -22197,10 +22095,6 @@ export namespace Prisma {
     create?: XOR<VehicleCreateWithoutDriverInput, VehicleUncheckedCreateWithoutDriverInput>
     connectOrCreate?: VehicleCreateOrConnectWithoutDriverInput
     connect?: VehicleWhereUniqueInput
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
   }
 
   export type VehicleUpdateOneWithoutDriverNestedInput = {
@@ -22507,62 +22401,6 @@ export namespace Prisma {
     deleteMany?: TripScalarWhereInput | TripScalarWhereInput[]
   }
 
-  export type VehicleScheduleCreateNestedManyWithoutRouteInput = {
-    create?: XOR<VehicleScheduleCreateWithoutRouteInput, VehicleScheduleUncheckedCreateWithoutRouteInput> | VehicleScheduleCreateWithoutRouteInput[] | VehicleScheduleUncheckedCreateWithoutRouteInput[]
-    connectOrCreate?: VehicleScheduleCreateOrConnectWithoutRouteInput | VehicleScheduleCreateOrConnectWithoutRouteInput[]
-    createMany?: VehicleScheduleCreateManyRouteInputEnvelope
-    connect?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-  }
-
-  export type VehicleScheduleUncheckedCreateNestedManyWithoutRouteInput = {
-    create?: XOR<VehicleScheduleCreateWithoutRouteInput, VehicleScheduleUncheckedCreateWithoutRouteInput> | VehicleScheduleCreateWithoutRouteInput[] | VehicleScheduleUncheckedCreateWithoutRouteInput[]
-    connectOrCreate?: VehicleScheduleCreateOrConnectWithoutRouteInput | VehicleScheduleCreateOrConnectWithoutRouteInput[]
-    createMany?: VehicleScheduleCreateManyRouteInputEnvelope
-    connect?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-  }
-
-  export type VehicleScheduleUpdateManyWithoutRouteNestedInput = {
-    create?: XOR<VehicleScheduleCreateWithoutRouteInput, VehicleScheduleUncheckedCreateWithoutRouteInput> | VehicleScheduleCreateWithoutRouteInput[] | VehicleScheduleUncheckedCreateWithoutRouteInput[]
-    connectOrCreate?: VehicleScheduleCreateOrConnectWithoutRouteInput | VehicleScheduleCreateOrConnectWithoutRouteInput[]
-    upsert?: VehicleScheduleUpsertWithWhereUniqueWithoutRouteInput | VehicleScheduleUpsertWithWhereUniqueWithoutRouteInput[]
-    createMany?: VehicleScheduleCreateManyRouteInputEnvelope
-    set?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-    disconnect?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-    delete?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-    connect?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-    update?: VehicleScheduleUpdateWithWhereUniqueWithoutRouteInput | VehicleScheduleUpdateWithWhereUniqueWithoutRouteInput[]
-    updateMany?: VehicleScheduleUpdateManyWithWhereWithoutRouteInput | VehicleScheduleUpdateManyWithWhereWithoutRouteInput[]
-    deleteMany?: VehicleScheduleScalarWhereInput | VehicleScheduleScalarWhereInput[]
-  }
-
-  export type VehicleScheduleUncheckedUpdateManyWithoutRouteNestedInput = {
-    create?: XOR<VehicleScheduleCreateWithoutRouteInput, VehicleScheduleUncheckedCreateWithoutRouteInput> | VehicleScheduleCreateWithoutRouteInput[] | VehicleScheduleUncheckedCreateWithoutRouteInput[]
-    connectOrCreate?: VehicleScheduleCreateOrConnectWithoutRouteInput | VehicleScheduleCreateOrConnectWithoutRouteInput[]
-    upsert?: VehicleScheduleUpsertWithWhereUniqueWithoutRouteInput | VehicleScheduleUpsertWithWhereUniqueWithoutRouteInput[]
-    createMany?: VehicleScheduleCreateManyRouteInputEnvelope
-    set?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-    disconnect?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-    delete?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-    connect?: VehicleScheduleWhereUniqueInput | VehicleScheduleWhereUniqueInput[]
-    update?: VehicleScheduleUpdateWithWhereUniqueWithoutRouteInput | VehicleScheduleUpdateWithWhereUniqueWithoutRouteInput[]
-    updateMany?: VehicleScheduleUpdateManyWithWhereWithoutRouteInput | VehicleScheduleUpdateManyWithWhereWithoutRouteInput[]
-    deleteMany?: VehicleScheduleScalarWhereInput | VehicleScheduleScalarWhereInput[]
-  }
-
-  export type RouteCreateNestedOneWithoutSchedulesInput = {
-    create?: XOR<RouteCreateWithoutSchedulesInput, RouteUncheckedCreateWithoutSchedulesInput>
-    connectOrCreate?: RouteCreateOrConnectWithoutSchedulesInput
-    connect?: RouteWhereUniqueInput
-  }
-
-  export type RouteUpdateOneRequiredWithoutSchedulesNestedInput = {
-    create?: XOR<RouteCreateWithoutSchedulesInput, RouteUncheckedCreateWithoutSchedulesInput>
-    connectOrCreate?: RouteCreateOrConnectWithoutSchedulesInput
-    upsert?: RouteUpsertWithoutSchedulesInput
-    connect?: RouteWhereUniqueInput
-    update?: XOR<XOR<RouteUpdateToOneWithWhereWithoutSchedulesInput, RouteUpdateWithoutSchedulesInput>, RouteUncheckedUpdateWithoutSchedulesInput>
-  }
-
   export type VehicleQueueCreateNestedOneWithoutBookingsInput = {
     create?: XOR<VehicleQueueCreateWithoutBookingsInput, VehicleQueueUncheckedCreateWithoutBookingsInput>
     connectOrCreate?: VehicleQueueCreateOrConnectWithoutBookingsInput
@@ -22651,6 +22489,25 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -22660,11 +22517,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -22706,18 +22558,21 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type NestedIntNullableFilter<$PrismaModel = never> = {
@@ -22739,6 +22594,20 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -22751,37 +22620,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
@@ -23789,125 +23627,6 @@ export namespace Prisma {
     data: XOR<TripUpdateManyMutationInput, TripUncheckedUpdateManyWithoutQueueInput>
   }
 
-  export type VehicleScheduleCreateWithoutRouteInput = {
-    id: string
-    vehicleId: string
-    departureTime: Date | string
-    availableSeats: number
-    totalSeats: number
-    status?: string
-    actualDeparture?: Date | string | null
-    syncedAt: Date | string
-  }
-
-  export type VehicleScheduleUncheckedCreateWithoutRouteInput = {
-    id: string
-    vehicleId: string
-    departureTime: Date | string
-    availableSeats: number
-    totalSeats: number
-    status?: string
-    actualDeparture?: Date | string | null
-    syncedAt: Date | string
-  }
-
-  export type VehicleScheduleCreateOrConnectWithoutRouteInput = {
-    where: VehicleScheduleWhereUniqueInput
-    create: XOR<VehicleScheduleCreateWithoutRouteInput, VehicleScheduleUncheckedCreateWithoutRouteInput>
-  }
-
-  export type VehicleScheduleCreateManyRouteInputEnvelope = {
-    data: VehicleScheduleCreateManyRouteInput | VehicleScheduleCreateManyRouteInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type VehicleScheduleUpsertWithWhereUniqueWithoutRouteInput = {
-    where: VehicleScheduleWhereUniqueInput
-    update: XOR<VehicleScheduleUpdateWithoutRouteInput, VehicleScheduleUncheckedUpdateWithoutRouteInput>
-    create: XOR<VehicleScheduleCreateWithoutRouteInput, VehicleScheduleUncheckedCreateWithoutRouteInput>
-  }
-
-  export type VehicleScheduleUpdateWithWhereUniqueWithoutRouteInput = {
-    where: VehicleScheduleWhereUniqueInput
-    data: XOR<VehicleScheduleUpdateWithoutRouteInput, VehicleScheduleUncheckedUpdateWithoutRouteInput>
-  }
-
-  export type VehicleScheduleUpdateManyWithWhereWithoutRouteInput = {
-    where: VehicleScheduleScalarWhereInput
-    data: XOR<VehicleScheduleUpdateManyMutationInput, VehicleScheduleUncheckedUpdateManyWithoutRouteInput>
-  }
-
-  export type VehicleScheduleScalarWhereInput = {
-    AND?: VehicleScheduleScalarWhereInput | VehicleScheduleScalarWhereInput[]
-    OR?: VehicleScheduleScalarWhereInput[]
-    NOT?: VehicleScheduleScalarWhereInput | VehicleScheduleScalarWhereInput[]
-    id?: StringFilter<"VehicleSchedule"> | string
-    vehicleId?: StringFilter<"VehicleSchedule"> | string
-    routeId?: StringFilter<"VehicleSchedule"> | string
-    departureTime?: DateTimeFilter<"VehicleSchedule"> | Date | string
-    availableSeats?: IntFilter<"VehicleSchedule"> | number
-    totalSeats?: IntFilter<"VehicleSchedule"> | number
-    status?: StringFilter<"VehicleSchedule"> | string
-    actualDeparture?: DateTimeNullableFilter<"VehicleSchedule"> | Date | string | null
-    syncedAt?: DateTimeFilter<"VehicleSchedule"> | Date | string
-  }
-
-  export type RouteCreateWithoutSchedulesInput = {
-    id: string
-    departureStationId: string
-    destinationStationId: string
-    destinationName: string
-    basePrice: number
-    isActive?: boolean
-    syncedAt: Date | string
-  }
-
-  export type RouteUncheckedCreateWithoutSchedulesInput = {
-    id: string
-    departureStationId: string
-    destinationStationId: string
-    destinationName: string
-    basePrice: number
-    isActive?: boolean
-    syncedAt: Date | string
-  }
-
-  export type RouteCreateOrConnectWithoutSchedulesInput = {
-    where: RouteWhereUniqueInput
-    create: XOR<RouteCreateWithoutSchedulesInput, RouteUncheckedCreateWithoutSchedulesInput>
-  }
-
-  export type RouteUpsertWithoutSchedulesInput = {
-    update: XOR<RouteUpdateWithoutSchedulesInput, RouteUncheckedUpdateWithoutSchedulesInput>
-    create: XOR<RouteCreateWithoutSchedulesInput, RouteUncheckedCreateWithoutSchedulesInput>
-    where?: RouteWhereInput
-  }
-
-  export type RouteUpdateToOneWithWhereWithoutSchedulesInput = {
-    where?: RouteWhereInput
-    data: XOR<RouteUpdateWithoutSchedulesInput, RouteUncheckedUpdateWithoutSchedulesInput>
-  }
-
-  export type RouteUpdateWithoutSchedulesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    departureStationId?: StringFieldUpdateOperationsInput | string
-    destinationStationId?: StringFieldUpdateOperationsInput | string
-    destinationName?: StringFieldUpdateOperationsInput | string
-    basePrice?: FloatFieldUpdateOperationsInput | number
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type RouteUncheckedUpdateWithoutSchedulesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    departureStationId?: StringFieldUpdateOperationsInput | string
-    destinationStationId?: StringFieldUpdateOperationsInput | string
-    destinationName?: StringFieldUpdateOperationsInput | string
-    basePrice?: FloatFieldUpdateOperationsInput | number
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
   export type VehicleQueueCreateWithoutBookingsInput = {
     id: string
     destinationId: string
@@ -24826,50 +24545,6 @@ export namespace Prisma {
     syncStatus?: StringFieldUpdateOperationsInput | string
     syncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type VehicleScheduleCreateManyRouteInput = {
-    id: string
-    vehicleId: string
-    departureTime: Date | string
-    availableSeats: number
-    totalSeats: number
-    status?: string
-    actualDeparture?: Date | string | null
-    syncedAt: Date | string
-  }
-
-  export type VehicleScheduleUpdateWithoutRouteInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    vehicleId?: StringFieldUpdateOperationsInput | string
-    departureTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    availableSeats?: IntFieldUpdateOperationsInput | number
-    totalSeats?: IntFieldUpdateOperationsInput | number
-    status?: StringFieldUpdateOperationsInput | string
-    actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type VehicleScheduleUncheckedUpdateWithoutRouteInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    vehicleId?: StringFieldUpdateOperationsInput | string
-    departureTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    availableSeats?: IntFieldUpdateOperationsInput | number
-    totalSeats?: IntFieldUpdateOperationsInput | number
-    status?: StringFieldUpdateOperationsInput | string
-    actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type VehicleScheduleUncheckedUpdateManyWithoutRouteInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    vehicleId?: StringFieldUpdateOperationsInput | string
-    departureTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    availableSeats?: IntFieldUpdateOperationsInput | number
-    totalSeats?: IntFieldUpdateOperationsInput | number
-    status?: StringFieldUpdateOperationsInput | string
-    actualDeparture?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

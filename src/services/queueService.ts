@@ -1,5 +1,7 @@
 import { prisma } from '../config/database';
 import { WebSocketService } from '../websocket/webSocketService';
+import { EnhancedLocalWebSocketServer } from '../websocket/LocalWebSocketServer';
+import * as dashboardController from '../controllers/dashboardController';
 
 export interface QueueEntry {
   id: string;
@@ -36,6 +38,32 @@ export interface QueueSummary {
   estimatedNextDeparture?: Date | undefined;
 }
 
+// Add a reference to the EnhancedLocalWebSocketServer
+let localWebSocketServer: EnhancedLocalWebSocketServer | null = null;
+
+// Function to set the EnhancedLocalWebSocketServer instance
+export function setLocalWebSocketServer(wsServer: EnhancedLocalWebSocketServer) {
+  localWebSocketServer = wsServer;
+}
+
+// Function to notify about queue updates
+async function notifyQueueUpdate(queue: any) {
+  if (localWebSocketServer) {
+    try {
+      // Get updated statistics
+      const stats = await dashboardController.getDashboardStats();
+      
+      // Notify clients
+      localWebSocketServer.notifyQueueUpdate({
+        queue,
+        statistics: stats
+      });
+    } catch (error) {
+      console.error('❌ Error notifying queue update:', error);
+    }
+  }
+}
+
 export class QueueService {
   private currentStationId: string;
   private webSocketService: WebSocketService;
@@ -46,18 +74,36 @@ export class QueueService {
   }
 
   /**
-   * Enter a vehicle into a queue for the first authorized destination (not current station)
+   * Enter a vehicle into a queue with specified parameters
    */
-  async enterQueue(licensePlate: string): Promise<{
+  async enterQueue(
+    licensePlate: string, 
+    options?: {
+      destinationId?: string;
+      destinationName?: string;
+      availableSeats?: number;
+      totalSeats?: number;
+      basePrice?: number;
+      driverInfo?: {
+        firstName: string;
+        lastName: string;
+        phoneNumber: string;
+      };
+      vehicleInfo?: {
+        model?: string;
+        color?: string;
+      };
+    }
+  ): Promise<{
     success: boolean;
     queueEntry?: QueueEntry;
     error?: string;
   }> {
     try {
-      console.log(`🚗 Vehicle ${licensePlate} entering queue (auto destination)`);
-
-      // Find the vehicle in local database
-      const vehicle = await prisma.vehicle.findUnique({
+      console.log(`🚗 Vehicle ${licensePlate} entering queue`);
+      
+      // Find or create the vehicle in local database
+      let vehicle = await prisma.vehicle.findUnique({
         where: { licensePlate },
         include: {
           driver: true,
@@ -65,10 +111,71 @@ export class QueueService {
         }
       });
 
+      // If vehicle doesn't exist and we have driver info, create it
+      if (!vehicle && options?.driverInfo) {
+        console.log(`Creating new vehicle ${licensePlate}`);
+        
+        // Generate IDs for new records
+        const driverId = `driver_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        const vehicleId = `vehicle_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        
+        // Create driver first
+        const driver = await prisma.driver.create({
+          data: {
+            id: driverId,
+            cin: `CIN_${Date.now()}`, // Required field
+            firstName: options.driverInfo.firstName || 'Unknown',
+            lastName: options.driverInfo.lastName || 'Unknown',
+            phoneNumber: options.driverInfo.phoneNumber || 'Unknown',
+            isActive: true,
+            accountStatus: 'APPROVED',
+            syncedAt: new Date()
+          }
+        });
+        
+        // Then create vehicle
+        vehicle = await prisma.vehicle.create({
+          data: {
+            id: vehicleId,
+            licensePlate,
+            model: options.vehicleInfo?.model || 'Unknown',
+            color: options.vehicleInfo?.color || 'White',
+            capacity: options.totalSeats || 4,
+            isActive: true,
+            isAvailable: true,
+            syncedAt: new Date(),
+            driver: {
+              connect: {
+                id: driver.id
+              }
+            },
+            // Authorize for current station and destination
+            authorizedStations: {
+              create: [
+                { 
+                  stationId: this.currentStationId,
+                  syncedAt: new Date()
+                },
+                ...(options.destinationId ? [{ 
+                  stationId: options.destinationId,
+                  syncedAt: new Date()
+                }] : [])
+              ]
+            }
+          },
+          include: {
+            driver: true,
+            authorizedStations: true
+          }
+        });
+        
+        console.log(`✅ Created new vehicle ${licensePlate} with driver ${driver.firstName} ${driver.lastName}`);
+      }
+
       if (!vehicle) {
         return {
           success: false,
-          error: `Vehicle with license plate ${licensePlate} not found in local database`
+          error: `Vehicle with license plate ${licensePlate} not found and couldn't be created`
         };
       }
 
@@ -79,39 +186,6 @@ export class QueueService {
           error: `Vehicle ${licensePlate} is not active`
         };
       }
-
-      if (!vehicle.isAvailable) {
-        return {
-          success: false,
-          error: `Vehicle ${licensePlate} is not available for trips`
-        };
-      }
-
-      // Check if vehicle is authorized for current station
-      const isAuthorizedForCurrentStation = vehicle.authorizedStations.some(
-        auth => auth.stationId === this.currentStationId
-      );
-
-      if (!isAuthorizedForCurrentStation) {
-        return {
-          success: false,
-          error: `Vehicle ${licensePlate} is not authorized for current station`
-        };
-      }
-
-      // Find the first authorized station that is NOT the current station
-      const destinationAuth = vehicle.authorizedStations.find(
-        auth => auth.stationId !== this.currentStationId
-      );
-
-      if (!destinationAuth) {
-        return {
-          success: false,
-          error: `Vehicle ${licensePlate} has no authorized destination station (other than current station)`
-        };
-      }
-
-      const destinationId = destinationAuth.stationId;
 
       // Check if vehicle is already in a queue
       const existingQueueEntry = await prisma.vehicleQueue.findFirst({
@@ -128,8 +202,66 @@ export class QueueService {
         };
       }
 
-      // Get destination name (you might want to cache this or get from central server)
-      const destinationName = await this.getDestinationName(destinationId);
+      // Determine destination
+      let destinationId: string;
+      let destinationName: string;
+      
+      if (options?.destinationId) {
+        // Use provided destination
+        destinationId = options.destinationId;
+        destinationName = options.destinationName || await this.getDestinationName(destinationId);
+        
+        // Ensure vehicle is authorized for this destination
+        const isAuthorized = vehicle.authorizedStations.some(auth => auth.stationId === destinationId);
+        
+        if (!isAuthorized) {
+          // Add authorization
+          await prisma.vehicleAuthorizedStation.create({
+            data: {
+              vehicleId: vehicle.id,
+              stationId: destinationId,
+              syncedAt: new Date()
+            }
+          });
+          console.log(`Added authorization for ${licensePlate} to destination ${destinationId}`);
+        }
+      } else {
+        // Find the first authorized station that is NOT the current station
+        const destinationAuth = vehicle.authorizedStations.find(
+          auth => auth.stationId !== this.currentStationId
+        );
+
+        if (!destinationAuth) {
+          return {
+            success: false,
+            error: `Vehicle ${licensePlate} has no authorized destination station (other than current station)`
+          };
+        }
+
+        destinationId = destinationAuth.stationId;
+        destinationName = await this.getDestinationName(destinationId);
+      }
+
+      // Get the correct base price from the route table
+      let basePrice = options?.basePrice || 0;
+      
+      if (!options?.basePrice) {
+        // Try to get base price from route table for this destination
+        try {
+          const route = await prisma.route.findUnique({
+            where: { stationId: destinationId }
+          });
+          
+          if (route && route.basePrice > 0) {
+            basePrice = route.basePrice;
+            console.log(`✅ Found base price for ${destinationName}: ${basePrice} TND`);
+          } else {
+            console.warn(`⚠️ No route found for destination ${destinationName} (${destinationId}), using default price`);
+          }
+        } catch (error) {
+          console.error(`❌ Error fetching route price for ${destinationName}:`, error);
+        }
+      }
 
       // Get the next position in the queue for this destination
       const nextPosition = await this.getNextQueuePosition(destinationId);
@@ -144,9 +276,9 @@ export class QueueService {
           queuePosition: nextPosition,
           status: 'WAITING',
           enteredAt: new Date(),
-          availableSeats: vehicle.capacity,
-          totalSeats: vehicle.capacity,
-          basePrice: 0,
+          availableSeats: options?.availableSeats || vehicle.capacity,
+          totalSeats: options?.totalSeats || vehicle.capacity,
+          basePrice: basePrice,
           syncedAt: new Date()
         },
         include: {
@@ -158,10 +290,13 @@ export class QueueService {
         }
       });
 
-      console.log(`✅ Vehicle ${licensePlate} entered queue at position ${nextPosition} for ${destinationName}`);
+      console.log(`✅ Vehicle ${licensePlate} entered queue at position ${nextPosition} for ${destinationName} with base price ${basePrice} TND`);
 
       // Broadcast queue update
       this.broadcastQueueUpdate(destinationId);
+
+      // Notify clients about queue updates
+      notifyQueueUpdate(queueEntry);
 
       return {
         success: true,
@@ -211,6 +346,21 @@ export class QueueService {
         return {
           success: false,
           error: `Vehicle ${licensePlate} is not in any active queue`
+        };
+      }
+
+      // Check for active bookings
+      const activeBookings = await prisma.booking.count({
+        where: {
+          queueId: queueEntry.id,
+          paymentStatus: { in: ['PAID', 'PENDING'] }
+        }
+      });
+
+      if (activeBookings > 0) {
+        return {
+          success: false,
+          error: `Vehicle ${licensePlate} cannot exit queue: there are active bookings`
         };
       }
 
@@ -327,6 +477,9 @@ export class QueueService {
     error?: string;
   }> {
     try {
+      console.log(`🔍 Getting queue for destination: ${destinationId}`);
+
+      // Get queue entries for this destination
       const queueEntries = await prisma.vehicleQueue.findMany({
         where: {
           destinationId,
@@ -344,11 +497,14 @@ export class QueueService {
         }
       });
 
-      const formattedEntries = queueEntries.map(entry => this.formatQueueEntry(entry));
+      // Format queue entries
+      const formattedQueue = queueEntries.map(entry => this.formatQueueEntry(entry));
+
+      console.log(`✅ Found ${formattedQueue.length} vehicles in queue for destination ${destinationId}`);
 
       return {
         success: true,
-        queue: formattedEntries
+        queue: formattedQueue
       };
 
     } catch (error) {
@@ -416,6 +572,9 @@ export class QueueService {
 
       // Broadcast queue update
       this.broadcastQueueUpdate(queueEntry.destinationId);
+
+      // Notify clients about queue updates
+      notifyQueueUpdate(queueEntry);
 
       return { success: true };
 

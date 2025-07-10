@@ -132,7 +132,50 @@ router.post('/verify', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// Verify token (for middleware use)
+// Verify token (for middleware use) - GET endpoint for desktop app
+router.get('/verify-token', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : req.query.token as string;
+    
+    if (!token) {
+      res.status(400).json({
+        success: false,
+        message: 'Token is required',
+        code: 'NO_TOKEN'
+      });
+      return;
+    }
+
+    const authService = initializeServices();
+    const result = await authService.verifyToken(token);
+
+    if (!result.valid) {
+      res.status(401).json({
+        success: false,
+        message: result.error || 'Invalid token',
+        code: 'INVALID_TOKEN'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: 'Token is valid',
+      staff: result.staff,
+      source: result.source
+    });
+  } catch (error) {
+    console.error('❌ Token verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+});
+
+// Verify token (POST endpoint for compatibility)
 router.post('/verify-token', async (req: Request, res: Response): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;

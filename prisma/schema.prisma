@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -19,6 +18,10 @@ model StationConfig {
   stationName   String   @map("station_name")
   governorate   String
   delegation    String
+  address       String?
+  openingTime   String   @default("06:00") @map("opening_time")
+  closingTime   String   @default("22:00") @map("closing_time")
+  isOperational Boolean  @default(true) @map("is_operational")
   serverVersion String   @map("server_version")
   lastSync      DateTime? @map("last_sync")
   isOnline      Boolean  @default(false) @map("is_online")
@@ -45,6 +48,8 @@ model Staff {
   bookings      Booking[]  @relation("BookingStaff")
   verifications Booking[]  @relation("VerificationStaff")
   sessions      Session[]
+  entryTickets  DriverEntryTicket[] @relation("EntryTicketStaff")
+  exitTickets   DriverExitTicket[]  @relation("ExitTicketStaff")
   
   @@map("staff")
 }
@@ -108,6 +113,7 @@ model Vehicle {
   // Vehicle status (matching central server)
   isActive        Boolean           @default(false) @map("is_active") // Only active after driver approval
   isAvailable     Boolean           @default(true) @map("is_available") // Available for trips
+  isBanned        Boolean           @default(false) @map("is_banned") // Banned from operation
   
   syncedAt        DateTime          @map("synced_at")
   
@@ -116,6 +122,8 @@ model Vehicle {
   queueEntries        VehicleQueue[]              // Vehicle can be in multiple queues over time
   authorizedStations  VehicleAuthorizedStation[]  // Stations this vehicle can operate between
   trips               Trip[]                      // Trips made by this vehicle
+  entryTickets        DriverEntryTicket[]         // Entry tickets for this vehicle
+  exitTickets         DriverExitTicket[]          // Exit tickets for this vehicle
   
   @@map("vehicles")
 }
@@ -170,17 +178,17 @@ model VehicleQueue {
 // =============== ROUTES & SCHEDULES (LOCAL) ===============
 
 model Route {
-  id                    String            @id // Same ID as central
-  departureStationId    String            @map("departure_station_id")
-  destinationStationId  String            @map("destination_station_id")
-  destinationName       String            @map("destination_name") // Cached for display
-  basePrice             Float             @map("base_price") // SQLite uses REAL for decimals
+  id                    String            @id
+  stationId             String            @map("station_id")
+  stationName           String            @map("station_name")
+  basePrice             Float             @map("base_price")
   isActive              Boolean           @default(true) @map("is_active")
   syncedAt              DateTime          @map("synced_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
   
   // Relations
-  schedules             VehicleSchedule[]
-  
+  //schedules             VehicleSchedule[]
+  @@unique([stationId])
   @@map("routes")
 }
 
@@ -196,7 +204,7 @@ model VehicleSchedule {
   syncedAt          DateTime        @map("synced_at")
   
   // Relations
-  route             Route           @relation(fields: [routeId], references: [id])
+  //route             Route           @relation(fields: [routeId], references: [id])
   
   @@map("vehicle_schedules")
 }
@@ -309,4 +317,47 @@ model Trip {
   queue             VehicleQueue @relation(fields: [queueId], references: [id])
   
   @@map("trips")
+}
+
+// =============== DRIVER TICKETS (LOCAL) ===============
+
+model DriverEntryTicket {
+  id              String   @id @default(cuid())
+  vehicleId       String   @map("vehicle_id")
+  licensePlate    String   @map("license_plate")
+  stationId       String   @map("station_id")
+  stationName     String   @map("station_name")
+  queuePosition   Int      @map("queue_position")
+  nextVehiclePlate String? @map("next_vehicle_plate") // Vehicle next in queue
+  entryTime       DateTime @map("entry_time")
+  ticketPrice     Float    @default(2.0) @map("ticket_price") // 2 TND entry fee
+  ticketNumber    String   @unique @map("ticket_number")
+  createdBy       String   @map("created_by") // Staff ID
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  createdByStaff  Staff    @relation("EntryTicketStaff", fields: [createdBy], references: [id])
+  
+  @@map("driver_entry_tickets")
+}
+
+model DriverExitTicket {
+  id              String   @id @default(cuid())
+  vehicleId       String   @map("vehicle_id")
+  licensePlate    String   @map("license_plate")
+  departureStationId   String   @map("departure_station_id")
+  departureStationName String   @map("departure_station_name")
+  destinationStationId  String   @map("destination_station_id")
+  destinationStationName String  @map("destination_station_name")
+  exitTime        DateTime @map("exit_time")
+  ticketNumber    String   @unique @map("ticket_number")
+  createdBy       String   @map("created_by") // Staff ID
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  createdByStaff  Staff    @relation("ExitTicketStaff", fields: [createdBy], references: [id])
+  
+  @@map("driver_exit_tickets")
 }

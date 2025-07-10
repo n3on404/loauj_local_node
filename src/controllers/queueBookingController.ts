@@ -88,10 +88,10 @@ export class QueueBookingController {
       const staffId = req.staff?.id;
 
       // Validate input
-      if (!destinationId || !seatsRequested || !customerName) {
+      if (!destinationId || !seatsRequested ) {
         res.status(400).json({
           success: false,
-          error: 'Destination ID, seats requested, and customer name are required'
+          error: 'Destination ID, seats requested are required'
         });
         return;
       }
@@ -219,21 +219,43 @@ export class QueueBookingController {
         return;
       }
 
+      // Try to verify the ticket
       const result = await this.queueBookingService.verifyTicket(verificationCode, staffId);
 
       if (result.success) {
         res.status(200).json({
           success: true,
           message: 'Ticket verified successfully',
-          data: result.booking
+          data: result.booking,
+          justVerified: true
         });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error
-        });
+        return;
       }
 
+      // If already verified, fetch and return ticket details with a flag
+      if (result.error === 'Ticket already verified') {
+        const bookingResult = await this.queueBookingService.getBookingByVerificationCode(verificationCode);
+        if (bookingResult.success) {
+          res.status(200).json({
+            success: true,
+            message: 'Ticket was already verified',
+            data: bookingResult.booking,
+            justVerified: false
+          });
+        } else {
+          res.status(404).json({
+            success: false,
+            error: bookingResult.error || 'Ticket not found'
+          });
+        }
+        return;
+      }
+
+      // Other errors
+      res.status(400).json({
+        success: false,
+        error: result.error
+      });
     } catch (error) {
       console.error('❌ Error in verifyTicket controller:', error);
       res.status(500).json({

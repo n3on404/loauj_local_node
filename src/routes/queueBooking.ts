@@ -13,8 +13,8 @@ export default function createQueueBookingRouter(webSocketService?: WebSocketSer
     : createQueueBookingController(new WebSocketService()); // Fallback
 
   // Apply authentication middleware to all routes
-  //router.use(authenticate);
-  //router.use(requireStaff);
+  router.use(authenticate);
+  router.use(requireStaff);
 
   /**
    * @route GET /api/queue-booking/destinations

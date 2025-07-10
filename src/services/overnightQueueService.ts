@@ -135,7 +135,19 @@ export class OvernightQueueService {
           
           console.log(`🔄 Vehicle ${licensePlate} found in regular queue for ${existingQueueEntry.destinationName}, removing from regular queue...`);
           
-          // Delete from regular queue
+          // Check if there are any bookings for this queue entry
+          const bookings = await prisma.booking.findMany({
+            where: { queueId: existingQueueEntry.id }
+          });
+
+          if (bookings.length > 0) {
+            return {
+              success: false,
+              error: `Vehicle ${licensePlate} has ${bookings.length} active booking(s) and cannot be moved to overnight queue. Please cancel the bookings first.`
+            };
+          }
+          
+          // Delete from regular queue (now safe since no bookings exist)
           await prisma.vehicleQueue.delete({
             where: { id: existingQueueEntry.id }
           });
@@ -636,6 +648,19 @@ export class OvernightQueueService {
           timestamp: new Date().toISOString()
         }
       });
+
+      // Send to local WebSocket server for desktop app updates
+      // We need to get the local WebSocket server instance
+      // This will be set by the main server
+      const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+      const localWebSocketServer = getLocalWebSocketServer();
+      if (localWebSocketServer) {
+        localWebSocketServer.notifyOvernightQueueUpdate({
+          destinationId,
+          stationId: this.currentStationId,
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (error) {
       console.error('❌ Error broadcasting overnight queue update:', error);
     }
@@ -658,6 +683,17 @@ export class OvernightQueueService {
         stationId: this.currentStationId,
         timestamp: new Date().toISOString()
       });
+
+      // Send to local WebSocket server for desktop app updates
+      const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+      const localWebSocketServer = getLocalWebSocketServer();
+      if (localWebSocketServer) {
+        localWebSocketServer.notifyQueueUpdate({
+          destinationId,
+          stationId: this.currentStationId,
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (error) {
       console.error('❌ Error broadcasting queue update:', error);
     }

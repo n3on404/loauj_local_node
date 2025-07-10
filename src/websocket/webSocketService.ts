@@ -2,7 +2,8 @@ import { EventEmitter } from 'events';
 import WebSocket from 'ws';
 import axios from 'axios';
 import { env } from '../config/environment';
-import { vehicleSyncService } from '../services/vehicleSyncService';
+import { VehicleData, vehicleSyncService } from '../services/vehicleSyncService';
+import { routeSyncService } from '../services/routeSyncService';
 
 export class WebSocketService extends EventEmitter {
   private ws: WebSocket | null = null;
@@ -365,6 +366,11 @@ export class WebSocketService extends EventEmitter {
       const result = await vehicleSyncService.handleFullSync(vehicles, this.stationId);
       
       console.log(`📊 Full sync results: ${result.processed} processed, ${result.skipped} skipped, ${result.errors.length} errors`);
+      
+      vehicles.forEach(async (vehicle: VehicleData) => {
+        const result_route_sync = await routeSyncService.syncRoutesForVehicle(vehicle);
+        console.log(`📊 Route sync results: ${result_route_sync}`);
+      });
       
       // Send acknowledgment
       this.sendVehicleSyncAck(data.messageId, 'vehicle_sync_full', result.success, result.errors);
