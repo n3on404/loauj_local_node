@@ -34,15 +34,15 @@ export class WebSocketService extends EventEmitter {
     this.centralServerUrl = env.CENTRAL_SERVER_WS_URL;
     this.centralServerHttpUrl = env.CENTRAL_SERVER_URL;
     this.stationId = env.STATION_ID || 'station-001'; // Default for testing
-    
+
     console.log(`📡 WebSocket Service initialized`);
     console.log(`   Central Server: ${this.centralServerHttpUrl}`);
     console.log(`   WebSocket URL: ${this.centralServerUrl}`);
     console.log(`   Station ID: ${this.stationId}`);
-    console.log(`   Reconnection: Initial delay ${this.initialReconnectDelay/1000}s, max ${this.maxReconnectDelay/1000}s`);
-    console.log(`   Connection Monitor: Every ${this.connectionMonitorInterval/1000}s`);
-    console.log(`   IP Refresh: Every ${this.IP_REFRESH_INTERVAL/1000/60} minutes`);
-    
+    console.log(`   Reconnection: Initial delay ${this.initialReconnectDelay / 1000}s, max ${this.maxReconnectDelay / 1000}s`);
+    console.log(`   Connection Monitor: Every ${this.connectionMonitorInterval / 1000}s`);
+    console.log(`   IP Refresh: Every ${this.IP_REFRESH_INTERVAL / 1000 / 60} minutes`);
+
     // Start connection monitor
     this.startConnectionMonitor();
   }
@@ -55,7 +55,7 @@ export class WebSocketService extends EventEmitter {
 
     try {
       console.log(`🔌 Attempting to connect to central server (attempt #${this.reconnectAttempts + 1})...`);
-      
+
       // First test if central server is reachable via HTTP
       const isReachable = await this.testCentralServerConnection();
       if (!isReachable) {
@@ -64,10 +64,10 @@ export class WebSocketService extends EventEmitter {
 
       console.log(`🔌 Connecting to WebSocket server: ${this.centralServerUrl}`);
       this.isConnecting = true;
-      
+
       this.ws = new WebSocket(this.centralServerUrl);
       this.setupWebSocket();
-      
+
     } catch (error) {
       console.error('❌ WebSocket connection failed:', error);
       this.isConnecting = false;
@@ -82,7 +82,7 @@ export class WebSocketService extends EventEmitter {
         timeout: 5000,
         validateStatus: (status) => status < 500 // Accept any status below 500
       });
-      
+
       console.log(`✅ Central server is reachable (HTTP ${response.status})`);
       return true;
     } catch (error) {
@@ -99,7 +99,7 @@ export class WebSocketService extends EventEmitter {
       this.isConnecting = false;
       this.isAuthenticated = false;
       this.emit('connected');
-      
+
       // Authenticate with the central server
       this.authenticate().catch(error => {
         console.error('❌ Authentication failed:', error);
@@ -121,7 +121,7 @@ export class WebSocketService extends EventEmitter {
       this.isAuthenticated = false;
       this.cleanup();
       this.emit('disconnected', { code, reason: reason.toString() });
-      
+
       if (code !== 1000) { // Not a normal closure
         this.attemptReconnect();
       }
@@ -144,21 +144,21 @@ export class WebSocketService extends EventEmitter {
   private async getPublicIpAddress(): Promise<string | null> {
     try {
       console.log('🌐 Fetching public IP address...');
-      
+
       // Try multiple IP services for reliability
       const ipServices = [
         'https://api.ipify.org?format=json',
         'https://ipapi.co/json/',
         'https://ifconfig.me/ip'
       ];
-      
+
       for (const service of ipServices) {
         try {
-          const response = await axios.get(service, { 
+          const response = await axios.get(service, {
             timeout: 5000,
             headers: { 'User-Agent': 'WebSocketService/1.0' }
           });
-          
+
           let ip: string;
           if (service.includes('ipify')) {
             ip = response.data.ip;
@@ -167,7 +167,7 @@ export class WebSocketService extends EventEmitter {
           } else {
             ip = response.data.trim();
           }
-          
+
           if (ip && this.isValidIP(ip)) {
             console.log(`✅ Public IP detected: ${ip}`);
             return ip;
@@ -177,7 +177,7 @@ export class WebSocketService extends EventEmitter {
           continue;
         }
       }
-      
+
       console.warn('⚠️ Could not detect public IP address from any service');
       return null;
     } catch (error) {
@@ -185,6 +185,12 @@ export class WebSocketService extends EventEmitter {
       return null;
     }
   }
+
+  // LOCAL DEVELOPMENT: Use localhost instead of public IP detection
+ // private async getPublicIpAddress(): Promise<string | null> {
+   // console.log('🏠 Using localhost IP for local development');
+    //return '127.0.0.1';
+  //}
 
   private isValidIP(ip: string): boolean {
     const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -198,12 +204,12 @@ export class WebSocketService extends EventEmitter {
     }
 
     console.log(`🔐 Authenticating with station ID: ${this.stationId}`);
-    
+
     // Get public IP if not already cached
     if (!this.publicIp) {
       this.publicIp = await this.getPublicIpAddress();
     }
-    
+
     this.send({
       type: 'authenticate',
       payload: {
@@ -217,7 +223,7 @@ export class WebSocketService extends EventEmitter {
 
   private handleMessage(data: any): void {
     console.log('📨 Received WebSocket message:', data.type);
-    
+
     switch (data.type) {
       case 'connected':
         console.log('🎉 Received welcome message from central server');
@@ -261,7 +267,7 @@ export class WebSocketService extends EventEmitter {
       case 'connection_test_response':
         console.log('✅ Connection test successful');
         break;
-        
+
       case 'sync_request':
         this.emit('sync_request', data.payload);
         break;
@@ -269,15 +275,15 @@ export class WebSocketService extends EventEmitter {
       case 'sync_response':
         this.emit('sync_response', data.payload);
         break;
-        
+
       case 'booking_update':
         this.emit('booking_update', data.payload);
         break;
-        
+
       case 'vehicle_update':
         this.emit('vehicle_update', data.payload);
         break;
-        
+
       case 'queue_update':
         this.emit('queue_update', data.payload);
         break;
@@ -345,7 +351,7 @@ export class WebSocketService extends EventEmitter {
         console.error('❌ Server error:', data.payload?.message);
         this.emit('server_error', data.payload);
         break;
-        
+
       default:
         console.warn('⚠️ Unknown message type:', data.type);
         this.emit('unknown_message', data);
@@ -362,19 +368,19 @@ export class WebSocketService extends EventEmitter {
     try {
       const { vehicles, stationId, syncTime, count } = data.payload;
       console.log(`🚐 Processing full vehicle sync: ${count} vehicles for station ${stationId}`);
-      
+
       const result = await vehicleSyncService.handleFullSync(vehicles, this.stationId);
-      
+
       console.log(`📊 Full sync results: ${result.processed} processed, ${result.skipped} skipped, ${result.errors.length} errors`);
-      
+
       vehicles.forEach(async (vehicle: VehicleData) => {
         const result_route_sync = await routeSyncService.syncRoutesForVehicle(vehicle);
         console.log(`📊 Route sync results: ${result_route_sync}`);
       });
-      
+
       // Send acknowledgment
       this.sendVehicleSyncAck(data.messageId, 'vehicle_sync_full', result.success, result.errors);
-      
+
       this.emit('vehicle_sync_complete', {
         type: 'full',
         processed: result.processed,
@@ -383,7 +389,7 @@ export class WebSocketService extends EventEmitter {
         success: result.success,
         errors: result.errors
       });
-      
+
     } catch (error) {
       console.error('❌ Error processing full vehicle sync:', error);
       this.sendVehicleSyncAck(data.messageId, 'vehicle_sync_full', false, ['Processing error']);
@@ -397,21 +403,21 @@ export class WebSocketService extends EventEmitter {
     try {
       const { vehicle, stationId, syncTime } = data.payload;
       console.log(`🚐 Processing vehicle update: ${vehicle.licensePlate} for station ${stationId}`);
-      
+
       const result = await vehicleSyncService.handleVehicleUpdate(vehicle, this.stationId);
-      
+
       console.log(`📊 Vehicle update result: ${result.processed ? 'processed' : 'skipped (already up-to-date)'}`);
-      
+
       // Send acknowledgment
       this.sendVehicleSyncAck(data.messageId, 'vehicle_sync_update', result.success, result.error ? [result.error] : []);
-      
+
       this.emit('vehicle_sync_update', {
         vehicle,
         success: result.success,
         processed: result.processed,
         error: result.error
       });
-      
+
     } catch (error) {
       console.error('❌ Error processing vehicle update sync:', error);
       this.sendVehicleSyncAck(data.messageId, 'vehicle_sync_update', false, ['Processing error']);
@@ -425,18 +431,18 @@ export class WebSocketService extends EventEmitter {
     try {
       const { vehicleId, stationId, syncTime } = data.payload;
       console.log(`🚐 Processing vehicle deletion: ${vehicleId} for station ${stationId}`);
-      
+
       const result = await vehicleSyncService.handleVehicleDelete(vehicleId);
-      
+
       // Send acknowledgment
       this.sendVehicleSyncAck(data.messageId, 'vehicle_sync_delete', result.success, result.error ? [result.error] : []);
-      
+
       this.emit('vehicle_sync_delete', {
         vehicleId,
         success: result.success,
         error: result.error
       });
-      
+
     } catch (error) {
       console.error('❌ Error processing vehicle delete sync:', error);
       this.sendVehicleSyncAck(data.messageId, 'vehicle_sync_delete', false, ['Processing error']);
@@ -464,10 +470,11 @@ export class WebSocketService extends EventEmitter {
   private async refreshPublicIp(): Promise<void> {
     const previousIp = this.publicIp;
     this.publicIp = await this.getPublicIpAddress();
-    
+
+    // For local development, we always use localhost, so no need to update unless it's the first time
     if (this.publicIp && this.publicIp !== previousIp) {
-      console.log(`🔄 Public IP changed from ${previousIp || 'unknown'} to ${this.publicIp}`);
-      
+      console.log(`🔄 IP set to ${this.publicIp} for local development`);
+
       // If authenticated, send IP update to server
       if (this.isAuthenticated && this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.send({
@@ -485,7 +492,7 @@ export class WebSocketService extends EventEmitter {
 
   private startHeartbeat(): void {
     this.stopHeartbeat();
-    
+
     this.heartbeatTimer = setInterval(() => {
       if (this.isConnected) {
         console.log('💓 Sending heartbeat to central server...');
@@ -499,18 +506,18 @@ export class WebSocketService extends EventEmitter {
         });
       }
     }, this.heartbeatInterval);
-    
+
     // Initialize last heartbeat response time
     this.lastHeartbeatResponse = Date.now();
   }
 
   private startConnectionTest(): void {
     this.stopConnectionTest();
-    
+
     this.connectionTestTimer = setInterval(() => {
-      if (!this.send({ 
-        type: 'connection_test', 
-        timestamp: Date.now() 
+      if (!this.send({
+        type: 'connection_test',
+        timestamp: Date.now()
       })) {
         console.warn('⚠️ Connection test failed');
       }
@@ -533,7 +540,7 @@ export class WebSocketService extends EventEmitter {
 
   private startIpRefresh(): void {
     this.stopIpRefresh();
-    
+
     this.ipRefreshTimer = setInterval(async () => {
       console.log('🔄 Periodic IP refresh check...');
       await this.refreshPublicIp();
@@ -551,13 +558,13 @@ export class WebSocketService extends EventEmitter {
     if (this.connectionMonitorTimer) {
       clearInterval(this.connectionMonitorTimer);
     }
-    
+
     this.connectionMonitorTimer = setInterval(() => {
       // Check if we're supposed to be connected
       if (!this._reconnectEnabled) {
         return; // Skip monitoring if reconnection is disabled
       }
-      
+
       // If we're not connected and not already trying to connect, attempt reconnection
       if (!this.isConnected && !this.isConnecting && !this.reconnectTimer) {
         console.log('🔍 Connection monitor: Not connected. Initiating reconnection...');
@@ -566,15 +573,15 @@ export class WebSocketService extends EventEmitter {
         });
         return;
       }
-      
+
       // If we are connected, check if we're still getting heartbeat responses
       if (this.isConnected && this.lastHeartbeatResponse) {
         const heartbeatAge = Date.now() - this.lastHeartbeatResponse;
-        
+
         // If we haven't received a heartbeat response in 2.5x the interval, connection might be dead
         if (heartbeatAge > this.heartbeatInterval * 2.5) {
-          console.warn(`⚠️ Connection monitor: No heartbeat response in ${Math.round(heartbeatAge/1000)}s. Connection may be dead.`);
-          
+          console.warn(`⚠️ Connection monitor: No heartbeat response in ${Math.round(heartbeatAge / 1000)}s. Connection may be dead.`);
+
           // Force close the socket to trigger reconnection
           if (this.ws) {
             console.log('🔄 Connection monitor: Forcing socket closure to trigger reconnection');
@@ -583,8 +590,8 @@ export class WebSocketService extends EventEmitter {
         }
       }
     }, this.connectionMonitorInterval);
-    
-    console.log(`🔍 Connection monitor started (interval: ${this.connectionMonitorInterval/1000}s)`);
+
+    console.log(`🔍 Connection monitor started (interval: ${this.connectionMonitorInterval / 1000}s)`);
   }
 
   private stopConnectionMonitor(): void {
@@ -600,9 +607,9 @@ export class WebSocketService extends EventEmitter {
       console.log('⏸️ Reconnection is disabled. Not attempting to reconnect.');
       return;
     }
-    
+
     this.reconnectAttempts++;
-    
+
     // Calculate reconnect delay with exponential backoff (with max limit)
     if (this.reconnectAttempts > 1) {
       // Exponential backoff formula: min(initialDelay * 2^(attempts-1), maxDelay)
@@ -613,13 +620,13 @@ export class WebSocketService extends EventEmitter {
     } else {
       this.reconnectDelay = this.initialReconnectDelay;
     }
-    
-    console.log(`🔄 Attempting to reconnect (attempt #${this.reconnectAttempts}) in ${Math.round(this.reconnectDelay/1000)}s...`);
-    
+
+    console.log(`🔄 Attempting to reconnect (attempt #${this.reconnectAttempts}) in ${Math.round(this.reconnectDelay / 1000)}s...`);
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
     }
-    
+
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect().catch(error => {
@@ -639,7 +646,7 @@ export class WebSocketService extends EventEmitter {
     this.stopHeartbeat();
     this.stopConnectionTest();
     this.stopIpRefresh();
-    
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -648,28 +655,28 @@ export class WebSocketService extends EventEmitter {
 
   disconnect(): void {
     console.log('🔌 Disconnecting WebSocket...');
-    
+
     this.cleanup();
-    
+
     if (this.ws) {
       this.ws.close(1000, 'Normal closure'); // Normal closure code
       this.ws = null;
     }
-    
+
     this.emit('disconnected');
     console.log('✅ WebSocket disconnected');
   }
 
   stopReconnecting(): void {
     console.log('🛑 Stopping reconnection attempts...');
-    
+
     this._reconnectEnabled = false;
-    
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    
+
     this.reconnectAttempts = 0;
     console.log('✅ Reconnection attempts stopped');
   }
@@ -677,7 +684,7 @@ export class WebSocketService extends EventEmitter {
   startReconnecting(): void {
     console.log('▶️ Enabling reconnection attempts...');
     this._reconnectEnabled = true;
-    
+
     // If we're not connected, try to connect immediately
     if (!this.isConnected && !this.isConnecting && !this.reconnectTimer) {
       console.log('🔄 Initiating immediate reconnection attempt...');
@@ -691,28 +698,28 @@ export class WebSocketService extends EventEmitter {
 
   forceReconnect(): void {
     console.log('🔄 Forcing reconnection...');
-    
+
     // Make sure reconnection is enabled
     this._reconnectEnabled = true;
-    
+
     // Close existing connection if any
     if (this.ws) {
       this.ws.close(1000, 'Forced reconnection');
       this.ws = null;
     }
-    
+
     // Reset reconnection state
     this.isConnecting = false;
     this.isAuthenticated = false;
     this.reconnectAttempts = 0;
     this.reconnectDelay = this.initialReconnectDelay;
-    
+
     // Clear any existing reconnect timer
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    
+
     // Attempt to connect immediately
     this.connect().catch(error => {
       console.error('❌ Forced reconnection attempt failed:', error);
@@ -726,14 +733,14 @@ export class WebSocketService extends EventEmitter {
     try {
       const { destinationId, requestId } = data.payload;
       console.log(`📋 Processing seat availability request for destination: ${destinationId}`);
-      
+
       // Import the queue booking service dynamically to avoid circular dependency
       const QueueBookingServiceModule = await import('../services/queueBookingService');
       const queueBookingService = new QueueBookingServiceModule.QueueBookingService(this);
-      
+
       // Get current seat availability
       const seatInfo = await queueBookingService.getAvailableSeats(destinationId);
-      
+
       // Send response back to central server
       this.send({
         type: 'seat_availability_response',
@@ -747,12 +754,12 @@ export class WebSocketService extends EventEmitter {
         },
         timestamp: Date.now()
       });
-      
+
       console.log(`✅ Seat availability response sent for request ${requestId}`);
-      
+
     } catch (error) {
       console.error('❌ Error processing seat availability request:', error);
-      
+
       // Send error response
       this.send({
         type: 'seat_availability_response',
@@ -834,7 +841,7 @@ export class WebSocketService extends EventEmitter {
       }
 
       const messageId = `login_${Date.now()}_${Math.random()}`;
-      
+
       // Set up one-time listener for response
       const handleResponse = (message: any) => {
         if (message.type === 'staff_login_response' && message.messageId === messageId) {
@@ -842,15 +849,15 @@ export class WebSocketService extends EventEmitter {
           resolve(message.payload);
         }
       };
-      
+
       this.on('message', handleResponse);
-      
+
       // Set timeout for request
       setTimeout(() => {
         this.off('message', handleResponse);
         reject(new Error('Login request timeout'));
       }, 30000); // 30 second timeout
-      
+
       // Send request
       const success = this.send({
         type: 'staff_login_request',
@@ -858,7 +865,7 @@ export class WebSocketService extends EventEmitter {
         timestamp: Date.now(),
         messageId
       });
-      
+
       if (!success) {
         this.off('message', handleResponse);
         reject(new Error('Failed to send login request'));
@@ -874,7 +881,7 @@ export class WebSocketService extends EventEmitter {
       }
 
       const messageId = `verify_${Date.now()}_${Math.random()}`;
-      
+
       // Set up one-time listener for response
       const handleResponse = (message: any) => {
         if (message.type === 'staff_verify_response' && message.messageId === messageId) {
@@ -882,15 +889,15 @@ export class WebSocketService extends EventEmitter {
           resolve(message.payload);
         }
       };
-      
+
       this.on('message', handleResponse);
-      
+
       // Set timeout for request
       setTimeout(() => {
         this.off('message', handleResponse);
         reject(new Error('Verification request timeout'));
       }, 30000); // 30 second timeout
-      
+
       // Send request
       const success = this.send({
         type: 'staff_verify_request',
@@ -898,7 +905,7 @@ export class WebSocketService extends EventEmitter {
         timestamp: Date.now(),
         messageId
       });
-      
+
       if (!success) {
         this.off('message', handleResponse);
         reject(new Error('Failed to send verification request'));
@@ -913,7 +920,7 @@ export class WebSocketService extends EventEmitter {
 
   get connectionState(): string {
     if (!this.ws) return 'disconnected';
-    
+
     switch (this.ws.readyState) {
       case WebSocket.CONNECTING: return 'connecting';
       case WebSocket.OPEN: return 'connected';
@@ -926,7 +933,7 @@ export class WebSocketService extends EventEmitter {
   get authenticated(): boolean {
     return this.isAuthenticated;
   }
-  
+
   get reconnectEnabled(): boolean {
     return this._reconnectEnabled;
   }

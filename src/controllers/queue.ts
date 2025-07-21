@@ -266,6 +266,49 @@ export class QueueController {
       });
     }
   }
+
+  /**
+   * Get available destinations for a vehicle
+   * GET /api/queue/vehicle/:licensePlate/destinations
+   */
+  async getVehicleDestinations(req: Request, res: Response): Promise<void> {
+    try {
+      const { licensePlate } = req.params;
+
+      if (!licensePlate) {
+        res.status(400).json({
+          success: false,
+          message: 'License plate is required'
+        });
+        return;
+      }
+
+      const result = await this.queueService.getVehicleAvailableDestinations(licensePlate);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          data: {
+            licensePlate,
+            destinations: result.destinations,
+            defaultDestination: result.defaultDestination
+          }
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: result.error || 'Failed to get vehicle destinations'
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error getting vehicle destinations:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 }
 
 // Export a function to create queue controller instance

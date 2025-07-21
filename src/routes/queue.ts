@@ -61,5 +61,13 @@ export default function createQueueRouter(webSocketService?: WebSocketService) {
    */
   router.put('/status', queueController.updateVehicleStatus.bind(queueController));
 
+  /**
+   * @route GET /api/queue/vehicle/:licensePlate/destinations
+   * @desc Get available destinations for a vehicle
+   * @access Private (Authenticated staff)
+   * @param {string} licensePlate - The vehicle license plate
+   */
+  router.get('/vehicle/:licensePlate/destinations', queueController.getVehicleDestinations.bind(queueController));
+
   return router;
 } 

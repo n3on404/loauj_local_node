@@ -128,20 +128,20 @@ const startServer = async () => {
     app.use('/api/routes', routeRoutes);
     app.use('/api/driver-tickets', driverTicketsRoutes);
 
-    // Initialize queue routes
-    const queueRoutes = createQueueRouter();
+    // Initialize queue routes with WebSocket service
+    const queueRoutes = createQueueRouter(webSocketService);
     app.use('/api/queue', queueRoutes);
 
-    // Initialize overnight queue routes
-    const overnightQueueRoutes = createOvernightQueueRouter();
+    // Initialize overnight queue routes with WebSocket service
+    const overnightQueueRoutes = createOvernightQueueRouter(webSocketService);
     app.use('/api/overnight-queue', overnightQueueRoutes);
 
-    // Initialize queue booking routes
-    const queueBookingRoutes = createQueueBookingRouter();
+    // Initialize queue booking routes with WebSocket service
+    const queueBookingRoutes = createQueueBookingRouter(webSocketService);
     app.use('/api/queue-booking', queueBookingRoutes);
 
-    // Initialize simplified cash booking routes
-    const cashBookingRoutes = createCashBookingRouter();
+    // Initialize simplified cash booking routes with WebSocket service
+    const cashBookingRoutes = createCashBookingRouter(webSocketService);
     app.use('/api/cash-booking', cashBookingRoutes);
 
     // Initialize dashboard routes

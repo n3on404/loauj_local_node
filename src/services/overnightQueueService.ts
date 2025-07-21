@@ -2,6 +2,7 @@ import { prisma } from '../config/database';
 import { WebSocketService } from '../websocket/webSocketService';
 import { QueueEntry } from './queueService';
 import cron from 'node-cron';
+import { RouteService } from './routeService';
 
 export interface OvernightQueueEntry {
   id: string;
@@ -36,10 +37,12 @@ export class OvernightQueueService {
   private currentStationId: string;
   private webSocketService: WebSocketService;
   private transferJobActive: boolean = false;
+  private routeService: RouteService;
 
   constructor(webSocketService: WebSocketService) {
     this.currentStationId = process.env.STATION_ID || 'station-001';
     this.webSocketService = webSocketService;
+    this.routeService = new RouteService();
     this.startBackgroundJobs();
   }
 
@@ -587,18 +590,10 @@ export class OvernightQueueService {
   }
 
   /**
-   * Get destination name (cache or lookup)
+   * Get destination name from route table
    */
   private async getDestinationName(destinationId: string): Promise<string> {
-    // For now, return a simple mapping - in production you'd lookup from stations table
-    const stationNames: { [key: string]: string } = {
-      'station-tunis': 'Tunis',
-      'station-sfax': 'Sfax',
-      'station-gafsa': 'Gafsa',
-      'station-sousse': 'Sousse'
-    };
-
-    return stationNames[destinationId] || `Station ${destinationId}`;
+    return await this.routeService.getStationNameById(destinationId);
   }
 
   /**

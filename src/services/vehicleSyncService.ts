@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { prisma } from '../config/database';
 import { env } from '../config/environment';
+import { RouteService } from './routeService';
 
 export interface VehicleData {
   id: string;
@@ -30,6 +31,11 @@ export interface VehicleData {
 }
 
 export class VehicleSyncService {
+  private routeService: RouteService;
+
+  constructor() {
+    this.routeService = new RouteService();
+  }
   /**
    * Check if vehicle data has changed compared to local version
    */
@@ -168,6 +174,18 @@ export class VehicleSyncService {
                 console.log(`   ID: ${vehicleData.id}, Old LP: ${existingById.licensePlate}, New LP: ${vehicleData.licensePlate}`);
               }
 
+              // Determine default destination from authorized stations
+              const currentStationId = env.STATION_ID || 'station-001';
+              const destinationAuth = vehicleData.authorizedStations.find(
+                auth => auth.stationId !== currentStationId
+              );
+              
+              // Get default destination name from route table if available
+              let defaultDestinationName = null;
+              if (destinationAuth?.stationId) {
+                defaultDestinationName = await this.routeService.getStationNameById(destinationAuth.stationId);
+              }
+
               // Now safely upsert the vehicle
               await tx.vehicle.upsert({
                 where: { id: vehicleData.id },
@@ -180,6 +198,9 @@ export class VehicleSyncService {
                   color: vehicleData.color || null,
                   isActive: vehicleData.isActive,
                   isAvailable: vehicleData.isAvailable,
+                  // Set default destination based on first non-current authorized station
+                  defaultDestinationId: destinationAuth?.stationId || null,
+                  defaultDestinationName, // Fetch from route table
                   syncedAt: new Date()
                 },
                 update: {
@@ -191,6 +212,7 @@ export class VehicleSyncService {
                   isActive: vehicleData.isActive,
                   isAvailable: vehicleData.isAvailable,
                   syncedAt: new Date()
+                  // Note: Don't update default destination on sync to preserve local settings
                 }
               });
 
@@ -266,10 +288,13 @@ export class VehicleSyncService {
                 where: { vehicleId: vehicleData.id }
               });
 
-              const authorizedStationData = vehicleData.authorizedStations.map(auth => ({
+              const authorizedStationData = vehicleData.authorizedStations.map((auth, index) => ({
                 id: `${vehicleData.id}_${auth.stationId}`, // Generate deterministic ID
                 vehicleId: vehicleData.id,
                 stationId: auth.stationId,
+                stationName: null, // Will be populated later by route sync
+                priority: auth.stationId === currentStationId ? 99 : index + 1, // Current station lowest priority
+                isDefault: index === 0 && auth.stationId !== currentStationId, // First non-current station is default
                 createdAt: new Date(auth.createdAt),
                 syncedAt: new Date()
               }));
@@ -409,13 +434,24 @@ export class VehicleSyncService {
           where: { vehicleId: vehicleData.id }
         });
 
-        const authorizedStationData = vehicleData.authorizedStations.map(auth => ({
-          id: `${vehicleData.id}_${auth.stationId}`, // Generate deterministic ID
-          vehicleId: vehicleData.id,
-          stationId: auth.stationId,
-          createdAt: new Date(auth.createdAt),
-          syncedAt: new Date()
-        }));
+        const stationId = env.STATION_ID || 'station-001';
+        
+        // Fetch station names for all authorized stations
+        const authorizedStationData = [];
+        for (const [index, auth] of vehicleData.authorizedStations.entries()) {
+          const stationName = await this.routeService.getStationNameById(auth.stationId);
+          
+          authorizedStationData.push({
+            id: `${vehicleData.id}_${auth.stationId}`, // Generate deterministic ID
+            vehicleId: vehicleData.id,
+            stationId: auth.stationId,
+            stationName, // Fetch from route table
+            priority: auth.stationId === stationId ? 99 : index + 1, // Current station lowest priority
+            isDefault: index === 0 && auth.stationId !== stationId, // First non-current station is default
+            createdAt: new Date(auth.createdAt),
+            syncedAt: new Date()
+          });
+        }
 
         await tx.vehicleAuthorizedStation.createMany({
           data: authorizedStationData

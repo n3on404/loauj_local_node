@@ -115,6 +115,10 @@ model Vehicle {
   isAvailable     Boolean           @default(true) @map("is_available") // Available for trips
   isBanned        Boolean           @default(false) @map("is_banned") // Banned from operation
   
+  // Default destination for this vehicle
+  defaultDestinationId   String?           @map("default_destination_id") // Primary destination station
+  defaultDestinationName String?           @map("default_destination_name") // Cached name for display
+  
   syncedAt        DateTime          @map("synced_at")
   
   // Relations
@@ -130,14 +134,17 @@ model Vehicle {
 
 // Junction table for Vehicle-Station many-to-many relationship (matching central)
 model VehicleAuthorizedStation {
-  id        String   @id @default(cuid())
-  vehicleId String   @map("vehicle_id")
-  stationId String   @map("station_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  syncedAt  DateTime @map("synced_at")
+  id          String   @id @default(cuid())
+  vehicleId   String   @map("vehicle_id")
+  stationId   String   @map("station_id")
+  stationName String?  @map("station_name") // Cached station name for display
+  priority    Int      @default(1) // Route priority (1 = highest priority, 2 = second, etc.)
+  isDefault   Boolean  @default(false) @map("is_default") // Whether this is the default destination
+  createdAt   DateTime @default(now()) @map("created_at")
+  syncedAt    DateTime @map("synced_at")
   
   // Relations
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   
   // Prevent duplicate entries
   @@unique([vehicleId, stationId])

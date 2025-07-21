@@ -2,6 +2,69 @@ import { prisma } from '../config/database';
 import axios from 'axios';
 
 export class RouteService {
+  private static stationNameCache: Map<string, string> = new Map();
+  private static cacheExpiry: Map<string, number> = new Map();
+  private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  /**
+   * Get station name by station ID from route table
+   * Uses caching to improve performance
+   */
+  async getStationNameById(stationId: string): Promise<string> {
+    try {
+      // Check cache first
+      const cached = RouteService.stationNameCache.get(stationId);
+      const cacheTime = RouteService.cacheExpiry.get(stationId);
+      
+      if (cached && cacheTime && Date.now() < cacheTime) {
+        return cached;
+      }
+
+      // Fetch from database
+      const route = await prisma.route.findUnique({
+        where: { stationId },
+        select: { stationName: true }
+      });
+
+      if (route?.stationName) {
+        // Cache the result
+        RouteService.stationNameCache.set(stationId, route.stationName);
+        RouteService.cacheExpiry.set(stationId, Date.now() + RouteService.CACHE_DURATION);
+        return route.stationName;
+      }
+
+      // Fallback to formatted station ID if not found in routes
+      const fallbackName = this.formatStationId(stationId);
+      console.warn(`⚠️ Station name not found in routes for ${stationId}, using fallback: ${fallbackName}`);
+      return fallbackName;
+
+    } catch (error) {
+      console.error(`❌ Error fetching station name for ${stationId}:`, error);
+      return this.formatStationId(stationId);
+    }
+  }
+
+  /**
+   * Clear station name cache (useful when routes are updated)
+   */
+  static clearStationNameCache(): void {
+    RouteService.stationNameCache.clear();
+    RouteService.cacheExpiry.clear();
+    console.log('✅ Station name cache cleared');
+  }
+
+  /**
+   * Format station ID as fallback when route not found
+   */
+  private formatStationId(stationId: string): string {
+    // Convert station-tunis to "Tunis", station-sfax to "Sfax", etc.
+    return stationId
+      .replace(/^station-/, '')
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
   /**
    * Get all routes
    */

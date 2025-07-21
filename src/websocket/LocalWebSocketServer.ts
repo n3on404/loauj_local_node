@@ -534,17 +534,69 @@ export class EnhancedLocalWebSocketServer extends EventEmitter {
 
     // Subscribe to booking updates
     this.webSocketService.on('booking_update', (data: any) => {
-      this.broadcastToSubscribers('bookings', {
+      console.log('📡 Broadcasting booking_update to clients:', data);
+      this.broadcast({
         type: 'booking_update',
         payload: data,
         timestamp: Date.now()
       });
+      
+      // Also broadcast specific seat availability update if destination info is available
+      if (data.destinationId) {
+        this.broadcastSeatAvailabilityUpdate(data.destinationId);
+      }
     });
 
     // Subscribe to queue updates
     this.webSocketService.on('queue_update', (data: any) => {
-      this.broadcastToSubscribers('queues', {
+      console.log('📡 Broadcasting queue_update to clients:', data);
+      this.broadcast({
         type: 'queue_update',
+        payload: data,
+        timestamp: Date.now()
+      });
+      
+      // Also broadcast specific seat availability update if destination info is available
+      if (data.destinationId) {
+        this.broadcastSeatAvailabilityUpdate(data.destinationId);
+      }
+    });
+    
+    // Subscribe to cash booking updates
+    this.webSocketService.on('cash_booking_updated', (data: any) => {
+      console.log('📡 Broadcasting cash_booking_updated to clients:', data);
+      this.broadcast({
+        type: 'cash_booking_updated',
+        payload: data,
+        timestamp: Date.now()
+      });
+      
+      // Also broadcast specific seat availability update if destination info is available
+      if (data.destinationId) {
+        this.broadcastSeatAvailabilityUpdate(data.destinationId);
+      }
+    });
+    
+    // Subscribe to queue updated events (from queue service)
+    this.webSocketService.on('queue_updated', (data: any) => {
+      console.log('📡 Broadcasting queue_updated to clients:', data);
+      this.broadcast({
+        type: 'queue_updated',
+        payload: data,
+        timestamp: Date.now()
+      });
+      
+      // Also broadcast specific seat availability update if destination info is available
+      if (data.destinationId) {
+        this.broadcastSeatAvailabilityUpdate(data.destinationId);
+      }
+    });
+
+    // Subscribe to seat availability changes (new event type)
+    this.webSocketService.on('seat_availability_changed', (data: any) => {
+      console.log('📡 Broadcasting seat_availability_changed to clients:', data);
+      this.broadcast({
+        type: 'seat_availability_changed',
         payload: data,
         timestamp: Date.now()
       });
@@ -858,4 +910,136 @@ export class EnhancedLocalWebSocketServer extends EventEmitter {
       });
     });
   }
+  
+  // Static method to get the current instance
+  public static getInstance(): EnhancedLocalWebSocketServer | null {
+    return EnhancedLocalWebSocketServer.instance;
+  }
+
+  /**
+   * Broadcast seat availability update for a specific destination
+   */
+  public async broadcastSeatAvailabilityUpdate(destinationId: string): Promise<void> {
+    try {
+      // Import the queue booking service dynamically to avoid circular dependency
+      const QueueBookingServiceModule = await import('../services/queueBookingService');
+      const queueBookingService = new QueueBookingServiceModule.QueueBookingService(this.webSocketService);
+      
+      // Get current seat availability for the destination
+      const seatInfo = await queueBookingService.getAvailableSeats(destinationId);
+      
+      if (seatInfo.success && seatInfo.data) {
+        const updatePayload = {
+          destinationId,
+          availableSeats: seatInfo.data.totalAvailableSeats,
+          totalCapacity: seatInfo.data.vehicles.reduce((sum, v) => sum + v.totalSeats, 0),
+          vehicleCount: seatInfo.data.vehicles.length,
+          destinationName: seatInfo.data.destinationName,
+          timestamp: new Date().toISOString()
+        };
+
+        // Broadcast to all subscribed clients
+        this.broadcast({
+          type: 'seat_availability_changed',
+          payload: updatePayload,
+          timestamp: Date.now()
+        });
+
+        console.log(`📡 Broadcasted seat availability update for destination: ${destinationId} (${seatInfo.data.totalAvailableSeats} seats available)`);
+      }
+    } catch (error) {
+      console.error(`❌ Error broadcasting seat availability update for destination ${destinationId}:`, error);
+    }
+  }
+
+  /**
+   * Broadcast destination list update with current availability
+   */
+  public async broadcastDestinationListUpdate(): Promise<void> {
+    try {
+      // Import the queue booking service dynamically to avoid circular dependency
+      const QueueBookingServiceModule = await import('../services/queueBookingService');
+      const queueBookingService = new QueueBookingServiceModule.QueueBookingService(this.webSocketService);
+      
+      // Get current destinations with availability
+      const destinationsResult = await queueBookingService.getAvailableDestinations();
+      
+      if (destinationsResult.success && destinationsResult.destinations) {
+        // Filter out destinations with no available seats
+        const availableDestinations = destinationsResult.destinations.filter((dest: any) => dest.totalAvailableSeats > 0);
+        
+        const updatePayload = {
+          destinations: availableDestinations,
+          timestamp: new Date().toISOString()
+        };
+
+        // Broadcast to all subscribed clients
+        this.broadcast({
+          type: 'destinations_updated',
+          payload: updatePayload,
+          timestamp: Date.now()
+        });
+
+        console.log(`📡 Broadcasted destination list update: ${availableDestinations.length} destinations available`);
+      }
+    } catch (error) {
+      console.error('❌ Error broadcasting destination list update:', error);
+    }
+  }
+
+  /**
+   * Broadcast booking conflict notification to all clients
+   */
+  public broadcastBookingConflict(conflictData: {
+    destinationId: string;
+    destinationName: string;
+    conflictType: 'insufficient_seats' | 'booking_conflict' | 'seat_taken';
+    message: string;
+    affectedSeats?: number;
+  }): void {
+    const message = {
+      type: 'booking_conflict',
+      payload: {
+        ...conflictData,
+        timestamp: new Date().toISOString()
+      },
+      timestamp: Date.now()
+    };
+
+    // Broadcast to all authenticated clients
+    this.broadcast(message);
+    
+    console.log(`🚨 Broadcasted booking conflict: ${conflictData.conflictType} for destination ${conflictData.destinationName}`);
+  }
+
+  /**
+   * Broadcast immediate booking success notification
+   */
+  public broadcastBookingSuccess(bookingData: {
+    destinationId: string;
+    destinationName: string;
+    seatsBooked: number;
+    remainingSeats: number;
+    bookingId: string;
+    vehicleLicensePlate?: string;
+  }): void {
+    const message = {
+      type: 'booking_success',
+      payload: {
+        ...bookingData,
+        timestamp: new Date().toISOString()
+      },
+      timestamp: Date.now()
+    };
+
+    // Broadcast to all authenticated clients
+    this.broadcast(message);
+    
+    console.log(`🎉 Broadcasted booking success: ${bookingData.seatsBooked} seats booked for ${bookingData.destinationName}`);
+  }
+}
+
+// Export function for external access
+export function getLocalWebSocketServer(): EnhancedLocalWebSocketServer | null {
+  return EnhancedLocalWebSocketServer.getInstance();
 } 

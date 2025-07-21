@@ -159,148 +159,222 @@ export class QueueBookingService {
   }
 
   /**
-   * Create booking with intelligent seat allocation
+   * Create booking with intelligent seat allocation and race condition protection
    */
   async createBooking(bookingRequest: BookingRequest): Promise<BookingResult> {
     try {
       console.log(`🎫 Creating booking for ${bookingRequest.seatsRequested} seats to ${bookingRequest.destinationId}`);
 
-      // Get available seats
-      const availableSeatsResult = await this.getAvailableSeats(bookingRequest.destinationId);
-      
-      if (!availableSeatsResult.success || !availableSeatsResult.data) {
-        return {
-          success: false,
-          error: availableSeatsResult.error || 'No vehicles available'
-        };
-      }
-
-      const { data: availableSeats } = availableSeatsResult;
-
-      // Check if we have enough total seats
-      if (availableSeats.totalAvailableSeats < bookingRequest.seatsRequested) {
-        return {
-          success: false,
-          error: `Not enough seats available. Requested: ${bookingRequest.seatsRequested}, Available: ${availableSeats.totalAvailableSeats}`
-        };
-      }
-
-      // Distribute seats across vehicles using intelligent allocation
-      const allocation = this.allocateSeats(availableSeats.vehicles, bookingRequest.seatsRequested);
-      
-      if (allocation.length === 0) {
-        return {
-          success: false,
-          error: 'Unable to allocate seats across available vehicles'
-        };
-      }
-
-      // Create bookings for each vehicle
-      const bookings: QueueBooking[] = [];
-      const verificationCodes: string[] = [];
-      let totalAmount = 0;
-
-      for (const { vehicle, seatsToBook } of allocation) {
-        const verificationCode = this.generateVerificationCode();
-        const qrCode = this.generateQRCode(verificationCode);
-        const bookingAmount = seatsToBook * vehicle.basePrice;
-
-        // Create booking in database
-        const bookingType = bookingRequest.bookingType || 'CASH';
-        const booking = await prisma.booking.create({
-          data: {
-            id: `booking_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-            queueId: vehicle.queueId,
-            seatsBooked: seatsToBook,
-            totalAmount: bookingAmount,
-            bookingSource: bookingType === 'CASH' ? 'CASH_STATION' : 'ONLINE',
-            bookingType: bookingType,
-            customerPhone: bookingRequest.customerPhone || null,
-
-            paymentStatus: bookingType === 'CASH' ? 'PAID' : 'PENDING',
-            paymentMethod: bookingRequest.paymentMethod || (bookingType === 'CASH' ? 'CASH' : 'ONLINE'),
-            verificationCode,
-            createdBy: bookingRequest.staffId
-          }
+      // Use a database transaction to prevent race conditions
+      const result = await prisma.$transaction(async (tx) => {
+        // Get available seats within the transaction for consistency
+        const queueEntries = await tx.vehicleQueue.findMany({
+          where: {
+            destinationId: bookingRequest.destinationId,
+            status: { in: ['WAITING', 'LOADING', 'READY'] }
+          },
+          include: {
+            vehicle: true
+          },
+          orderBy: [
+            { queueType: 'desc' }, // OVERNIGHT first
+            { queuePosition: 'asc' }
+          ]
         });
 
-        // Update available seats in queue
-        await prisma.vehicleQueue.update({
-          where: { id: vehicle.queueId },
-          data: {
-            availableSeats: vehicle.availableSeats - seatsToBook
-          }
-        });
+        if (queueEntries.length === 0) {
+          throw new Error('No vehicles available for this destination');
+        }
 
-        // Check if vehicle is now full and update status
-        const updatedAvailableSeats = vehicle.availableSeats - seatsToBook;
-        if (updatedAvailableSeats === 0) {
-          await prisma.vehicleQueue.update({
-            where: { id: vehicle.queueId },
-            data: { status: 'READY' }
+        // Calculate total available seats within transaction
+        const totalAvailableSeats = queueEntries.reduce((sum, entry) => sum + entry.availableSeats, 0);
+
+        // Check if we have enough seats (atomic check)
+        if (totalAvailableSeats < bookingRequest.seatsRequested) {
+          throw new Error(`Not enough seats available. Requested: ${bookingRequest.seatsRequested}, Available: ${totalAvailableSeats}`);
+        }
+
+        // Get base price for this destination
+        let basePrice = 0;
+        try {
+          const route = await tx.route.findUnique({
+            where: { stationId: bookingRequest.destinationId }
           });
-          console.log(`🚐 Vehicle ${vehicle.licensePlate} is now READY (fully booked)`);
-          
-          // Get queue info for trip record
-          const queueInfo = await prisma.vehicleQueue.findUnique({
+          if (route && route.basePrice > 0) {
+            basePrice = route.basePrice;
+          }
+        } catch (error) {
+          console.warn('⚠️ Could not fetch route price, using queue base price');
+        }
+
+        // Prepare vehicles data for allocation
+        const vehicles: VehicleSeatingInfo[] = queueEntries.map(entry => ({
+          queueId: entry.id,
+          vehicleId: entry.vehicleId,
+          licensePlate: entry.vehicle.licensePlate,
+          queuePosition: entry.queuePosition,
+          availableSeats: entry.availableSeats,
+          totalSeats: entry.totalSeats,
+          basePrice: basePrice || entry.basePrice,
+          status: entry.status,
+          estimatedDeparture: entry.estimatedDeparture
+        }));
+
+        // Allocate seats across vehicles
+        const allocation = this.allocateSeats(vehicles, bookingRequest.seatsRequested);
+        
+        if (allocation.length === 0) {
+          throw new Error('Unable to allocate seats across available vehicles');
+        }
+
+        // Create bookings and update seats atomically
+        const bookings: QueueBooking[] = [];
+        const verificationCodes: string[] = [];
+        let totalAmount = 0;
+
+        for (const { vehicle, seatsToBook } of allocation) {
+          // Double-check seat availability before booking (optimistic locking)
+          const currentQueueEntry = await tx.vehicleQueue.findUnique({
+            where: { id: vehicle.queueId },
+            select: { availableSeats: true, id: true }
+          });
+
+          if (!currentQueueEntry) {
+            throw new Error(`Vehicle queue ${vehicle.queueId} no longer exists`);
+          }
+
+          if (currentQueueEntry.availableSeats < seatsToBook) {
+            throw new Error(`Insufficient seats on vehicle ${vehicle.licensePlate}. Available: ${currentQueueEntry.availableSeats}, Requested: ${seatsToBook}`);
+          }
+
+          const verificationCode = this.generateVerificationCode();
+          const bookingAmount = seatsToBook * vehicle.basePrice;
+
+          // Create booking
+          const bookingType = bookingRequest.bookingType || 'CASH';
+          const booking = await tx.booking.create({
+            data: {
+              id: `booking_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+              queueId: vehicle.queueId,
+              seatsBooked: seatsToBook,
+              totalAmount: bookingAmount,
+              bookingSource: bookingType === 'CASH' ? 'CASH_STATION' : 'ONLINE',
+              bookingType: bookingType,
+              customerPhone: bookingRequest.customerPhone || null,
+              paymentStatus: bookingType === 'CASH' ? 'PAID' : 'PENDING',
+              paymentMethod: bookingRequest.paymentMethod || (bookingType === 'CASH' ? 'CASH' : 'ONLINE'),
+              verificationCode,
+              createdBy: bookingRequest.staffId
+            }
+          });
+
+          // Atomically update available seats with additional safety check
+          const updatedQueue = await tx.vehicleQueue.updateMany({
+            where: { 
+              id: vehicle.queueId,
+              availableSeats: { gte: seatsToBook } // Ensure we still have enough seats
+            },
+            data: {
+              availableSeats: { decrement: seatsToBook }
+            }
+          });
+
+          // Check if the update actually happened (no rows updated means conflict)
+          if (updatedQueue.count === 0) {
+            throw new Error(`Booking conflict: Seats on vehicle ${vehicle.licensePlate} were just booked by another user. Please try again.`);
+          }
+
+          // Get updated queue info to check if vehicle is now full
+          const updatedQueueEntry = await tx.vehicleQueue.findUnique({
             where: { id: vehicle.queueId },
             include: { vehicle: true }
           });
-          
-          if (queueInfo) {
-            // Create trip record when vehicle is ready to start
-            await this.createTripRecord(vehicle.queueId, queueInfo);
+
+          if (!updatedQueueEntry) {
+            throw new Error('Vehicle queue entry not found after update');
           }
+
+          // Update status to READY if vehicle is now full
+          if (updatedQueueEntry.availableSeats === 0) {
+            await tx.vehicleQueue.update({
+              where: { id: vehicle.queueId },
+              data: { status: 'READY' }
+            });
+            console.log(`🚐 Vehicle ${vehicle.licensePlate} is now READY (fully booked)`);
+          }
+
+          const queueBooking: QueueBooking = {
+            id: booking.id,
+            queueId: booking.queueId,
+            vehicleLicensePlate: updatedQueueEntry.vehicle.licensePlate,
+            destinationName: updatedQueueEntry.destinationName,
+            startStationName: env.STATION_NAME,
+            seatsBooked: booking.seatsBooked,
+            totalAmount: booking.totalAmount,
+            verificationCode: booking.verificationCode,
+            bookingType: (booking.bookingType || 'CASH') as 'CASH' | 'ONLINE',
+            customerPhone: booking.customerPhone,
+            onlineTicketId: booking.onlineTicketId,
+            createdAt: booking.createdAt,
+            queuePosition: updatedQueueEntry.queuePosition,
+            estimatedDeparture: updatedQueueEntry.estimatedDeparture
+          };
+
+          bookings.push(queueBooking);
+          verificationCodes.push(verificationCode);
+          totalAmount += bookingAmount;
+
+          console.log(`✅ Atomically booked ${seatsToBook} seats on vehicle ${vehicle.licensePlate} (${updatedQueueEntry.availableSeats} seats remaining)`);
         }
 
-        // Get queue and vehicle info for response
+        return {
+          success: true,
+          bookings,
+          totalAmount,
+          verificationCodes,
+          ticketIds: verificationCodes
+        };
+      });
+
+      // Create trip records for fully booked vehicles (outside transaction to avoid conflicts)
+      for (const booking of result.bookings) {
         const queueInfo = await prisma.vehicleQueue.findUnique({
-          where: { id: vehicle.queueId },
+          where: { id: booking.queueId },
           include: { vehicle: true }
         });
-
-        const queueBooking: QueueBooking = {
-          id: booking.id,
-          queueId: booking.queueId,
-          vehicleLicensePlate: queueInfo?.vehicle.licensePlate || '',
-          destinationName: queueInfo?.destinationName || '',
-          startStationName: env.STATION_NAME,
-          seatsBooked: booking.seatsBooked,
-          totalAmount: booking.totalAmount,
-          verificationCode: booking.verificationCode,
-          bookingType: (booking.bookingType || 'CASH') as 'CASH' | 'ONLINE',
-          customerPhone: booking.customerPhone,
-          onlineTicketId: booking.onlineTicketId,
-          createdAt: booking.createdAt,
-          queuePosition: queueInfo?.queuePosition || 0,
-          estimatedDeparture: queueInfo?.estimatedDeparture || null
-        };
-
-        bookings.push(queueBooking);
-        verificationCodes.push(verificationCode);
-        totalAmount += bookingAmount;
-
-        console.log(`✅ Booked ${seatsToBook} seats on vehicle ${vehicle.licensePlate} (${updatedAvailableSeats} seats remaining)`);
+        
+        if (queueInfo && queueInfo.status === 'READY' && queueInfo.availableSeats === 0) {
+          await this.createTripRecord(booking.queueId, queueInfo);
+        }
       }
 
-      // Broadcast booking update
-      this.broadcastBookingUpdate(bookingRequest.destinationId);
+      // Broadcast booking update AFTER successful transaction
+      this.broadcastBookingUpdate(bookingRequest.destinationId, result);
 
-      console.log(`🎉 Booking completed: ${bookingRequest.seatsRequested} seats across ${bookings.length} vehicle(s), Total: $${totalAmount}`);
+      console.log(`🎉 Booking completed: ${bookingRequest.seatsRequested} seats across ${result.bookings.length} vehicle(s), Total: $${result.totalAmount}`);
 
-      return {
-        success: true,
-        bookings,
-        totalAmount,
-        verificationCodes,
-        ticketIds: verificationCodes
-      };
+      return result;
 
     } catch (error) {
       console.error('❌ Error creating booking:', error);
+      
+      // Determine conflict type and broadcast appropriate notification
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred during booking';
+      
+      if (errorMessage.includes('Booking conflict') || errorMessage.includes('were just booked by another user')) {
+        this.broadcastBookingConflict(bookingRequest.destinationId, errorMessage, 'booking_conflict');
+      } else if (errorMessage.includes('Not enough seats available') || errorMessage.includes('Insufficient seats')) {
+        this.broadcastBookingConflict(bookingRequest.destinationId, errorMessage, 'insufficient_seats');
+      } else if (errorMessage.includes('no longer exists') || errorMessage.includes('Seats on vehicle')) {
+        this.broadcastBookingConflict(bookingRequest.destinationId, errorMessage, 'seat_taken');
+      }
+      
+      // Broadcast immediate update to refresh all clients on failure
+      this.broadcastBookingUpdate(bookingRequest.destinationId);
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage
       };
     }
   }
@@ -485,7 +559,7 @@ export class QueueBookingService {
   }
 
   /**
-   * Get all destinations with available seats
+   * Get all destinations with available seats (filters out fully booked destinations)
    */
   async getAvailableDestinations(): Promise<{
     success: boolean;
@@ -498,11 +572,13 @@ export class QueueBookingService {
     error?: string;
   }> {
     try {
-      const destinations = await prisma.vehicleQueue.groupBy({
+      console.log('📊 Getting available destinations for booking (filtering fully booked)...');
+      
+      // First get all destinations
+      const allDestinations = await prisma.vehicleQueue.groupBy({
         by: ['destinationId', 'destinationName'],
         where: {
-          status: { in: ['WAITING', 'LOADING', 'READY'] },
-          availableSeats: { gt: 0 }
+          status: { in: ['WAITING', 'LOADING', 'READY'] }
         },
         _sum: {
           availableSeats: true
@@ -512,12 +588,20 @@ export class QueueBookingService {
         }
       });
 
-      const result = destinations.map(dest => ({
+      // Filter out destinations with no available seats
+      const availableDestinations = allDestinations.filter(dest => 
+        (dest._sum.availableSeats || 0) > 0
+      );
+
+      const result = availableDestinations.map(dest => ({
         destinationId: dest.destinationId,
         destinationName: dest.destinationName,
         totalAvailableSeats: dest._sum.availableSeats || 0,
         vehicleCount: dest._count.id
       }));
+
+      const filteredOut = allDestinations.length - availableDestinations.length;
+      console.log(`✅ Found ${result.length} destinations with available seats (filtered out ${filteredOut} fully booked destinations)`);
 
       return {
         success: true,
@@ -723,13 +807,34 @@ export class QueueBookingService {
   }
 
   /**
-   * Broadcast booking update and financial updates
+   * Broadcast booking update with enhanced conflict and success notifications
    */
-  private broadcastBookingUpdate(destinationId: string): void {
+  private broadcastBookingUpdate(destinationId: string, result?: BookingResult): void {
     try {
-      // Emit queue update for real-time queue management
+      // Emit multiple event types for real-time updates
       this.webSocketService.emit('queue_updated', {
         destinationId,
+        timestamp: new Date().toISOString()
+      });
+      
+      this.webSocketService.emit('booking_update', {
+        destinationId,
+        stationId: this.currentStationId,
+        timestamp: new Date().toISOString()
+      });
+      
+      this.webSocketService.emit('queue_update', {
+        destinationId,
+        stationId: this.currentStationId,
+        updateType: 'booking_created',
+        timestamp: new Date().toISOString()
+      });
+
+      // Emit specific seat availability change event
+      this.webSocketService.emit('seat_availability_changed', {
+        destinationId,
+        stationId: this.currentStationId,
+        updateType: 'seat_availability_changed',
         timestamp: new Date().toISOString()
       });
 
@@ -741,11 +846,73 @@ export class QueueBookingService {
       });
 
       console.log(`📡 Broadcast queue update for destination: ${destinationId}`);
-      
-      // Emit financial update for supervisor dashboard
-      this.emitFinancialUpdate();
+
+      // Try to get the local WebSocket server directly and broadcast specific updates
+      try {
+        const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+        const localWebSocketServer = getLocalWebSocketServer();
+        if (localWebSocketServer) {
+          // Broadcast specific seat availability update
+          localWebSocketServer.broadcastSeatAvailabilityUpdate(destinationId);
+          // Also broadcast general destination list update
+          localWebSocketServer.broadcastDestinationListUpdate();
+          
+          // If booking was successful, broadcast success notification
+          if (result && result.success && result.bookings && result.bookings.length > 0) {
+            const firstBooking = result.bookings[0];
+            const totalSeatsBooked = result.bookings.reduce((sum, b) => sum + b.seatsBooked, 0);
+            
+            localWebSocketServer.broadcastBookingSuccess({
+              destinationId,
+              destinationName: firstBooking.destinationName,
+              seatsBooked: totalSeatsBooked,
+              remainingSeats: 0, // Will be updated by seat availability broadcast
+              bookingId: firstBooking.id,
+              vehicleLicensePlate: firstBooking.vehicleLicensePlate
+            });
+          }
+          
+          console.log(`📡 Triggered specific seat availability updates for destination: ${destinationId}`);
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not access local WebSocket server directly:', error);
+      }
+
     } catch (error) {
       console.error('❌ Error broadcasting booking update:', error);
+    }
+  }
+
+  /**
+   * Broadcast booking conflict notification
+   */
+  private broadcastBookingConflict(destinationId: string, errorMessage: string, conflictType: 'insufficient_seats' | 'booking_conflict' | 'seat_taken' = 'booking_conflict'): void {
+    try {
+      // Get destination name
+      prisma.vehicleQueue.findFirst({
+        where: { destinationId },
+        select: { destinationName: true }
+      }).then(queue => {
+        const destinationName = queue?.destinationName || 'Unknown Destination';
+        
+        // Try to get the local WebSocket server and broadcast conflict
+        try {
+          const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+          const localWebSocketServer = getLocalWebSocketServer();
+          if (localWebSocketServer) {
+            localWebSocketServer.broadcastBookingConflict({
+              destinationId,
+              destinationName,
+              conflictType,
+              message: errorMessage
+            });
+          }
+        } catch (error) {
+          console.warn('⚠️ Could not broadcast booking conflict:', error);
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error broadcasting booking conflict:', error);
     }
   }
 
