@@ -13,6 +13,7 @@ import createQueueBookingRouter from './routes/queueBooking';
 import createCashBookingRouter from './routes/cashBooking';
 import createWebSocketRouter from './routes/websocket';
 import bookingRoutes from './routes/booking';
+import localBookingRoutes from './routes/localBooking';
 import vehicleRoutes from './routes/vehicle';
 import stationRoutes from './routes/station';
 import syncRoutes from './routes/sync';
@@ -21,6 +22,7 @@ import staffRoutes from './routes/staff';
 import dashboardRouter from './routes/dashboard';
 import routeRoutes from './routes/route';
 import driverTicketsRoutes from './routes/driverTickets';
+import publicRoutes from './routes/public';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -36,6 +38,8 @@ import { createAutoTripSyncRouter } from './routes/autoTripSync';
 import { setLocalWebSocketServer as setQueueLocalWebSocketServer } from './services/queueService';
 import { setLocalWebSocketServer as setBookingLocalWebSocketServer } from './services/simpleCashBookingService';
 import { setLocalWebSocketServer as setWebSocketRouterServer } from './routes/websocket';
+import { setPublicControllerWebSocket } from './controllers/publicController';
+import { setBookingControllerWebSocket } from './controllers/localBooking';
 
 import * as dashboardController from './controllers/dashboardController';
 
@@ -120,13 +124,14 @@ const startServer = async () => {
 
     // API routes - register after WebSocket is initialized
     app.use('/api/auth', authRoutes);
-    app.use('/api/bookings', bookingRoutes);
+    app.use('/api/bookings', localBookingRoutes);
     app.use('/api/vehicles', vehicleRoutes);
     app.use('/api/station', stationRoutes);
     app.use('/api/sync', syncRoutes);
     app.use('/api/staff', staffRoutes);
     app.use('/api/routes', routeRoutes);
     app.use('/api/driver-tickets', driverTicketsRoutes);
+    app.use('/api/public', publicRoutes);
 
     // Initialize queue routes with WebSocket service
     const queueRoutes = createQueueRouter(webSocketService);
@@ -179,6 +184,8 @@ const startServer = async () => {
     setQueueLocalWebSocketServer(localWebSocketServer);
     setBookingLocalWebSocketServer(localWebSocketServer);
     setWebSocketRouterServer(localWebSocketServer);
+    setPublicControllerWebSocket(localWebSocketServer);
+    setBookingControllerWebSocket(localWebSocketServer);
 
     // Set up periodic dashboard data updates (every 5 seconds)
     const dashboardUpdateInterval = setInterval(async () => {
