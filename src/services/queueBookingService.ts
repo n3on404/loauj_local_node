@@ -2,6 +2,7 @@ import { prisma } from '../config/database';
 import { WebSocketService } from '../websocket/webSocketService';
 import * as dashboardController from '../controllers/dashboardController';
 import { env } from '../config/environment';
+import { configService } from '../config/supervisorConfig';
 
 export interface BookingRequest {
   destinationId: string;
@@ -65,7 +66,7 @@ export class QueueBookingService {
   private webSocketService: WebSocketService;
 
   constructor(webSocketService: WebSocketService) {
-    this.currentStationId = process.env.STATION_ID || 'station-001';
+    this.currentStationId = configService.getStationId();
     this.webSocketService = webSocketService;
   }
 
@@ -308,7 +309,7 @@ export class QueueBookingService {
             queueId: booking.queueId,
             vehicleLicensePlate: updatedQueueEntry.vehicle.licensePlate,
             destinationName: updatedQueueEntry.destinationName,
-            startStationName: env.STATION_NAME,
+            startStationName: configService.getStationName(),
             seatsBooked: booking.seatsBooked,
             totalAmount: booking.totalAmount,
             verificationCode: booking.verificationCode,
@@ -450,7 +451,7 @@ export class QueueBookingService {
         queueId: booking.queueId,
         vehicleLicensePlate: booking.queue.vehicle.licensePlate,
         destinationName: booking.queue.destinationName,
-        startStationName: env.STATION_NAME,
+        startStationName: configService.getStationName(),
         seatsBooked: booking.seatsBooked,
         totalAmount: booking.totalAmount,
         verificationCode: booking.verificationCode,
@@ -532,7 +533,7 @@ export class QueueBookingService {
         queueId: updatedBooking.queueId,
         vehicleLicensePlate: updatedBooking.queue.vehicle.licensePlate,
         destinationName: updatedBooking.queue.destinationName,
-        startStationName: env.STATION_NAME,
+        startStationName: configService.getStationName(),
         seatsBooked: updatedBooking.seatsBooked,
         totalAmount: updatedBooking.totalAmount,
         verificationCode: updatedBooking.verificationCode,
@@ -710,7 +711,7 @@ export class QueueBookingService {
           queueId: booking.queueId,
           vehicleLicensePlate: queueInfo.vehicle.licensePlate,
           destinationName: queueInfo.destinationName,
-          startStationName: env.STATION_NAME,
+          startStationName: configService.getStationName(),
           seatsBooked: booking.seatsBooked,
           totalAmount: booking.totalAmount,
           verificationCode: booking.verificationCode,
@@ -849,7 +850,7 @@ export class QueueBookingService {
 
       // Try to get the local WebSocket server directly and broadcast specific updates
       try {
-        const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+        const { getLocalWebSocketServer } = require('../websocket/EnhancedLocalWebSocketServer');
         const localWebSocketServer = getLocalWebSocketServer();
         if (localWebSocketServer) {
           // Broadcast specific seat availability update
@@ -897,7 +898,7 @@ export class QueueBookingService {
         
         // Try to get the local WebSocket server and broadcast conflict
         try {
-          const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+          const { getLocalWebSocketServer } = require('../websocket/EnhancedLocalWebSocketServer');
           const localWebSocketServer = getLocalWebSocketServer();
           if (localWebSocketServer) {
             localWebSocketServer.broadcastBookingConflict({
@@ -989,7 +990,7 @@ export class QueueBookingService {
     try {
       // Check if we're online by trying to reach central server
       const centralServerUrl = process.env.CENTRAL_SERVER_URL || 'http://localhost:5000';
-      const stationId = process.env.STATION_ID || 'station-001';
+      const stationId = configService.getStationId();
       
       console.log(`🌐 Syncing trip ${trip.id} to central server...`);
 

@@ -1,22 +1,23 @@
 import { prisma } from '../config/database';
 import { WebSocketService } from '../websocket/webSocketService';
-import { EnhancedLocalWebSocketServer } from '../websocket/LocalWebSocketServer';
+import { EnhancedMQTTService } from './enhancedMqttService';
 import * as dashboardController from '../controllers/dashboardController';
+import { configService } from '../config/supervisorConfig';
 
-// Add a reference to the EnhancedLocalWebSocketServer
-let localWebSocketServer: EnhancedLocalWebSocketServer | null = null;
+// Add a reference to the EnhancedMQTTService
+let enhancedMqttService: EnhancedMQTTService | null = null;
 
-// Function to set the EnhancedLocalWebSocketServer instance
-export function setLocalWebSocketServer(wsServer: EnhancedLocalWebSocketServer) {
-  localWebSocketServer = wsServer;
+// Function to set the EnhancedMQTTService instance
+export function setEnhancedMqttService(mqttService: EnhancedMQTTService) {
+  enhancedMqttService = mqttService;
 }
 
 // Enhanced notification function with financial updates
 async function notifyBookingUpdate(booking: any) {
   try {
-    // Notify WebSocket clients about the booking update
-    if (localWebSocketServer) {
-      localWebSocketServer.notifyBookingUpdate({
+    // Notify MQTT clients about the booking update
+    if (enhancedMqttService) {
+      enhancedMqttService.publish('cash_booking_updated', {
         type: 'booking_created',
         bookingId: booking.id,
         seatsBooked: booking.seatsBooked,
@@ -39,20 +40,20 @@ async function notifyBookingUpdate(booking: any) {
 // New function to emit financial updates for supervisor dashboard
 async function emitFinancialUpdate() {
   try {
-    if (localWebSocketServer) {
+    if (enhancedMqttService) {
       // Get updated financial stats
       const financialStats = await dashboardController.getFinancialStats();
       const recentTransactions = await dashboardController.getTransactionHistory(10);
       
       // Emit financial update event
-      localWebSocketServer.broadcast({
+      enhancedMqttService.broadcast({
         type: 'financial_update',
         payload: {
           financial: financialStats,
           recentTransactions,
           timestamp: new Date().toISOString()
         },
-        timestamp: Date.now()
+        timestamp: new Date().toISOString()
       });
       
       console.log('📊 Sent real-time financial update');
@@ -119,7 +120,7 @@ export class SimpleCashBookingService {
   private webSocketService: WebSocketService;
 
   constructor(webSocketService: WebSocketService) {
-    this.currentStationId = process.env.STATION_ID || 'station-001';
+    this.currentStationId = configService.getStationId();
     this.webSocketService = webSocketService;
   }
 
@@ -665,15 +666,18 @@ export class SimpleCashBookingService {
 
       console.log(`📡 Broadcast booking update for destination: ${destinationId}`);
 
-      // Try to get the local WebSocket server directly and broadcast specific updates
+      // Try to get the enhanced MQTT service and publish specific updates
       try {
-        const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
-        const localWebSocketServer = getLocalWebSocketServer();
-        if (localWebSocketServer) {
-          // Broadcast specific seat availability update
-          localWebSocketServer.broadcastSeatAvailabilityUpdate(destinationId);
-          // Also broadcast general destination list update
-          localWebSocketServer.broadcastDestinationListUpdate();
+        if (enhancedMqttService) {
+          // Publish specific seat availability update
+          enhancedMqttService.publish('seat_availability_changed', {
+            destination_id: destinationId,
+            timestamp: new Date().toISOString()
+          });
+          // Also publish general destination list update
+          enhancedMqttService.publish('destination_list_update', {
+            timestamp: new Date().toISOString()
+          });
           
           console.log(`📡 Triggered specific seat availability updates for destination: ${destinationId}`);
         }

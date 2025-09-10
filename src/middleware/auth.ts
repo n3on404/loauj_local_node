@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { getAuthService } from '../services/authService';
 import { WebSocketService } from '../websocket/webSocketService';
+import { configService } from '../config/supervisorConfig';
 
 // Extend Express Request interface to include staff
 declare global {
@@ -35,7 +36,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       console.log('🔐 Central server request - bypassing authentication');
       req.staff = {
         role: 'CENTRAL_SERVER',
-        station: { id: process.env.STATION_ID || 'monastir-main-station' }
+        station: { id: configService.getStationId() }
       };
       next();
       return;

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { vehicleSyncService } from '../services/vehicleSyncService';
 import { env } from '../config/environment';
+import { configService } from '../config/supervisorConfig';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.post('/request', async (req: Request, res: Response) => {
     const result = await vehicleSyncService.forwardDriverRequest(req.body);
     if (result.success && result.vehicle) {
       // Sync new vehicle to local DB
-      await vehicleSyncService.handleVehicleUpdate(result.vehicle, env.STATION_ID || 'station-001');
+      await vehicleSyncService.handleVehicleUpdate(result.vehicle, configService.getStationId());
       // Optionally notify clients via WebSocket here
     }
     res.json(result);
@@ -48,7 +49,7 @@ router.post('/:id/approve', async (req: Request, res: Response) => {
     const authHeader = req.headers['authorization'];
     const result = await vehicleSyncService.forwardApproveRequest(id, authHeader);
     if (result.success && result.vehicle) {
-      await vehicleSyncService.handleVehicleUpdate(result.vehicle, env.STATION_ID || 'station-001');
+      await vehicleSyncService.handleVehicleUpdate(result.vehicle, configService.getStationId());
       // Optionally notify clients via WebSocket here
     }
     res.json(result);
@@ -167,13 +168,13 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       filters.isAvailable = isAvailable === 'true';
   }
 
-    const vehicles = await vehicleSyncService.getLocalVehicles(env.STATION_ID || 'station-001', filters);
+    const vehicles = await vehicleSyncService.getLocalVehicles(configService.getStationId(), filters);
 
     res.json({
       success: true,
       data: vehicles,
       count: vehicles.length,
-      stationId: env.STATION_ID || 'station-001'
+      stationId: configService.getStationId()
     });
   } catch (error) {
     console.error('❌ Error getting vehicles:', error);
@@ -196,7 +197,7 @@ router.get('/stats', async (req: Request, res: Response): Promise<void> => {
     res.json({
       success: true,
       data: stats,
-      stationId: env.STATION_ID || 'station-001'
+      stationId: configService.getStationId()
     });
   } catch (error) {
     console.error('❌ Error getting vehicle stats:', error);
@@ -216,7 +217,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     
-    const vehicles = await vehicleSyncService.getLocalVehicles(env.STATION_ID || 'station-001');
+    const vehicles = await vehicleSyncService.getLocalVehicles(configService.getStationId());
     const vehicle = vehicles.find(v => v.id === id);
     
     if (!vehicle) {
@@ -257,7 +258,7 @@ router.get('/driver/:cin', async (req: Request, res: Response): Promise<void> =>
       return;
     }
     
-    const vehicles = await vehicleSyncService.getLocalVehicles(env.STATION_ID || 'station-001');
+    const vehicles = await vehicleSyncService.getLocalVehicles(configService.getStationId());
     const vehicle = vehicles.find(v => v.driver?.cin === cin);
     
     if (!vehicle) {

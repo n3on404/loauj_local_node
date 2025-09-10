@@ -1,8 +1,9 @@
 import { prisma } from '../config/database';
 import { WebSocketService } from '../websocket/webSocketService';
-import { EnhancedLocalWebSocketServer } from '../websocket/LocalWebSocketServer';
+import { EnhancedLocalWebSocketServer } from '../websocket/EnhancedLocalWebSocketServer';
 import * as dashboardController from '../controllers/dashboardController';
 import { RouteService } from './routeService';
+import { configService } from '../config/supervisorConfig';
 
 export interface QueueEntry {
   id: string;
@@ -71,7 +72,7 @@ export class QueueService {
   private routeService: RouteService;
 
   constructor(webSocketService: WebSocketService) {
-    this.currentStationId = process.env.STATION_ID || 'station-001';
+    this.currentStationId = configService.getStationId();
     this.webSocketService = webSocketService;
     this.routeService = new RouteService();
   }
@@ -793,7 +794,7 @@ export class QueueService {
     
     // Also try to get the local WebSocket server directly and broadcast
     try {
-      const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+      const { getLocalWebSocketServer } = require('../websocket/EnhancedLocalWebSocketServer');
       const localWebSocketServer = getLocalWebSocketServer();
       if (localWebSocketServer) {
         // Broadcast specific seat availability update

@@ -3,6 +3,7 @@ import { WebSocketService } from '../websocket/webSocketService';
 import { QueueEntry } from './queueService';
 import cron from 'node-cron';
 import { RouteService } from './routeService';
+import { configService } from '../config/supervisorConfig';
 
 export interface OvernightQueueEntry {
   id: string;
@@ -40,7 +41,7 @@ export class OvernightQueueService {
   private routeService: RouteService;
 
   constructor(webSocketService: WebSocketService) {
-    this.currentStationId = process.env.STATION_ID || 'station-001';
+    this.currentStationId = configService.getStationId();
     this.webSocketService = webSocketService;
     this.routeService = new RouteService();
     this.startBackgroundJobs();
@@ -168,6 +169,23 @@ export class OvernightQueueService {
       // Get the next position in the overnight queue for this destination
       const nextPosition = await this.getNextOvernightQueuePosition(originalDestinationId);
 
+      // Get the correct base price from the route table
+      let basePrice = 0;
+      try {
+        const route = await prisma.route.findUnique({
+          where: { stationId: originalDestinationId }
+        });
+
+        if (route && route.basePrice > 0) {
+          basePrice = route.basePrice;
+          console.log(`✅ Found base price for ${destinationName}: ${basePrice} TND`);
+        } else {
+          console.warn(`⚠️ No route found for destination ${destinationName} (${originalDestinationId}), using default price`);
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching route price for ${destinationName}:`, error);
+      }
+
       // Create overnight queue entry
       const queueEntry = await prisma.vehicleQueue.create({
         data: {
@@ -181,7 +199,7 @@ export class OvernightQueueService {
           enteredAt: new Date(),
           availableSeats: vehicle.capacity,
           totalSeats: vehicle.capacity,
-          basePrice: 0,
+          basePrice: basePrice,
           syncedAt: new Date()
         },
         include: {
@@ -647,7 +665,7 @@ export class OvernightQueueService {
       // Send to local WebSocket server for desktop app updates
       // We need to get the local WebSocket server instance
       // This will be set by the main server
-      const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+      const { getLocalWebSocketServer } = require('../websocket/EnhancedLocalWebSocketServer');
       const localWebSocketServer = getLocalWebSocketServer();
       if (localWebSocketServer) {
         localWebSocketServer.notifyOvernightQueueUpdate({
@@ -680,7 +698,7 @@ export class OvernightQueueService {
       });
 
       // Send to local WebSocket server for desktop app updates
-      const { getLocalWebSocketServer } = require('../websocket/LocalWebSocketServer');
+      const { getLocalWebSocketServer } = require('../websocket/EnhancedLocalWebSocketServer');
       const localWebSocketServer = getLocalWebSocketServer();
       if (localWebSocketServer) {
         localWebSocketServer.notifyQueueUpdate({

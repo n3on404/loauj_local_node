@@ -4,6 +4,7 @@ import axios from 'axios';
 import { env } from '../config/environment';
 import { VehicleData, vehicleSyncService } from '../services/vehicleSyncService';
 import { routeSyncService } from '../services/routeSyncService';
+import { configService } from '../config/supervisorConfig';
 
 export class WebSocketService extends EventEmitter {
   private ws: WebSocket | null = null;
@@ -33,7 +34,7 @@ export class WebSocketService extends EventEmitter {
     super();
     this.centralServerUrl = env.CENTRAL_SERVER_WS_URL;
     this.centralServerHttpUrl = env.CENTRAL_SERVER_URL;
-    this.stationId = env.STATION_ID || 'station-001'; // Default for testing
+    this.stationId = configService.getStationId();
 
     console.log(`📡 WebSocket Service initialized`);
     console.log(`   Central Server: ${this.centralServerHttpUrl}`);

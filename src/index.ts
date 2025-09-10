@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { env } from './config/environment';
 import { getConnectionInfo, testConnection } from './config/database';
+import { configService } from './config/supervisorConfig';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -32,14 +33,11 @@ import { requestLogger } from './middleware/requestLogger';
 // Import services
 import { SyncService } from './services/syncService';
 import { WebSocketService } from './websocket/webSocketService';
-import { EnhancedLocalWebSocketServer } from './websocket/LocalWebSocketServer';
 import { AutoTripSyncService } from './services/autoTripSyncService';
+import { EnhancedMQTTService } from './services/enhancedMqttService';
+import { mqttConfig, validateMqttConfig } from './config/mqttConfig';
 import { createAutoTripSyncRouter } from './routes/autoTripSync';
-import { setLocalWebSocketServer as setQueueLocalWebSocketServer } from './services/queueService';
-import { setLocalWebSocketServer as setBookingLocalWebSocketServer } from './services/simpleCashBookingService';
-import { setLocalWebSocketServer as setWebSocketRouterServer } from './routes/websocket';
-import { setPublicControllerWebSocket } from './controllers/publicController';
-import { setBookingControllerWebSocket } from './controllers/localBooking';
+import { setEnhancedMqttService } from './services/simpleCashBookingService';
 
 import * as dashboardController from './controllers/dashboardController';
 
@@ -73,8 +71,8 @@ app.use(requestLogger);
 // Initialize services
 let syncService: SyncService;
 let webSocketService: WebSocketService;
-let localWebSocketServer: EnhancedLocalWebSocketServer;
 let autoTripSyncService: AutoTripSyncService;
+let enhancedMqttService: EnhancedMQTTService;
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -111,6 +109,8 @@ const startServer = async () => {
     // Initialize auto trip sync service
     autoTripSyncService = new AutoTripSyncService(webSocketService);
     await autoTripSyncService.start();
+
+
     
     // Create and register WebSocket routes
     const websocketRoutes = createWebSocketRouter(webSocketService);
@@ -132,7 +132,6 @@ const startServer = async () => {
     app.use('/api/routes', routeRoutes);
     app.use('/api/driver-tickets', driverTicketsRoutes);
     app.use('/api/public', publicRoutes);
-
     // Initialize queue routes with WebSocket service
     const queueRoutes = createQueueRouter(webSocketService);
     app.use('/api/queue', queueRoutes);
@@ -162,35 +161,70 @@ const startServer = async () => {
     // Start HTTP server - listen on all interfaces for public access
     const server = app.listen(env.PORT, '0.0.0.0', () => {
       console.log(`
-🚀 Louaj Local Node Server Started
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Louaj Local Node Server Started (MQTT-Enhanced)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 Server: http://localhost:${env.PORT}
 🌐 Public: http://0.0.0.0:${env.PORT}
 🏥 Health: http://localhost:${env.PORT}/health
-🔌 WebSocket: http://localhost:${env.PORT}/api/websocket/status
+� MQTT: ${mqttConfig.brokerUrl} (Enhanced Service)
 🗄️  Database: ${env.DATABASE_URL}
 ⚙️  Environment: ${env.NODE_ENV}
-📍 Station: ${env.STATION_NAME || 'Not configured'}
+📍 Station: ${configService.getStationName()}
 🔗 Central Server: ${env.CENTRAL_SERVER_URL}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       `);
     });
 
-    // Initialize enhanced local WebSocket server for desktop app communication
-    localWebSocketServer = new EnhancedLocalWebSocketServer(server, webSocketService);
-    console.log('✅ Enhanced Local WebSocket Server initialized successfully');
+    // Initialize Enhanced MQTT Service for desktop app communication (replacing WebSocket)
+    if (validateMqttConfig()) {
+      const { createQueueService } = await import('./services/queueService');
+      const queueService = createQueueService(webSocketService);
+      
+      enhancedMqttService = new EnhancedMQTTService(mqttConfig, queueService);
+      await enhancedMqttService.connect();
+      
+      // Set the MQTT service for cash booking service
+      setEnhancedMqttService(enhancedMqttService);
+      
+      // Set up MQTT event listeners
+      enhancedMqttService.on('plateDetected', (data: any) => {
+        console.log('🚗 Plate detected via MQTT:', data.detection.licensePlate);
+      });
+      
+      enhancedMqttService.on('connected', () => {
+        console.log('✅ Enhanced MQTT Service connected and ready');
+        // Publish initial station status
+        enhancedMqttService.publishStationStatus();
+      });
+      
+      enhancedMqttService.on('error', (error: any) => {
+        console.error('❌ Enhanced MQTT Service error:', error);
+      });
+      
+      enhancedMqttService.on('client_authenticated', (data: any) => {
+        console.log('👤 Client authenticated via MQTT:', data.clientId);
+      });
+      
+      enhancedMqttService.on('client_connected', (data: any) => {
+        console.log('🔌 Client connected via MQTT:', data.clientId);
+      });
+      
+      console.log('✅ Enhanced MQTT Service initialized successfully (replacing WebSocket)');
+    } else {
+      console.warn('⚠️ MQTT configuration invalid, cannot initialize Enhanced MQTT Service');
+    }
 
-    // Set the LocalWebSocketServer instance in services and routes
-    setQueueLocalWebSocketServer(localWebSocketServer);
-    setBookingLocalWebSocketServer(localWebSocketServer);
-    setWebSocketRouterServer(localWebSocketServer);
-    setPublicControllerWebSocket(localWebSocketServer);
-    setBookingControllerWebSocket(localWebSocketServer);
-
-    // Set up periodic dashboard data updates (every 5 seconds)
+    // Set up periodic dashboard data updates (every 5 seconds) - now broadcasts via MQTT
     const dashboardUpdateInterval = setInterval(async () => {
       try {
-        await dashboardController.updateDashboardData(localWebSocketServer);
+        // Import dashboard controller dynamically
+        const dashboardModule = await import('./controllers/dashboardController');
+        const dashboardData = await dashboardModule.getAllDashboardData();
+        
+        // Broadcast dashboard updates via MQTT instead of WebSocket
+        if (enhancedMqttService && dashboardData) {
+          enhancedMqttService.notifyDashboardUpdate(dashboardData);
+        }
       } catch (error) {
         console.error('❌ Error updating dashboard data:', error);
       }
@@ -222,9 +256,9 @@ const startServer = async () => {
           console.log('🔌 WebSocket connection closed');
         }
 
-        if (localWebSocketServer) {
-          await localWebSocketServer.close();
-          console.log('🔌 Local WebSocket Server closed');
+        if (enhancedMqttService) {
+          await enhancedMqttService.disconnect();
+          console.log('📡 Enhanced MQTT Service disconnected');
         }
         
         // Close database connection

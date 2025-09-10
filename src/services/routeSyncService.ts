@@ -1,6 +1,7 @@
 import { prisma } from '../config/database';
 import { VehicleData } from './vehicleSyncService';
 import axios from 'axios';
+import { configService } from '../config/supervisorConfig';
 
 // Retry configuration
 const MAX_RETRIES = 3;
@@ -14,8 +15,8 @@ export class RouteSyncService {
     async syncRoutesForVehicle(vehicleData: VehicleData) {
         console.log(`🚐 Processing route sync for vehicle ${vehicleData.licensePlate}`);
         
-        // Get current station ID from environment
-        const currentStationId = process.env.STATION_ID || 'monastir-main-station';
+        // Get current station ID from config service
+        const currentStationId = configService.getStationId();
         
         // Only sync routes for the current station to avoid overwhelming the central server
         const currentStationAuth = vehicleData.authorizedStations.find(

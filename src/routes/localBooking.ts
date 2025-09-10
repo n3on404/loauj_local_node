@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { localBookingController } from '../controllers/localBooking';
+import { localBookingController, calculateETD } from '../controllers/localBooking';
 
 const router = Router();
 
@@ -65,6 +65,105 @@ router.get('/station/summary', localBookingController.getStationBookingSummary.b
 router.post('/confirm-payment', localBookingController.confirmPayment.bind(localBookingController));
 
 /**
+ * @route GET /api/bookings/eta/:destinationId
+ * @desc Test route to calculate Estimated Time of Arrival for a destination
+ * @access Public (for testing purposes)
+ * @param {string} destinationId - The destination station ID
+ * @returns {object} ETA calculation result with queue information
+ */
+router.get('/eta/:destinationId', async (req, res) => {
+  try {
+    const { destinationId } = req.params;
+
+    if (!destinationId) {
+      res.status(400).json({
+        success: false,
+        error: 'Destination ID is required'
+      });
+      return;
+    }
+
+    console.log(`🕐 Calculating ETA for destination: ${destinationId}`);
+
+    // Calculate the estimated departure time
+    const etd = await calculateETD(destinationId);
+
+    // Get additional queue information for debugging
+    const { prisma } = await import('../config/database');
+    const vehiclesInQueue = await prisma.vehicleQueue.findMany({
+      where: {
+        destinationId,
+        status: { in: ["WAITING", "LOADING", "READY"] },
+        vehicle: {
+          isActive: true,
+          isBanned: false,
+        },
+      },
+      orderBy: { queuePosition: "asc" },
+      include: {
+        vehicle: {
+          select: {
+            licensePlate: true,
+            model: true,
+            isActive: true
+          }
+        },
+        bookings: {
+          select: {
+            seatsBooked: true,
+            paymentStatus: true
+          }
+        }
+      },
+    });
+
+    const queueSummary = vehiclesInQueue.map(v => {
+      // Only count confirmed bookings (PAID, COMPLETED)
+      const confirmedBookings = v.bookings.filter(b =>
+        ['PAID', 'COMPLETED'].includes(b.paymentStatus)
+      );
+      const confirmedBookedSeats = confirmedBookings.reduce((sum, b) => sum + b.seatsBooked, 0);
+      const allBookedSeats = v.bookings.reduce((sum, b) => sum + b.seatsBooked, 0);
+
+      return {
+        licensePlate: v.vehicle.licensePlate,
+        queuePosition: v.queuePosition,
+        status: v.status,
+        totalSeats: v.totalSeats,
+        availableSeats: v.availableSeats,
+        passengers: v.totalSeats - v.availableSeats,
+        confirmedBookedSeats,
+        totalBookedSeats: allBookedSeats,
+        estimatedDeparture: v.estimatedDeparture
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        destinationId,
+        estimatedDepartureTime: etd.toISOString(),
+        calculatedAt: new Date().toISOString(),
+        queueInformation: {
+          totalVehicles: vehiclesInQueue.length,
+          vehicles: queueSummary
+        }
+      }
+    });
+
+    console.log(`✅ ETD calculated for ${destinationId}: ${etd.toISOString()}`);
+
+  } catch (error) {
+    console.error('❌ Error calculating ETA:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to calculate ETA',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * Health check for local booking service
  * GET /api/bookings/health
  */
@@ -76,7 +175,10 @@ router.get('/health', (_req, res) => {
     endpoints: {
       create_booking: 'POST /api/bookings/create',
       verify_booking: 'GET /api/bookings/verify/:verificationCode',
-      station_summary: 'GET /api/bookings/station/summary'
+      check_booking: 'GET /api/bookings/check/:verificationCode',
+      test_eta: 'GET /api/bookings/eta/:destinationId',
+      station_summary: 'GET /api/bookings/station/summary',
+      confirm_payment: 'POST /api/bookings/confirm-payment'
     }
   });
 });

@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import { configService } from './supervisorConfig';
 
 // Load environment variables from .env file
 config();
@@ -57,11 +58,11 @@ export const env: EnvironmentConfig = {
   PORT: parseInt(process.env.PORT || '3001', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
   
-  // Station Configuration
-  STATION_ID: process.env.STATION_ID || 'monastir-main-station',
-  STATION_NAME: process.env.STATION_NAME || 'Monastir Main Station',
-  GOVERNORATE: process.env.GOVERNORATE || '',
-  DELEGATION: process.env.DELEGATION || '',
+  // Station Configuration - Now using config service
+  STATION_ID: configService.getStationId(),
+  STATION_NAME: configService.getStationName(),
+  GOVERNORATE: configService.getGovernorate(),
+  DELEGATION: configService.getDelegation(),
   
   // Central Server Connection
   CENTRAL_SERVER_URL: process.env.CENTRAL_SERVER_URL || 'http://localhost:5000',

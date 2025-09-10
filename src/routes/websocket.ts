@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { WebSocketService } from '../websocket/webSocketService';
-import { EnhancedLocalWebSocketServer } from '../websocket/LocalWebSocketServer';
+import { EnhancedLocalWebSocketServer } from '../websocket/EnhancedLocalWebSocketServer';
 
 let localWebSocketServer: EnhancedLocalWebSocketServer | null = null;
 

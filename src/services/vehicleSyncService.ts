@@ -2,6 +2,7 @@ import axios from 'axios';
 import { prisma } from '../config/database';
 import { env } from '../config/environment';
 import { RouteService } from './routeService';
+import { configService } from '../config/supervisorConfig';
 
 export interface VehicleData {
   id: string;
@@ -175,7 +176,7 @@ export class VehicleSyncService {
               }
 
               // Determine default destination from authorized stations
-              const currentStationId = env.STATION_ID || 'station-001';
+              const currentStationId = configService.getStationId();
               const destinationAuth = vehicleData.authorizedStations.find(
                 auth => auth.stationId !== currentStationId
               );
@@ -434,7 +435,7 @@ export class VehicleSyncService {
           where: { vehicleId: vehicleData.id }
         });
 
-        const stationId = env.STATION_ID || 'station-001';
+        const stationId = configService.getStationId();
         
         // Fetch station names for all authorized stations
         const authorizedStationData = [];

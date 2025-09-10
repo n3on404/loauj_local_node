@@ -3,6 +3,7 @@ import { prisma } from '../config/database';
 import { createQueueBookingService } from './queueBookingService';
 import { WebSocketService } from '../websocket/webSocketService';
 import axios from 'axios';
+import { configService } from '../config/supervisorConfig';
 
 export interface SyncStatus {
   isOnline: boolean;
@@ -40,7 +41,10 @@ export class AutoTripSyncService extends EventEmitter {
     super();
     this.webSocketService = webSocketService;
     this.centralServerUrl = process.env.CENTRAL_SERVER_URL || 'http://localhost:5000';
-    this.stationId = process.env.STATION_ID || 'station-001';
+    
+    // Use config service to get station ID instead of environment variable
+    this.stationId = configService.getStationId();
+    
     this.syncIntervalMs = parseInt(process.env.TRIP_SYNC_INTERVAL_MS || '30000'); // 30 seconds default
     this.connectionCheckIntervalMs = parseInt(process.env.CONNECTION_CHECK_INTERVAL_MS || '10000'); // 10 seconds
     this.maxRetryAttempts = parseInt(process.env.MAX_SYNC_RETRY_ATTEMPTS || '3');
