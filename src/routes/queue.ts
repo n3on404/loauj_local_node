@@ -35,8 +35,17 @@ export default function createQueueRouter(webSocketService?: WebSocketService) {
    * @route GET /api/queue/available
    * @desc Get all available destination queues with summary
    * @access Private (Authenticated staff)
+   * @query {string} [governorate] - Filter by governorate
+   * @query {string} [delegation] - Filter by delegation
    */
   router.get('/available', queueController.getAvailableQueues.bind(queueController));
+
+  /**
+   * @route GET /api/queue/locations
+   * @desc Get available governments and delegations for filtering
+   * @access Private (Authenticated staff)
+   */
+  router.get('/locations', queueController.getAvailableLocations.bind(queueController));
 
   /**
    * @route GET /api/queue/stats

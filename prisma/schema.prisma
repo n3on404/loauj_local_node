@@ -49,6 +49,8 @@ model Staff {
   sessions      Session[]
   entryTickets  DriverEntryTicket[] @relation("EntryTicketStaff")
   exitTickets   DriverExitTicket[]  @relation("ExitTicketStaff")
+  dayPasses     DayPass[]  @relation("DayPassStaff")
+  operationLogs OperationLog[]
   
   @@map("staff")
 }
@@ -95,8 +97,13 @@ model Driver {
   isActive        Boolean   @default(true) @map("is_active")
   syncedAt        DateTime  @map("synced_at")
   
+  // Day pass fields
+  hasValidDayPass Boolean   @default(false) @map("has_valid_day_pass")
+  dayPassExpiresAt DateTime? @map("day_pass_expires_at")
+  
   // Relations
   vehicle         Vehicle?  @relation(fields: [vehicleId], references: [id])
+  dayPasses       DayPass[] @relation("DriverDayPasses")
   
   @@map("drivers")
 }
@@ -127,6 +134,7 @@ model Vehicle {
   trips               Trip[]                      // Trips made by this vehicle
   entryTickets        DriverEntryTicket[]         // Entry tickets for this vehicle
   exitTickets         DriverExitTicket[]          // Exit tickets for this vehicle
+  dayPasses           DayPass[]                   // Day passes for this vehicle
   
   @@map("vehicles")
 }
@@ -188,6 +196,10 @@ model Route {
   stationId             String            @map("station_id")
   stationName           String            @map("station_name")
   basePrice             Float             @map("base_price")
+  governorate           String?           // Governorate name
+  governorateAr         String?           @map("governorate_ar") // Governorate name in Arabic
+  delegation            String?           // Delegation name
+  delegationAr          String?           @map("delegation_ar") // Delegation name in Arabic
   isActive              Boolean           @default(true) @map("is_active")
   syncedAt              DateTime          @map("synced_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
@@ -251,7 +263,7 @@ model Booking {
   syncStatus        String        @default("PENDING") @map("sync_status") // 'PENDING', 'SYNCED', 'FAILED'
   
   // Relations
-  queue             VehicleQueue  @relation(fields: [queueId], references: [id])
+  queue             VehicleQueue  @relation(fields: [queueId], references: [id], onDelete: Cascade)
   createdByStaff    Staff?        @relation("BookingStaff", fields: [createdBy], references: [id])
   verifiedByStaff   Staff?        @relation("VerificationStaff", fields: [verifiedById], references: [id])
   
@@ -285,6 +297,9 @@ model OperationLog {
   success     Boolean  @default(true)
   error       String?
   createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  staff       Staff?   @relation(fields: [staffId], references: [id])
   
   @@map("operation_logs")
 }
@@ -320,7 +335,7 @@ model Trip {
   
   // Relations
   vehicle           Vehicle  @relation(fields: [vehicleId], references: [id])
-  queue             VehicleQueue @relation(fields: [queueId], references: [id])
+  queue             VehicleQueue @relation(fields: [queueId], references: [id], onDelete: Cascade)
   
   @@map("trips")
 }
@@ -366,4 +381,29 @@ model DriverExitTicket {
   createdByStaff  Staff    @relation("ExitTicketStaff", fields: [createdBy], references: [id])
   
   @@map("driver_exit_tickets")
+}
+
+// =============== DAY PASS SYSTEM ===============
+
+model DayPass {
+  id              String   @id @default(cuid())
+  driverId        String   @map("driver_id")
+  vehicleId       String   @map("vehicle_id")
+  licensePlate    String   @map("license_plate")
+  price           Float    @default(2.0) // 2 TND per day pass
+  purchaseDate    DateTime @map("purchase_date") // Date when purchased
+  validFrom       DateTime @map("valid_from") // Start of validity (00:00:00)
+  validUntil      DateTime @map("valid_until") // End of validity (23:59:59)
+  isActive        Boolean  @default(true) @map("is_active")
+  isExpired       Boolean  @default(false) @map("is_expired")
+  createdBy       String   @map("created_by") // Staff ID who sold the pass
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  driver          Driver   @relation("DriverDayPasses", fields: [driverId], references: [id])
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  createdByStaff  Staff    @relation("DayPassStaff", fields: [createdBy], references: [id])
+  
+  @@map("day_passes")
 }

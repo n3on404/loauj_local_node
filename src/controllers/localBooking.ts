@@ -1,13 +1,21 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { EnhancedLocalWebSocketServer } from '../websocket/EnhancedLocalWebSocketServer';
+import { WebSocketService } from '../websocket/webSocketService';
+import { LoggingService } from '../services/loggingService';
 
 // Reference to WebSocket server for real-time updates
 let localWebSocketServer: EnhancedLocalWebSocketServer | null = null;
+let webSocketService: WebSocketService | null = null;
 
 // Function to set the WebSocket server instance
 export function setBookingControllerWebSocket(wsServer: EnhancedLocalWebSocketServer) {
   localWebSocketServer = wsServer;
+}
+
+// Function to set the WebSocket service instance
+export function setBookingControllerWebSocketService(wsService: WebSocketService) {
+  webSocketService = wsService;
 }
 
 /**
@@ -264,30 +272,17 @@ export class LocalBookingController {
           const newAvailableSeats = vehicleQueue.availableSeats - seatsToBook;
           const isNowFull = newAvailableSeats === 0;
           
-          // Determine new queue status
-          let newStatus = vehicleQueue.status;
-          if (isNowFull && vehicleQueue.status === 'WAITING') {
-            newStatus = 'LOADING'; // Vehicle is full and ready for loading
-          }
-
-          // Update vehicle queue with comprehensive data
+          // Update vehicle queue with seat availability only
+          // Status will be updated automatically after transaction
           await tx.vehicleQueue.update({
             where: { id: vehicleQueueId },
             data: {
               availableSeats: newAvailableSeats,
-              status: newStatus,
-              syncedAt: new Date(), // Update sync timestamp
-              // If vehicle becomes full, set estimated departure
-              ...(isNowFull && !vehicleQueue.estimatedDeparture && {
-                estimatedDeparture: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes from now
-              })
+              syncedAt: new Date() // Update sync timestamp
             }
           });
 
           console.log(`🚌 Updated vehicle ${vehicleQueue.vehicle.licensePlate}: ${vehicleQueue.availableSeats} → ${newAvailableSeats} seats available`);
-          if (isNowFull) {
-            console.log(`🔥 Vehicle ${vehicleQueue.vehicle.licensePlate} is now FULL and marked for LOADING`);
-          }
 
           // Create booking entry
           const booking = await tx.booking.create({
@@ -317,7 +312,7 @@ export class LocalBookingController {
             queuePosition: vehicleQueue.queuePosition,
             estimatedDeparture: vehicleQueue.estimatedDeparture,
             newAvailableSeats: newAvailableSeats,
-            newStatus: newStatus,
+            queueId: vehicleQueueId,
             isNowFull: isNowFull
           });
         }
@@ -329,6 +324,19 @@ export class LocalBookingController {
           bookedVehicles
         };
       });
+
+      // Update vehicle statuses based on new bookings (outside transaction to avoid conflicts)
+      if (webSocketService) {
+        for (const vehicle of result.bookedVehicles) {
+          try {
+            const { createQueueService } = await import('../services/queueService');
+            const queueService = createQueueService(webSocketService);
+            await queueService.updateVehicleStatusBasedOnBookings(vehicle.queueId);
+          } catch (error) {
+            console.error('❌ Error updating vehicle status after booking:', error);
+          }
+        }
+      }
 
       // Get station configuration for response
       const stationConfig = await prisma.stationConfig.findFirst({
@@ -400,7 +408,6 @@ export class LocalBookingController {
           previousAvailableSeats: vehicle.newAvailableSeats + vehicle.seatsBooked,
           newAvailableSeats: vehicle.newAvailableSeats,
           seatsBooked: vehicle.seatsBooked,
-          newStatus: vehicle.newStatus,
           isNowFull: vehicle.isNowFull,
           queuePosition: vehicle.queuePosition,
           estimatedDeparture: vehicle.estimatedDeparture,
@@ -413,7 +420,7 @@ export class LocalBookingController {
             vehicleId: vehicle.vehicleId,
             licensePlate: vehicle.licensePlate,
             oldStatus: 'WAITING',
-            newStatus: vehicle.newStatus,
+            newStatus: 'READY',
             reason: 'VEHICLE_FULL',
             estimatedDeparture: vehicle.estimatedDeparture,
             message: `Vehicle ${vehicle.licensePlate} is now full and ready for departure`
@@ -428,7 +435,7 @@ export class LocalBookingController {
           licensePlate: v.licensePlate,
           seatsBooked: v.seatsBooked,
           newAvailableSeats: v.newAvailableSeats,
-          status: v.newStatus
+          isNowFull: v.isNowFull
         })),
         summary: {
           totalVehiclesAffected: result.bookedVehicles.length,
@@ -913,37 +920,24 @@ export class LocalBookingController {
             }
           });
 
-          // Check if vehicle is now full
-          const updatedQueue = await tx.vehicleQueue.findUnique({
-            where: { id: booking.queueId }
-          });
-
-          if (updatedQueue && updatedQueue.availableSeats <= 0) {
-            await tx.vehicleQueue.update({
-              where: { id: booking.queueId },
-              data: {
-                status: 'READY' // Vehicle is ready to depart when full
-              }
-            });
-
-            console.log(`🚌 Vehicle queue ${vehicle.licensePlate} is now READY to depart`);
-            
-            // Broadcast vehicle status change
-            broadcastBookingUpdate('vehicle_status_changed', {
-              queueId: booking.queueId,
-              licensePlate: vehicle.licensePlate,
-              oldStatus: booking.queue.status,
-              newStatus: 'READY',
-              availableSeats: 0,
-              totalSeats: updatedQueue.totalSeats
-            });
-          }
+          // Note: Status will be updated automatically after transaction by calling updateVehicleStatusBasedOnBookings
 
           console.log(`🎯 Booking ${verificationCode} confirmed with ${booking.seatsBooked} seats`);
         }
 
         return updatedBooking;
       });
+
+      // Update vehicle status based on payment confirmation (outside transaction to avoid conflicts)
+      if (status === 'PAID' && updatedBooking.queue && webSocketService) {
+        try {
+          const { createQueueService } = await import('../services/queueService');
+          const queueService = createQueueService(webSocketService);
+          await queueService.updateVehicleStatusBasedOnBookings(updatedBooking.queueId);
+        } catch (error) {
+          console.error('❌ Error updating vehicle status after payment confirmation:', error);
+        }
+      }
 
       // Broadcast the payment confirmation update
       broadcastBookingUpdate('booking_created', {

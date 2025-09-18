@@ -693,7 +693,8 @@ export class EnhancedLocalWebSocketServer extends EventEmitter {
 
   private async collectDashboardData(): Promise<any> {
     try {
-      return await dashboardController.getAllDashboardData();
+      // Dashboard data is now available via REST API endpoints
+      return { message: 'Dashboard data available via /api/dashboard/* endpoints' };
     } catch (error) {
       console.error('❌ Error collecting dashboard data:', error);
       throw error;

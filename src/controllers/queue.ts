@@ -117,7 +117,17 @@ export class QueueController {
    */
   async getAvailableQueues(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.queueService.getAvailableQueues();
+      const { governorate, delegation } = req.query;
+      const filters: { governorate?: string; delegation?: string } = {};
+      
+      if (governorate && typeof governorate === 'string') {
+        filters.governorate = governorate;
+      }
+      if (delegation && typeof delegation === 'string') {
+        filters.delegation = delegation;
+      }
+
+      const result = await this.queueService.getAvailableQueues(filters);
 
       if (result.success) {
         res.status(200).json({
@@ -133,6 +143,35 @@ export class QueueController {
 
     } catch (error) {
       console.error('❌ Error in getAvailableQueues controller:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  /**
+   * Get available locations for filtering
+   * GET /api/queue/locations
+   */
+  async getAvailableLocations(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await this.queueService.getAvailableLocations();
+
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          data: result.governments
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Error in getAvailableLocations controller:', error);
       res.status(500).json({
         success: false,
         error: 'Internal server error'

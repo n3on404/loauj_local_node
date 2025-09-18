@@ -538,8 +538,9 @@ export class EnhancedMQTTService extends EventEmitter {
   private async handleGetDashboardData(message: MqttMessage): Promise<void> {
     try {
       // Import dashboard controller dynamically to avoid circular dependencies
-      const { getAllDashboardData } = await import('../controllers/dashboardController');
-      const dashboardData = await getAllDashboardData();
+      // Dashboard data will be fetched via API endpoints
+      // Dashboard data will be fetched via API endpoints
+      const dashboardData = { message: 'Dashboard data available via /api/dashboard/* endpoints' };
       
       if (message.clientId) {
         this.sendToClient(message.clientId, {

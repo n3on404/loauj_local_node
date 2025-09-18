@@ -295,14 +295,7 @@ export class QueueBookingService {
             throw new Error('Vehicle queue entry not found after update');
           }
 
-          // Update status to READY if vehicle is now full
-          if (updatedQueueEntry.availableSeats === 0) {
-            await tx.vehicleQueue.update({
-              where: { id: vehicle.queueId },
-              data: { status: 'READY' }
-            });
-            console.log(`🚐 Vehicle ${vehicle.licensePlate} is now READY (fully booked)`);
-          }
+          // Note: Status will be updated automatically after transaction by calling updateVehicleStatusBasedOnBookings
 
           const queueBooking: QueueBooking = {
             id: booking.id,
@@ -336,6 +329,17 @@ export class QueueBookingService {
           ticketIds: verificationCodes
         };
       });
+
+      // Update vehicle statuses based on new bookings (outside transaction to avoid conflicts)
+      for (const booking of result.bookings) {
+        try {
+          const { createQueueService } = await import('./queueService');
+          const queueService = createQueueService(this.webSocketService);
+          await queueService.updateVehicleStatusBasedOnBookings(booking.queueId);
+        } catch (error) {
+          console.error('❌ Error updating vehicle status after booking:', error);
+        }
+      }
 
       // Create trip records for fully booked vehicles (outside transaction to avoid conflicts)
       for (const booking of result.bookings) {
@@ -562,55 +566,204 @@ export class QueueBookingService {
   /**
    * Get all destinations with available seats (filters out fully booked destinations)
    */
-  async getAvailableDestinations(): Promise<{
+  async getAvailableDestinations(filters?: {
+    governorate?: string;
+    delegation?: string;
+  }): Promise<{
     success: boolean;
     destinations?: Array<{
       destinationId: string;
       destinationName: string;
       totalAvailableSeats: number;
       vehicleCount: number;
+      governorate?: string | undefined;
+      governorateAr?: string | undefined;
+      delegation?: string | undefined;
+      delegationAr?: string | undefined;
     }>;
     error?: string;
   }> {
     try {
       console.log('📊 Getting available destinations for booking (filtering fully booked)...');
       
-      // First get all destinations
-      const allDestinations = await prisma.vehicleQueue.groupBy({
-        by: ['destinationId', 'destinationName'],
+      // First get all unique destinations from routes table to avoid duplication
+      const allRoutes = await prisma.route.findMany({
         where: {
-          status: { in: ['WAITING', 'LOADING', 'READY'] }
+          isActive: true
         },
-        _sum: {
-          availableSeats: true
-        },
-        _count: {
-          id: true
+        select: {
+          stationId: true,
+          stationName: true,
+          governorate: true,
+          governorateAr: true,
+          delegation: true,
+          delegationAr: true
         }
       });
 
-      // Filter out destinations with no available seats
-      const availableDestinations = allDestinations.filter(dest => 
-        (dest._sum.availableSeats || 0) > 0
+      // Get available seats for each destination from vehicle queue
+      const destinationsWithSeats = await Promise.all(
+        allRoutes.map(async (route) => {
+          const queueEntries = await prisma.vehicleQueue.findMany({
+            where: {
+              destinationId: route.stationId,
+              status: { in: ['WAITING', 'LOADING'] }
+            },
+            select: {
+              availableSeats: true,
+              id: true
+            }
+          });
+
+          const totalAvailableSeats = queueEntries.reduce((sum, entry) => sum + entry.availableSeats, 0);
+          const vehicleCount = queueEntries.length;
+
+          return {
+            destinationId: route.stationId,
+            destinationName: route.stationName,
+            totalAvailableSeats,
+            vehicleCount,
+            governorate: route.governorate || undefined,
+            governorateAr: route.governorateAr || undefined,
+            delegation: route.delegation || undefined,
+            delegationAr: route.delegationAr || undefined
+          };
+        })
       );
 
-      const result = availableDestinations.map(dest => ({
-        destinationId: dest.destinationId,
-        destinationName: dest.destinationName,
-        totalAvailableSeats: dest._sum.availableSeats || 0,
-        vehicleCount: dest._count.id
-      }));
+      // Filter out destinations with no available seats
+      const destinationsWithRoutes = destinationsWithSeats.filter(dest => 
+        dest.totalAvailableSeats > 0
+      );
 
-      const filteredOut = allDestinations.length - availableDestinations.length;
-      console.log(`✅ Found ${result.length} destinations with available seats (filtered out ${filteredOut} fully booked destinations)`);
+      // Remove duplicates based on destinationId (in case there are multiple routes with same station)
+      const uniqueDestinations = destinationsWithRoutes.reduce((acc, dest) => {
+        const existing = acc.find(d => d.destinationId === dest.destinationId);
+        if (!existing) {
+          acc.push(dest);
+        } else {
+          // If duplicate found, merge the seat counts
+          existing.totalAvailableSeats += dest.totalAvailableSeats;
+          existing.vehicleCount += dest.vehicleCount;
+        }
+        return acc;
+      }, [] as typeof destinationsWithRoutes);
+
+      // Apply filters if provided
+      let filteredDestinations = uniqueDestinations;
+      
+      if (filters?.governorate) {
+        filteredDestinations = filteredDestinations.filter(dest => 
+          dest.governorate === filters.governorate
+        );
+      }
+      
+      if (filters?.delegation) {
+        filteredDestinations = filteredDestinations.filter(dest => 
+          dest.delegation === filters.delegation
+        );
+      }
+
+      const totalRoutes = allRoutes.length;
+      const availableCount = destinationsWithRoutes.length;
+      const uniqueCount = uniqueDestinations.length;
+      const filteredOut = totalRoutes - availableCount;
+      const duplicatesRemoved = availableCount - uniqueCount;
+      
+      console.log(`✅ Found ${filteredDestinations.length} destinations with available seats`);
+      console.log(`📊 Total routes: ${totalRoutes}, Available: ${availableCount}, Unique: ${uniqueCount}, Duplicates removed: ${duplicatesRemoved}`);
 
       return {
         success: true,
-        destinations: result
+        destinations: filteredDestinations
       };
 
     } catch (error) {
       console.error('❌ Error getting available destinations:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
+   * Get available governments and delegations for filtering
+   */
+  async getAvailableLocations(): Promise<{
+    success: boolean;
+    governments?: Array<{
+      name: string;
+      nameAr?: string | undefined;
+      delegations: Array<{
+        name: string;
+        nameAr?: string | undefined;
+      }>;
+    }>;
+    error?: string;
+  }> {
+    try {
+      console.log('📍 Getting available locations for filtering...');
+      
+      // Get all unique governments and delegations from routes
+      const routes = await prisma.route.findMany({
+        where: {
+          isActive: true,
+          governorate: { not: null },
+          delegation: { not: null }
+        },
+        select: {
+          governorate: true,
+          governorateAr: true,
+          delegation: true,
+          delegationAr: true
+        },
+        distinct: ['governorate', 'delegation'] // Ensure unique combinations
+      });
+
+      // Group by government
+      const governmentMap = new Map<string, {
+        name: string;
+        nameAr?: string | undefined;
+        delegations: Map<string, { name: string; nameAr?: string | undefined; }>;
+      }>();
+
+      routes.forEach(route => {
+        if (!route.governorate || !route.delegation) return;
+
+        if (!governmentMap.has(route.governorate)) {
+          governmentMap.set(route.governorate, {
+            name: route.governorate,
+            nameAr: route.governorateAr ? route.governorateAr : undefined,
+            delegations: new Map()
+          });
+        }
+
+        const government = governmentMap.get(route.governorate)!;
+        if (!government.delegations.has(route.delegation)) {
+          government.delegations.set(route.delegation, {
+            name: route.delegation,
+            nameAr: route.delegationAr ? route.delegationAr : undefined
+          });
+        }
+      });
+
+      // Convert to array format
+      const governments = Array.from(governmentMap.values()).map(gov => ({
+        name: gov.name,
+        nameAr: gov.nameAr ? gov.nameAr : undefined,
+        delegations: Array.from(gov.delegations.values())
+      }));
+
+      console.log(`✅ Found ${governments.length} governments with locations`);
+
+      return {
+        success: true,
+        governments
+      };
+
+    } catch (error) {
+      console.error('❌ Error getting available locations:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -923,13 +1076,13 @@ export class QueueBookingService {
   private async emitFinancialUpdate(): Promise<void> {
     try {
       // Get updated financial stats
-      const financialStats = await dashboardController.getFinancialStats();
-      const recentTransactions = await dashboardController.getTransactionHistory(10);
+      // const financialStats = await dashboardController.getFinancialStats();
+      // const recentTransactions = await dashboardController.getTransactionHistory(10);
       
       // Emit via WebSocket service for broadcasting to clients
       this.webSocketService.emit('financial_update', {
-        financial: financialStats,
-        recentTransactions,
+        financial: null, // Will be fetched by dashboard API
+        recentTransactions: null,
         timestamp: new Date().toISOString()
       });
       

@@ -42,8 +42,9 @@ async function emitFinancialUpdate() {
   try {
     if (enhancedMqttService) {
       // Get updated financial stats
-      const financialStats = await dashboardController.getFinancialStats();
-      const recentTransactions = await dashboardController.getTransactionHistory(10);
+      // Dashboard data will be fetched by API
+      const financialStats = null;
+      const recentTransactions = null;
       
       // Emit financial update event
       enhancedMqttService.broadcast({
@@ -332,14 +333,7 @@ export class SimpleCashBookingService {
             throw new Error('Vehicle queue entry not found after update');
           }
 
-          // Update status to READY if vehicle is now full
-          if (updatedQueueEntry.availableSeats === 0) {
-            await tx.vehicleQueue.update({
-              where: { id: vehicle.queueId },
-              data: { status: 'READY' }
-            });
-            console.log(`🚐 Vehicle ${vehicle.licensePlate} is now READY (fully booked)`);
-          }
+          // Note: Status will be updated automatically after transaction by calling updateVehicleStatusBasedOnBookings
 
           const cashBooking: SimpleCashBooking = {
             id: booking.id,
@@ -373,6 +367,17 @@ export class SimpleCashBookingService {
           ticketIds
         };
       });
+
+      // Update vehicle statuses based on new bookings (outside transaction to avoid conflicts)
+      for (const booking of result.bookings) {
+        try {
+          const { createQueueService } = await import('./queueService');
+          const queueService = createQueueService(this.webSocketService);
+          await queueService.updateVehicleStatusBasedOnBookings(booking.queueId);
+        } catch (error) {
+          console.error('❌ Error updating vehicle status after booking:', error);
+        }
+      }
 
       // Create trip records for fully booked vehicles (outside transaction to avoid conflicts)
       for (const booking of result.bookings) {

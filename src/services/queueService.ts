@@ -38,6 +38,10 @@ export interface QueueSummary {
   loadingVehicles: number;
   readyVehicles: number;
   estimatedNextDeparture?: Date | undefined;
+  governorate?: string | undefined;
+  governorateAr?: string | undefined;
+  delegation?: string | undefined;
+  delegationAr?: string | undefined;
 }
 
 // Add a reference to the EnhancedLocalWebSocketServer
@@ -52,13 +56,13 @@ export function setLocalWebSocketServer(wsServer: EnhancedLocalWebSocketServer) 
 async function notifyQueueUpdate(queue: any) {
   if (localWebSocketServer) {
     try {
-      // Get updated statistics
-      const stats = await dashboardController.getDashboardStats();
+      // Statistics will be fetched by dashboard API directly
+      // const stats = await dashboardController.getDashboardStats();
       
       // Notify clients
       localWebSocketServer.notifyQueueUpdate({
         queue,
-        statistics: stats
+        statistics: null // Stats will be fetched by dashboard API
       });
     } catch (error) {
       console.error('❌ Error notifying queue update:', error);
@@ -202,6 +206,19 @@ export class QueueService {
         };
       }
 
+      // Check if driver has valid day pass
+      if (vehicle.driver) {
+        const { dayPassService } = await import('./dayPassService');
+        const dayPassValidation = await dayPassService.validateDayPass(vehicle.driver.id);
+        
+        if (!dayPassValidation.isValid) {
+          return {
+            success: false,
+            error: `Le chauffeur ${vehicle.driver.firstName} ${vehicle.driver.lastName} n'a pas de pass journalier valide. ${dayPassValidation.message}`
+          };
+        }
+      }
+
       // Determine destination with enhanced logic FIRST
       let destinationId: string | undefined;
       let destinationName: string | undefined;
@@ -284,6 +301,14 @@ export class QueueService {
       let previousDestination = '';
 
       if (existingQueueEntry) {
+        // Only allow moving/changing destination when status is WAITING
+        if (existingQueueEntry.status !== 'WAITING') {
+          return {
+            success: false,
+            error: `Cannot change destination for vehicle ${licensePlate} unless status is WAITING (current: ${existingQueueEntry.status})`
+          };
+        }
+
         // If trying to enter same destination queue, return error
         if (existingQueueEntry.destinationId === destinationId) {
           return {
@@ -446,6 +471,14 @@ export class QueueService {
         };
       }
 
+      // Only allow deletion when status is WAITING
+      if (queueEntry.status !== 'WAITING') {
+        return {
+          success: false,
+          error: `Vehicle ${licensePlate} cannot be removed unless status is WAITING (current: ${queueEntry.status})`
+        };
+      }
+
       // Check for active bookings
       const activeBookings = await prisma.booking.count({
         where: {
@@ -455,10 +488,8 @@ export class QueueService {
       });
 
       if (activeBookings > 0) {
-        return {
-          success: false,
-          error: `Vehicle ${licensePlate} cannot exit queue: there are active bookings`
-        };
+        console.log(`⚠️ Vehicle ${licensePlate} has ${activeBookings} active bookings, proceeding with cascade delete`);
+        // Note: With cascade delete in Prisma schema, related bookings will be automatically deleted
       }
 
       const destinationId = queueEntry.destinationId;
@@ -488,67 +519,111 @@ export class QueueService {
   }
 
   /**
-   * Get all available destination queues
+   * Get all available destination queues with optional filtering
    */
-  async getAvailableQueues(): Promise<{
+  async getAvailableQueues(filters?: {
+    governorate?: string;
+    delegation?: string;
+  }): Promise<{
     success: boolean;
     queues?: QueueSummary[];
     error?: string;
   }> {
     try {
-      const queues = await prisma.vehicleQueue.groupBy({
-        by: ['destinationId', 'destinationName'],
+      // First get all unique destinations from routes table to avoid duplication
+      const allRoutes = await prisma.route.findMany({
         where: {
-          status: { in: ['WAITING', 'LOADING', 'READY'] }
+          isActive: true
         },
-        _count: {
-          id: true
-        },
-        _min: {
-          estimatedDeparture: true
+        select: {
+          stationId: true,
+          stationName: true,
+          governorate: true,
+          governorateAr: true,
+          delegation: true,
+          delegationAr: true
         }
       });
 
-      const queueSummaries: QueueSummary[] = [];
+      // Get queue data for each destination
+      const destinationsWithQueues = await Promise.all(
+        allRoutes.map(async (route) => {
+          const queueData = await prisma.vehicleQueue.groupBy({
+            by: ['destinationId', 'destinationName'],
+            where: {
+              destinationId: route.stationId,
+              status: { in: ['WAITING', 'LOADING', 'READY'] }
+            },
+            _count: {
+              id: true
+            },
+            _min: {
+              estimatedDeparture: true
+            }
+          });
 
-      for (const queue of queues) {
-        const statusCounts = await prisma.vehicleQueue.groupBy({
-          by: ['status'],
-          where: {
-            destinationId: queue.destinationId,
-            status: { in: ['WAITING', 'LOADING', 'READY'] }
-          },
-          _count: {
-            id: true
+          if (queueData.length === 0) {
+            return null; // No active queues for this destination
           }
-        });
 
-        const summary: QueueSummary = {
-          destinationId: queue.destinationId,
-          destinationName: queue.destinationName,
-          totalVehicles: queue._count.id,
-          waitingVehicles: 0,
-          loadingVehicles: 0,
-          readyVehicles: 0,
-          estimatedNextDeparture: queue._min.estimatedDeparture || undefined
-        };
+          const queue = queueData[0];
+          const statusCounts = await prisma.vehicleQueue.groupBy({
+            by: ['status'],
+            where: {
+              destinationId: route.stationId,
+              status: { in: ['WAITING', 'LOADING', 'READY'] }
+            },
+            _count: {
+              id: true
+            }
+          });
 
-        // Count vehicles by status
-        for (const statusCount of statusCounts) {
-          switch (statusCount.status) {
-            case 'WAITING':
-              summary.waitingVehicles = statusCount._count.id;
-              break;
-            case 'LOADING':
-              summary.loadingVehicles = statusCount._count.id;
-              break;
-            case 'READY':
-              summary.readyVehicles = statusCount._count.id;
-              break;
+          const summary: QueueSummary = {
+            destinationId: route.stationId,
+            destinationName: route.stationName,
+            totalVehicles: queue._count.id,
+            waitingVehicles: 0,
+            loadingVehicles: 0,
+            readyVehicles: 0,
+            estimatedNextDeparture: queue._min.estimatedDeparture || undefined,
+            governorate: route.governorate || undefined,
+            governorateAr: route.governorateAr || undefined,
+            delegation: route.delegation || undefined,
+            delegationAr: route.delegationAr || undefined
+          };
+
+          // Count vehicles by status
+          for (const statusCount of statusCounts) {
+            switch (statusCount.status) {
+              case 'WAITING':
+                summary.waitingVehicles = statusCount._count.id;
+                break;
+              case 'LOADING':
+                summary.loadingVehicles = statusCount._count.id;
+                break;
+              case 'READY':
+                summary.readyVehicles = statusCount._count.id;
+                break;
+            }
           }
-        }
 
-        queueSummaries.push(summary);
+          return summary;
+        })
+      );
+
+      // Filter out null entries (destinations with no active queues)
+      let queueSummaries = destinationsWithQueues.filter((summary): summary is QueueSummary => summary !== null);
+
+      // Apply filters if provided
+      if (filters?.governorate) {
+        queueSummaries = queueSummaries.filter(summary => 
+          summary.governorate === filters.governorate
+        );
+      }
+      if (filters?.delegation) {
+        queueSummaries = queueSummaries.filter(summary => 
+          summary.delegation === filters.delegation
+        );
       }
 
       return {
@@ -558,6 +633,93 @@ export class QueueService {
 
     } catch (error) {
       console.error('❌ Error getting available queues:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
+   * Get available locations for filtering
+   */
+  async getAvailableLocations(): Promise<{
+    success: boolean;
+    governments?: Array<{
+      name: string;
+      nameAr?: string | undefined;
+      delegations: Array<{
+        name: string;
+        nameAr?: string | undefined;
+      }>;
+    }>;
+    error?: string;
+  }> {
+    try {
+      console.log('📍 Getting available locations for queue filtering...');
+      
+      // Get all unique governments and delegations from routes
+      const routes = await prisma.route.findMany({
+        where: {
+          isActive: true,
+          governorate: { not: null },
+          delegation: { not: null }
+        },
+        select: {
+          governorate: true,
+          governorateAr: true,
+          delegation: true,
+          delegationAr: true
+        },
+        distinct: ['governorate', 'delegation'] // Ensure unique combinations
+      });
+
+      // Group by government
+      const governmentMap = new Map<string, {
+        name: string;
+        nameAr?: string | undefined;
+        delegations: Map<string, { name: string; nameAr?: string | undefined; }>;
+      }>();
+
+      for (const route of routes) {
+        if (!route.governorate || !route.delegation) continue;
+
+        // Get or create government
+        if (!governmentMap.has(route.governorate)) {
+          governmentMap.set(route.governorate, {
+            name: route.governorate,
+            nameAr: route.governorateAr ? route.governorateAr : undefined,
+            delegations: new Map()
+          });
+        }
+
+        const government = governmentMap.get(route.governorate)!;
+
+        // Add delegation if not already present
+        if (!government.delegations.has(route.delegation)) {
+          government.delegations.set(route.delegation, {
+            name: route.delegation,
+            nameAr: route.delegationAr ? route.delegationAr : undefined
+          });
+        }
+      }
+
+      // Convert to array format
+      const governments = Array.from(governmentMap.values()).map(gov => ({
+        name: gov.name,
+        nameAr: gov.nameAr ? gov.nameAr : undefined,
+        delegations: Array.from(gov.delegations.values())
+      }));
+
+      console.log(`✅ Found ${governments.length} governments with locations for queue filtering`);
+
+      return {
+        success: true,
+        governments
+      };
+
+    } catch (error) {
+      console.error('❌ Error getting available locations for queue filtering:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -614,7 +776,123 @@ export class QueueService {
   }
 
   /**
-   * Update vehicle status in queue
+   * Automatically update vehicle status based on booking activity
+   * This method should be called after any booking is created or updated
+   */
+  async updateVehicleStatusBasedOnBookings(queueId: string): Promise<{
+    success: boolean;
+    statusChanged?: boolean;
+    newStatus?: string;
+    error?: string;
+  }> {
+    try {
+      // Get the current queue entry with booking information
+      const queueEntry = await prisma.vehicleQueue.findUnique({
+        where: { id: queueId },
+        include: {
+          vehicle: true,
+          bookings: {
+            where: {
+              paymentStatus: { in: ['PAID', 'PENDING'] }
+            }
+          }
+        }
+      });
+
+      if (!queueEntry) {
+        return {
+          success: false,
+          error: `Queue entry ${queueId} not found`
+        };
+      }
+
+      const currentStatus = queueEntry.status;
+      const availableSeats = queueEntry.availableSeats;
+      const totalSeats = queueEntry.totalSeats;
+      const totalBookedSeats = queueEntry.bookings.reduce((sum, booking) => sum + booking.seatsBooked, 0);
+      const occupiedSeats = totalSeats - availableSeats;
+
+      console.log(`🔍 Checking status for vehicle ${queueEntry.vehicle.licensePlate}:`);
+      console.log(`   Current status: ${currentStatus}`);
+      console.log(`   Available seats: ${availableSeats}`);
+      console.log(`   Total seats: ${totalSeats}`);
+      console.log(`   Occupied seats: ${occupiedSeats}`);
+      console.log(`   Booked seats: ${totalBookedSeats}`);
+
+      let newStatus = currentStatus;
+      let statusChanged = false;
+
+      // Determine new status based on seat occupancy
+      if (availableSeats === totalSeats) {
+        // No seats occupied - should be WAITING
+        if (currentStatus !== 'WAITING') {
+          newStatus = 'WAITING';
+          statusChanged = true;
+          console.log(`🔄 Vehicle ${queueEntry.vehicle.licensePlate} status: ${currentStatus} → WAITING (no passengers)`);
+        }
+      } else if (availableSeats > 0) {
+        // Some seats occupied but not full - should be LOADING
+        if (currentStatus !== 'LOADING') {
+          newStatus = 'LOADING';
+          statusChanged = true;
+          console.log(`🔄 Vehicle ${queueEntry.vehicle.licensePlate} status: ${currentStatus} → LOADING (${occupiedSeats}/${totalSeats} seats occupied)`);
+        }
+      } else {
+        // All seats occupied - should be READY
+        if (currentStatus !== 'READY') {
+          newStatus = 'READY';
+          statusChanged = true;
+          console.log(`🔄 Vehicle ${queueEntry.vehicle.licensePlate} status: ${currentStatus} → READY (fully loaded - ${totalSeats}/${totalSeats} seats)`);
+        }
+      }
+
+      // Update status if it changed
+      if (statusChanged) {
+        await prisma.vehicleQueue.update({
+          where: { id: queueId },
+          data: {
+            status: newStatus,
+            ...(newStatus === 'READY' && !queueEntry.estimatedDeparture && {
+              estimatedDeparture: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes from now
+            })
+          }
+        });
+
+        console.log(`✅ Vehicle ${queueEntry.vehicle.licensePlate} status updated to ${newStatus}`);
+
+        // Broadcast the status change
+        this.broadcastQueueUpdate(queueEntry.destinationId);
+
+        // Notify clients about status change
+        notifyQueueUpdate({
+          ...queueEntry,
+          status: newStatus
+        });
+
+        // If vehicle is now fully booked (READY with 0 available seats), print exit ticket and remove from queue
+        if (newStatus === 'READY' && availableSeats === 0) {
+          console.log(`🚌 Vehicle ${queueEntry.vehicle.licensePlate} is now fully booked, generating exit ticket and removing from queue`);
+          await this.handleFullyBookedVehicle(queueEntry);
+        }
+      }
+
+      return {
+        success: true,
+        statusChanged,
+        newStatus: statusChanged ? newStatus : currentStatus
+      };
+
+    } catch (error) {
+      console.error('❌ Error updating vehicle status based on bookings:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
+   * Update vehicle status in queue (manual status update)
    */
   async updateVehicleStatus(licensePlate: string, status: 'WAITING' | 'LOADING' | 'READY' | 'DEPARTED'): Promise<{
     success: boolean;
@@ -909,6 +1187,78 @@ export class QueueService {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
+    }
+  }
+
+  /**
+   * Handle a fully booked vehicle by generating exit ticket and removing from queue
+   */
+  private async handleFullyBookedVehicle(queueEntry: any): Promise<void> {
+    try {
+      console.log(`🎫 Generating exit ticket for fully booked vehicle ${queueEntry.vehicle.licensePlate}`);
+      
+      // Generate exit ticket data
+      const exitTicketData = {
+        ticketNumber: `EXIT_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        licensePlate: queueEntry.vehicle.licensePlate,
+        departureStationName: this.currentStationId, // Current station
+        destinationStationName: queueEntry.destinationName,
+        exitTime: new Date(),
+        totalSeats: queueEntry.totalSeats,
+        occupiedSeats: queueEntry.totalSeats - queueEntry.availableSeats
+      };
+
+      // Broadcast exit ticket event to frontend for printing
+      if (this.webSocketService) {
+        this.webSocketService.emit('exit_ticket_generated', {
+          type: 'exit_ticket_generated',
+          payload: {
+            vehicle: {
+              licensePlate: queueEntry.vehicle.licensePlate,
+              destination: queueEntry.destinationName,
+              totalSeats: queueEntry.totalSeats
+            },
+            ticket: exitTicketData
+          }
+        });
+      }
+
+      // Immediately remove vehicle from queue by directly deleting the queue entry
+      console.log(`🚪 Removing fully booked vehicle ${queueEntry.vehicle.licensePlate} from queue`);
+      
+      try {
+        // Directly delete the queue entry since the vehicle is fully booked
+        await prisma.vehicleQueue.delete({
+          where: { id: queueEntry.id }
+        });
+
+        // Reorder remaining vehicles in the same destination queue
+        await this.reorderQueue(queueEntry.destinationId);
+
+        console.log(`✅ Successfully removed fully booked vehicle ${queueEntry.vehicle.licensePlate} from queue`);
+        
+        // Broadcast vehicle departure notification
+        if (this.webSocketService) {
+          this.webSocketService.emit('vehicle_departed', {
+            type: 'vehicle_departed',
+            payload: {
+              licensePlate: queueEntry.vehicle.licensePlate,
+              destination: queueEntry.destinationName,
+              reason: 'fully_booked',
+              exitTicketNumber: exitTicketData.ticketNumber
+            }
+          });
+        }
+
+        // Broadcast queue update to refresh all clients
+        this.broadcastQueueUpdate(queueEntry.destinationId);
+
+      } catch (deleteError) {
+        console.error(`❌ Failed to remove fully booked vehicle ${queueEntry.vehicle.licensePlate} from queue:`, deleteError);
+      }
+
+    } catch (error) {
+      console.error('❌ Error handling fully booked vehicle:', error);
     }
   }
 }

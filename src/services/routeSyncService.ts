@@ -45,7 +45,7 @@ export class RouteSyncService {
                     
                     // Log route details
                     routes.forEach((route: any) => {
-                        console.log(`   Route: ${route.station_id} - ${route.station_name} (${route.base_price} TND)`);
+                        console.log(`   Route: ${route.station_id} - ${route.station_name} (${route.base_price} TND) - ${route.governorate}, ${route.delegation}`);
 
                         this.uploadToDB(route);
                         console.log(`Route data: ${route}`);
@@ -96,6 +96,10 @@ export class RouteSyncService {
                 update: {
                     stationName: route.station_name,
                     basePrice: route.base_price,
+                    governorate: route.governorate,
+                    governorateAr: route.governorate_ar,
+                    delegation: route.delegation,
+                    delegationAr: route.delegation_ar,
                     isActive: true,
                     syncedAt: new Date(),
                     updatedAt: new Date()
@@ -105,13 +109,17 @@ export class RouteSyncService {
                     stationId: route.station_id,
                     stationName: route.station_name,
                     basePrice: route.base_price,
+                    governorate: route.governorate,
+                    governorateAr: route.governorate_ar,
+                    delegation: route.delegation,
+                    delegationAr: route.delegation_ar,
                     isActive: true,
                     syncedAt: new Date(),
                     updatedAt: new Date()
             }
         });
 
-            console.log(`Route upserted: ${route.station_id} - ${route.station_name}`);
+            console.log(`Route upserted: ${route.station_id} - ${route.station_name} (${route.governorate}, ${route.delegation})`);
         } catch (error: any) {
             console.error(`Error upserting route ${route.station_id}:`, error.message);
         }

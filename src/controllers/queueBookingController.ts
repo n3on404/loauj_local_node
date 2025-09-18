@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { createQueueBookingService } from '../services/queueBookingService';
 import { WebSocketService } from '../websocket/webSocketService';
 import { prisma } from '../config/database';
+import { LoggingService } from '../services/loggingService';
 
 export class QueueBookingController {
   private queueBookingService: ReturnType<typeof createQueueBookingService>;
@@ -16,7 +17,17 @@ export class QueueBookingController {
    */
   async getAvailableDestinations(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.queueBookingService.getAvailableDestinations();
+      const { governorate, delegation } = req.query;
+      
+      const filters: { governorate?: string; delegation?: string } = {};
+      if (governorate && typeof governorate === 'string') {
+        filters.governorate = governorate;
+      }
+      if (delegation && typeof delegation === 'string') {
+        filters.delegation = delegation;
+      }
+
+      const result = await this.queueBookingService.getAvailableDestinations(filters);
 
       if (result.success) {
         res.status(200).json({
@@ -32,6 +43,35 @@ export class QueueBookingController {
 
     } catch (error) {
       console.error('❌ Error in getAvailableDestinations controller:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  /**
+   * Get available locations (governments and delegations) for filtering
+   * GET /api/queue-booking/locations
+   */
+  async getAvailableLocations(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await this.queueBookingService.getAvailableLocations();
+
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          data: result.governments
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Error in getAvailableLocations controller:', error);
       res.status(500).json({
         success: false,
         error: 'Internal server error'
@@ -124,6 +164,20 @@ export class QueueBookingController {
       const result = await this.queueBookingService.createBooking(bookingRequest);
 
       if (result.success) {
+        // Log the successful booking
+        if (result.bookings && result.bookings.length > 0) {
+          const firstBooking = result.bookings[0];
+          await LoggingService.logBooking(
+            staffId,
+            firstBooking.vehicleLicensePlate,
+            firstBooking.destinationName,
+            seatsRequested,
+            result.totalAmount || 0,
+            'CASH',
+            result.verificationCodes?.[0] || 'N/A'
+          );
+        }
+
         res.status(201).json({
           success: true,
           message: `Successfully booked ${seatsRequested} seat(s) for ${customerName}`,

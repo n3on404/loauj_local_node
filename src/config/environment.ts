@@ -58,7 +58,7 @@ export const env: EnvironmentConfig = {
   PORT: parseInt(process.env.PORT || '3001', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
   
-  // Station Configuration - Now using config service
+  // Station Configuration - Now using config service (no env fallback for station info)
   STATION_ID: configService.getStationId(),
   STATION_NAME: configService.getStationName(),
   GOVERNORATE: configService.getGovernorate(),

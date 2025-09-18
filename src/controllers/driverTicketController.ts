@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
+import { LoggingService } from '../services/loggingService';
 
 export const generateEntryTicket = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -96,6 +97,15 @@ export const generateEntryTicket = async (req: Request, res: Response): Promise<
       }
     });
 
+    // Log the vehicle entry
+    await LoggingService.logVehicleEntry(
+      staffId,
+      vehicle.licensePlate,
+      stationConfig.stationName,
+      queueEntry.queuePosition,
+      ticketNumber
+    );
+
     res.json({
       success: true,
       message: 'Entry ticket generated successfully',
@@ -177,28 +187,48 @@ export const generateExitTicket = async (req: Request, res: Response): Promise<v
     // Generate ticket number
     const ticketNumber = `EXT-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-    // Create exit ticket
-    const exitTicket = await prisma.driverExitTicket.create({
-      data: {
-        vehicleId: vehicle.id,
-        licensePlate: vehicle.licensePlate,
-        departureStationId: stationConfig.stationId,
-        departureStationName: stationConfig.stationName,
-        destinationStationId: destinationId || queueEntry.destinationId,
-        destinationStationName: destinationName || queueEntry.destinationName,
-        exitTime: new Date(),
-        ticketNumber,
-        createdBy: staffId
-      },
-      include: {
-        vehicle: {
-          include: {
-            driver: true
-          }
+    // Create exit ticket and update vehicle status to DEPART in a transaction
+    const [exitTicket] = await prisma.$transaction([
+      // Create the exit ticket
+      prisma.driverExitTicket.create({
+        data: {
+          vehicleId: vehicle.id,
+          licensePlate: vehicle.licensePlate,
+          departureStationId: stationConfig.stationId,
+          departureStationName: stationConfig.stationName,
+          destinationStationId: destinationId || queueEntry.destinationId,
+          destinationStationName: destinationName || queueEntry.destinationName,
+          exitTime: new Date(),
+          ticketNumber,
+          createdBy: staffId
         },
-        createdByStaff: true
-      }
-    });
+        include: {
+          vehicle: {
+            include: {
+              driver: true
+            }
+          },
+          createdByStaff: true
+        }
+      }),
+      // Update vehicle status to DEPART (remove from active queue but keep record)
+      prisma.vehicleQueue.update({
+        where: { id: queueEntry.id },
+        data: { 
+          status: 'DEPARTED',
+          actualDeparture: new Date()
+        }
+      })
+    ]);
+
+    // Log the vehicle exit
+    await LoggingService.logVehicleExit(
+      staffId,
+      vehicle.licensePlate,
+      stationConfig.stationName,
+      destinationName || queueEntry.destinationName,
+      ticketNumber
+    );
 
     res.json({
       success: true,

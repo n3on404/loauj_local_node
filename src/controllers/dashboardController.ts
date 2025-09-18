@@ -1,376 +1,204 @@
-import { prisma } from '../config/database';
 import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
+
+const prisma = new PrismaClient();
 
 /**
  * Get dashboard statistics
  */
-export async function getDashboardStats() {
+export const getDashboardStats = async (req: Request, res: Response) => {
   try {
-    // Get queue statistics
-    const queueCount = await prisma.vehicleQueue.count({
+    const now = new Date();
+    const todayStart = startOfDay(now);
+    const todayEnd = endOfDay(now);
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    // Get total vehicles count
+    const totalVehicles = await prisma.vehicle.count({
+      where: { isActive: true }
+    });
+
+    // Get active queues (vehicles currently in queue)
+    const activeQueues = await prisma.vehicleQueue.count({
       where: {
-        status: 'WAITING'
+        status: { in: ['WAITING', 'LOADING', 'READY'] }
+      }
+    });
+
+    // Get unique destinations with active vehicles
+    const activeDestinations = await prisma.vehicleQueue.groupBy({
+      by: ['destinationId'],
+      where: {
+        status: { in: ['WAITING', 'LOADING', 'READY'] }
       }
     });
     
-    // Get vehicle statistics
-    const totalVehicles = await prisma.vehicle.count();
-    const activeVehicles = await prisma.vehicle.count({
-      where: {
-        isActive: true
-      }
-    });
-    
-    // Get booking statistics
+    // Get today's bookings
     const todayBookings = await prisma.booking.count({
       where: {
         createdAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0))
+          gte: todayStart,
+          lte: todayEnd
         }
       }
     });
     
-    const todayRevenue = await prisma.booking.aggregate({
+    // Get today's revenue
+    const todayRevenueResult = await prisma.booking.aggregate({
       _sum: {
         totalAmount: true
       },
       where: {
         createdAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0))
-        }
+          gte: todayStart,
+          lte: todayEnd
+        },
+        paymentStatus: 'PAID'
       }
     });
 
-    // Get booking type statistics
-    const onlineBookings = await prisma.booking.count({
+    // Get total bookings
+    const totalBookings = await prisma.booking.count();
+
+    // Get online vs cash bookings today
+    const onlineBookingsToday = await prisma.booking.count({
       where: {
-        bookingType: 'ONLINE',
         createdAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0))
-        }
+          gte: todayStart,
+          lte: todayEnd
+        },
+        bookingType: 'ONLINE'
       }
     });
 
-    const cashBookings = await prisma.booking.count({
+    const cashBookingsToday = await prisma.booking.count({
       where: {
-        bookingType: 'CASH',
         createdAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0))
-        }
+          gte: todayStart,
+          lte: todayEnd
+        },
+        bookingType: 'CASH'
       }
     });
 
-    // Get active destinations count
-    const activeDestinations = await prisma.vehicleQueue.groupBy({
-      by: ['destinationName'],
-      where: {
-        status: 'WAITING'
-      }
-    });
-
-    // System health check (simplified for now)
+    // System health checks
     const systemHealth = {
-      database: true, // Assume database is healthy if we can query
-      websocket: true, // Will be updated by WebSocket service
-      centralServer: true // Will be updated by connection status
+      database: true, // If we reach this point, DB is working
+      websocket: true, // TODO: implement proper websocket health check
+      centralServer: false // TODO: implement central server connectivity check
     };
-    
-    return {
+
+    const stats = {
       totalVehicles,
-      totalQueues: queueCount,
-      totalBookings: todayBookings,
+      totalQueues: activeQueues,
+      totalBookings,
       todayBookings,
-      todayRevenue: todayRevenue._sum.totalAmount || 0,
-      onlineBookings,
-      cashBookings,
+      todayRevenue: todayRevenueResult._sum.totalAmount || 0,
+      onlineBookings: onlineBookingsToday,
+      cashBookings: cashBookingsToday,
       activeDestinations: activeDestinations.length,
       systemHealth
     };
+
+    res.json({
+      success: true,
+      data: stats
+    });
+
   } catch (error) {
-    console.error('❌ Error fetching dashboard stats:', error);
-    throw error;
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch dashboard statistics',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-}
+};
 
 /**
- * Get financial statistics for supervisor dashboard
+ * Get active vehicle queues grouped by destination
  */
-export async function getFinancialStats() {
+export const getDashboardQueues = async (req: Request, res: Response) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    
-    // Today's income
-    const todayIncome = await prisma.booking.aggregate({
-      _sum: {
-        totalAmount: true
-      },
-      _count: {
-        id: true
-      },
-      where: {
-        createdAt: {
-          gte: today
-        },
-        paymentStatus: 'PAID'
-      }
-    });
-    
-    // This month's income
-    const monthIncome = await prisma.booking.aggregate({
-      _sum: {
-        totalAmount: true
-      },
-      _count: {
-        id: true
-      },
-      where: {
-        createdAt: {
-          gte: startOfMonth
-        },
-        paymentStatus: 'PAID'
-      }
-    });
-    
-    // Total transactions count
-    const totalTransactions = await prisma.booking.count({
-      where: {
-        paymentStatus: 'PAID'
-      }
-    });
-    
-    // Average transaction amount
-    const avgTransaction = await prisma.booking.aggregate({
-      _avg: {
-        totalAmount: true
-      },
-      where: {
-        paymentStatus: 'PAID'
-      }
-    });
-    
-    return {
-      todayIncome: todayIncome._sum.totalAmount || 0,
-      todayTransactions: todayIncome._count || 0,
-      monthIncome: monthIncome._sum.totalAmount || 0,
-      monthTransactions: monthIncome._count || 0,
-      totalTransactions,
-      avgTransactionAmount: avgTransaction._avg.totalAmount || 0
-    };
-  } catch (error) {
-    console.error('❌ Error fetching financial stats:', error);
-    throw error;
-  }
-}
-
-/**
- * Get transaction history for supervisor dashboard
- */
-export async function getTransactionHistory(limit = 50) {
-  try {
-    const transactions = await prisma.booking.findMany({
-      take: limit,
-      orderBy: {
-        createdAt: 'desc'
-      },
-      where: {
-        paymentStatus: 'PAID'
-      },
-      select: {
-        id: true,
-        seatsBooked: true,
-        totalAmount: true,
-        bookingSource: true,
-        bookingType: true,
-        customerPhone: true,
-        paymentMethod: true,
-        createdAt: true,
-        queue: {
-          select: {
-            destinationName: true,
-            vehicle: {
-              select: {
-                licensePlate: true
-              }
-            }
-          }
-        },
-        createdByStaff: {
-          select: {
-            firstName: true,
-            lastName: true,
-            role: true
-          }
-        }
-      }
-    });
-    
-    // Transform the data to match the expected format
-    const formattedTransactions = transactions.map(transaction => ({
-      id: transaction.id,
-      amount: transaction.totalAmount,
-      seatsBooked: transaction.seatsBooked,
-      bookingType: transaction.bookingType,
-      paymentMethod: transaction.paymentMethod,
-      customerPhone: transaction.customerPhone,
-      destinationName: transaction.queue.destinationName,
-      vehicleLicensePlate: transaction.queue.vehicle.licensePlate,
-      staffName: transaction.createdByStaff ? 
-        `${transaction.createdByStaff.firstName} ${transaction.createdByStaff.lastName}` : 
-        'System',
-      staffRole: transaction.createdByStaff?.role || 'SYSTEM',
-      createdAt: transaction.createdAt,
-      bookingSource: transaction.bookingSource
-    }));
-    
-    return formattedTransactions;
-  } catch (error) {
-    console.error('❌ Error fetching transaction history:', error);
-    throw error;
-  }
-}
-
-/**
- * Get supervisor dashboard data
- */
-export async function getSupervisorDashboardData() {
-  try {
-    const financial = await getFinancialStats();
-    const transactions = await getTransactionHistory(20);
-    const recentBookings = await getDashboardBookings();
-    
-    return {
-      financial,
-      transactions,
-      recentBookings,
-      timestamp: new Date().toISOString()
-    };
-  } catch (error) {
-    console.error('❌ Error collecting supervisor dashboard data:', error);
-    throw error;
-  }
-}
-
-/**
- * Get enhanced queue details for dashboard with statistics
- */
-export async function getDashboardQueues() {
-  try {
-    // Get all queues grouped by destination with statistics
-    const queuesByDestination = await prisma.vehicleQueue.groupBy({
-      by: ['destinationName'],
-      where: {
-        status: 'WAITING'
-      },
+    const queues = await prisma.vehicleQueue.groupBy({
+      by: ['destinationId', 'destinationName'],
       _count: {
         id: true
       },
       _sum: {
         availableSeats: true,
         totalSeats: true
+      },
+      _avg: {
+        basePrice: true
+      },
+      where: {
+        status: { in: ['WAITING', 'LOADING', 'READY'] }
       }
     });
 
-    // Get detailed queue information
-    const detailedQueues = await prisma.vehicleQueue.findMany({
+    // Get detailed breakdown by status for each destination
+    const queueDetails = await Promise.all(
+      queues.map(async (queue) => {
+        const statusBreakdown = await prisma.vehicleQueue.groupBy({
+          by: ['status'],
+          _count: {
+            id: true
+          },
       where: {
-        status: 'WAITING'
-      },
-      select: {
-        id: true,
-        destinationName: true,
-        queuePosition: true,
-        availableSeats: true,
-        totalSeats: true,
-        basePrice: true,
-        estimatedDeparture: true,
-        status: true,
-        vehicle: {
-          select: {
-            licensePlate: true,
-            driver: {
-              select: {
-                firstName: true,
-                lastName: true,
-                phoneNumber: true
-              }
-            }
+            destinationId: queue.destinationId,
+            status: { in: ['WAITING', 'LOADING', 'READY'] }
           }
-        }
-      },
-      orderBy: [
-        { destinationName: 'asc' },
-        { queuePosition: 'asc' }
-      ]
-    });
+        });
 
-    // Transform into the expected format
-    const enhancedQueues = queuesByDestination.map(dest => {
-      const destinationQueues = detailedQueues.filter(q => q.destinationName === dest.destinationName);
-      
-      // Get route information for base price
-      const firstQueue = destinationQueues[0];
-      const basePrice = firstQueue?.basePrice || 0;
-      
-      // Calculate status counts
-      const waitingVehicles = destinationQueues.filter(q => q.status === 'WAITING').length;
-      const loadingVehicles = destinationQueues.filter(q => q.status === 'LOADING').length;
-      const readyVehicles = destinationQueues.filter(q => q.status === 'READY').length;
+        const waitingVehicles = statusBreakdown.find(s => s.status === 'WAITING')?._count.id || 0;
+        const loadingVehicles = statusBreakdown.find(s => s.status === 'LOADING')?._count.id || 0;
+        const readyVehicles = statusBreakdown.find(s => s.status === 'READY')?._count.id || 0;
       
       return {
-        destinationId: dest.destinationName, // Using name as ID for now
-        destinationName: dest.destinationName,
-        vehicleCount: dest._count.id,
+          destinationId: queue.destinationId,
+          destinationName: queue.destinationName,
+          vehicleCount: queue._count.id,
         waitingVehicles,
         loadingVehicles,
         readyVehicles,
-        totalSeats: dest._sum.totalSeats || 0,
-        availableSeats: dest._sum.availableSeats || 0,
-        basePrice,
-        estimatedNextDeparture: firstQueue?.estimatedDeparture
-      };
+          totalSeats: queue._sum.totalSeats || 0,
+          availableSeats: queue._sum.availableSeats || 0,
+          basePrice: queue._avg.basePrice || 0
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: queueDetails
     });
-    
-    return enhancedQueues;
+
   } catch (error) {
-    console.error('❌ Error fetching queue details:', error);
-    throw error;
+    console.error('Error fetching dashboard queues:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch queue data',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-}
+};
 
 /**
- * Get vehicle details for dashboard
+ * Get current vehicles in the system
  */
-export async function getDashboardVehicles() {
+export const getDashboardVehicles = async (req: Request, res: Response) => {
   try {
     const vehicles = await prisma.vehicleQueue.findMany({
       where: {
-        status: {
-          in: ['WAITING', 'LOADING', 'READY']
-        }
+        status: { in: ['WAITING', 'LOADING', 'READY'] }
       },
-      select: {
-        id: true,
-        destinationName: true,
-        queuePosition: true,
-        availableSeats: true,
-        totalSeats: true,
-        basePrice: true,
-        estimatedDeparture: true,
-        status: true,
-        enteredAt: true,
+      include: {
         vehicle: {
-          select: {
-            licensePlate: true,
-            driver: {
-              select: {
-                firstName: true,
-                lastName: true,
-                phoneNumber: true
-              }
-            }
+          include: {
+            driver: true
           }
         }
       },
@@ -380,8 +208,7 @@ export async function getDashboardVehicles() {
       ]
     });
 
-    // Transform to match frontend interface
-    const enhancedVehicles = vehicles.map(queue => ({
+    const vehicleData = vehicles.map(queue => ({
       id: queue.id,
       licensePlate: queue.vehicle.licensePlate,
       destinationName: queue.destinationName,
@@ -396,53 +223,45 @@ export async function getDashboardVehicles() {
         firstName: queue.vehicle.driver.firstName,
         lastName: queue.vehicle.driver.lastName,
         phoneNumber: queue.vehicle.driver.phoneNumber
-      } : undefined
+      } : null
     }));
 
-    return enhancedVehicles;
+    res.json({
+      success: true,
+      data: vehicleData
+    });
+
   } catch (error) {
-    console.error('❌ Error fetching vehicle details:', error);
-    throw error;
+    console.error('Error fetching dashboard vehicles:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch vehicle data',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-}
+};
 
 /**
- * Get recent bookings for dashboard
+ * Get recent bookings for activity feed
  */
-export async function getDashboardBookings() {
+export const getDashboardBookings = async (req: Request, res: Response) => {
   try {
     const recentBookings = await prisma.booking.findMany({
-      take: 10,
+      take: 20,
       orderBy: {
         createdAt: 'desc'
       },
-      select: {
-        id: true,
-        seatsBooked: true,
-        totalAmount: true,
-        bookingSource: true,
-        bookingType: true,
-        customerPhone: true,
-        paymentStatus: true,
-        paymentMethod: true,
-        isVerified: true,
-        createdAt: true,
-        verificationCode: true,
+      include: {
         queue: {
-          select: {
-            destinationName: true,
-            vehicle: {
-              select: {
-                licensePlate: true
-              }
-            }
+          include: {
+            vehicle: true
           }
-        }
+        },
+        createdByStaff: true
       }
     });
-    
-    // Transform to match frontend interface
-    const enhancedBookings = recentBookings.map(booking => ({
+
+    const bookingData = recentBookings.map(booking => ({
       id: booking.id,
       vehicleLicensePlate: booking.queue.vehicle.licensePlate,
       destinationName: booking.queue.destinationName,
@@ -450,152 +269,346 @@ export async function getDashboardBookings() {
       totalAmount: booking.totalAmount,
       bookingType: booking.bookingType,
       createdAt: booking.createdAt.toISOString(),
+      verificationCode: booking.verificationCode,
+      staffName: booking.createdByStaff ? 
+        `${booking.createdByStaff.firstName} ${booking.createdByStaff.lastName}` : 
+        'Unknown',
+      customerPhone: booking.customerPhone
+    }));
+
+    res.json({
+      success: true,
+      data: bookingData
+    });
+
+  } catch (error) {
+    console.error('Error fetching dashboard bookings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch booking data',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Get real-time activity log
+ */
+export const getActivityLog = async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 50;
+    
+    // Get recent operation logs
+    const operationLogs = await prisma.operationLog.findMany({
+      take: limit,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        staff: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
+
+    // Get recent bookings as activities
+    const recentBookings = await prisma.booking.findMany({
+      take: 10,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        queue: {
+          include: {
+            vehicle: true
+          }
+        },
+        createdByStaff: true
+      }
+    });
+
+    // Get recent vehicle entries
+    const recentEntries = await prisma.driverEntryTicket.findMany({
+      take: 10,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        vehicle: {
+          include: {
+            driver: true
+          }
+        },
+        createdByStaff: true
+      }
+    });
+
+    // Get recent vehicle exits
+    const recentExits = await prisma.driverExitTicket.findMany({
+      take: 10,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        vehicle: {
+          include: {
+            driver: true
+          }
+        },
+        createdByStaff: true
+      }
+    });
+
+    // Combine all activities
+    const activities: any[] = [];
+
+    // Add operation logs
+    operationLogs.forEach(log => {
+      activities.push({
+        id: `op-${log.id}`,
+        type: 'operation',
+        action: log.operation,
+        description: getOperationDescription(log.operation, log.details || undefined),
+        timestamp: log.createdAt,
+        staffName: log.staff ? `${log.staff.firstName} ${log.staff.lastName}` : 'Unknown',
+        success: log.success,
+        details: log.details ? JSON.parse(log.details) : null
+      });
+    });
+
+    // Add booking activities
+    recentBookings.forEach(booking => {
+      activities.push({
+        id: `booking-${booking.id}`,
+        type: 'booking',
+        action: 'BOOKING_CREATED',
+        description: `Nouvelle réservation de ${booking.seatsBooked} place(s) pour ${booking.queue.destinationName} (${booking.queue.vehicle.licensePlate})`,
+        timestamp: booking.createdAt,
+        staffName: booking.createdByStaff ? 
+          `${booking.createdByStaff.firstName} ${booking.createdByStaff.lastName}` : 
+          'System',
+      success: true,
+        details: {
+          vehicleLicensePlate: booking.queue.vehicle.licensePlate,
+          destinationName: booking.queue.destinationName,
+          seatsBooked: booking.seatsBooked,
+          totalAmount: booking.totalAmount,
+          bookingType: booking.bookingType,
+          verificationCode: booking.verificationCode
+        }
+      });
+    });
+
+    // Add vehicle entry activities
+    recentEntries.forEach(entry => {
+      activities.push({
+        id: `entry-${entry.id}`,
+        type: 'vehicle_entry',
+        action: 'VEHICLE_ENTERED',
+        description: `Véhicule ${entry.licensePlate} entré en position ${entry.queuePosition} pour ${entry.stationName}`,
+        timestamp: entry.createdAt,
+        staffName: `${entry.createdByStaff.firstName} ${entry.createdByStaff.lastName}`,
+        success: true,
+        details: {
+          licensePlate: entry.licensePlate,
+          stationName: entry.stationName,
+          queuePosition: entry.queuePosition,
+          ticketNumber: entry.ticketNumber,
+          driverName: entry.vehicle.driver ? 
+            `${entry.vehicle.driver.firstName} ${entry.vehicle.driver.lastName}` : 
+            'Unknown'
+        }
+      });
+    });
+
+    // Add vehicle exit activities
+    recentExits.forEach(exit => {
+      activities.push({
+        id: `exit-${exit.id}`,
+        type: 'vehicle_exit',
+        action: 'VEHICLE_DEPARTED',
+        description: `Véhicule ${exit.licensePlate} parti de ${exit.departureStationName} vers ${exit.destinationStationName}`,
+        timestamp: exit.createdAt,
+        staffName: `${exit.createdByStaff.firstName} ${exit.createdByStaff.lastName}`,
+        success: true,
+        details: {
+          licensePlate: exit.licensePlate,
+          departureStationName: exit.departureStationName,
+          destinationStationName: exit.destinationStationName,
+          ticketNumber: exit.ticketNumber,
+          driverName: exit.vehicle.driver ? 
+            `${exit.vehicle.driver.firstName} ${exit.vehicle.driver.lastName}` : 
+            'Unknown'
+        }
+      });
+    });
+
+    // Sort all activities by timestamp (newest first)
+    activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    // Limit to requested number
+    const limitedActivities = activities.slice(0, limit);
+
+    res.json({
+      success: true,
+      data: limitedActivities
+    });
+
+  } catch (error) {
+    console.error('Error fetching activity log:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch activity log',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Helper function to generate human-readable operation descriptions
+ */
+function getOperationDescription(operation: string, details?: string): string {
+  const parsedDetails = details ? JSON.parse(details) : {};
+  
+  switch (operation) {
+    case 'LOGIN':
+      return `Connexion au système`;
+    case 'BOOK_TICKET':
+      return `Réservation de ${parsedDetails.seatsBooked || 1} place(s) pour ${parsedDetails.destinationName || 'destination inconnue'}`;
+    case 'VERIFY_TICKET':
+      return `Vérification du ticket ${parsedDetails.verificationCode || 'N/A'}`;
+    case 'ADD_VEHICLE':
+      return `Ajout du véhicule ${parsedDetails.licensePlate || 'N/A'} à la file d'attente`;
+    case 'REMOVE_VEHICLE':
+      return `Retrait du véhicule ${parsedDetails.licensePlate || 'N/A'} de la file d'attente`;
+    case 'UPDATE_VEHICLE_STATUS':
+      return `Mise à jour du statut du véhicule ${parsedDetails.licensePlate || 'N/A'} vers ${parsedDetails.newStatus || 'N/A'}`;
+    default:
+      return `Opération: ${operation}`;
+  }
+}
+
+/**
+ * Get supervisor dashboard data (financial overview)
+ */
+export const getSupervisorDashboard = async (req: Request, res: Response) => {
+  try {
+    const now = new Date();
+    const todayStart = startOfDay(now);
+    const todayEnd = endOfDay(now);
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    // Today's financial data
+    const todayStats = await prisma.booking.aggregate({
+      _sum: {
+        totalAmount: true
+      },
+      _count: {
+        id: true
+      },
+      _avg: {
+        totalAmount: true
+      },
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd
+        },
+        paymentStatus: 'PAID'
+      }
+    });
+
+    // Month's financial data
+    const monthStats = await prisma.booking.aggregate({
+      _sum: {
+        totalAmount: true
+      },
+      _count: {
+        id: true
+      },
+      where: {
+        createdAt: {
+          gte: monthStart,
+          lte: monthEnd
+        },
+        paymentStatus: 'PAID'
+      }
+    });
+
+    // Total transactions
+    const totalStats = await prisma.booking.aggregate({
+      _count: {
+        id: true
+      },
+      _avg: {
+        totalAmount: true
+      },
+      where: {
+        paymentStatus: 'PAID'
+      }
+    });
+
+    // Recent transactions for supervisor view
+    const recentTransactions = await prisma.booking.findMany({
+      take: 50,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        queue: {
+          include: {
+            vehicle: true
+          }
+        },
+        createdByStaff: true
+      },
+      where: {
+        paymentStatus: 'PAID'
+      }
+    });
+
+    const transactions = recentTransactions.map(booking => ({
+      id: booking.id,
+      destinationName: booking.queue.destinationName,
+      vehicleLicensePlate: booking.queue.vehicle.licensePlate,
+      seatsBooked: booking.seatsBooked,
+      amount: booking.totalAmount,
+      bookingType: booking.bookingType,
+      staffName: booking.createdByStaff ? 
+        `${booking.createdByStaff.firstName} ${booking.createdByStaff.lastName}` : 
+        'System',
+      staffRole: booking.createdByStaff?.role || 'UNKNOWN',
+      createdAt: booking.createdAt,
       verificationCode: booking.verificationCode
     }));
-    
-    return enhancedBookings;
-  } catch (error) {
-    console.error('❌ Error fetching recent bookings:', error);
-    throw error;
-  }
-}
 
-/**
- * Get all dashboard data
- */
-export async function getAllDashboardData() {
-  try {
-    const stats = await getDashboardStats();
-    const queues = await getDashboardQueues();
-    const vehicles = await getDashboardVehicles();
-    const recentBookings = await getDashboardBookings();
-    
-    return {
-      statistics: stats,
-      queues: queues,
-      vehicles: vehicles,
-      recentBookings: recentBookings,
-      timestamp: new Date().toISOString()
+    const financial = {
+      todayIncome: todayStats._sum.totalAmount || 0,
+      todayTransactions: todayStats._count.id || 0,
+      monthIncome: monthStats._sum.totalAmount || 0,
+      monthTransactions: monthStats._count.id || 0,
+      totalTransactions: totalStats._count.id || 0,
+      avgTransactionAmount: totalStats._avg.totalAmount || 0
     };
-  } catch (error) {
-    console.error('❌ Error collecting all dashboard data:', error);
-    throw error;
-  }
-}
 
-/**
- * Update the LocalWebSocketServer with the latest dashboard data
- */
-export async function updateDashboardData(wsServer: any) {
-  try {
-    const dashboardData = await getAllDashboardData();
-    
-    wsServer.broadcast({
-      type: 'dashboard_data',
-      payload: dashboardData,
-      timestamp: Date.now()
-    });
-    
-    return dashboardData;
-  } catch (error) {
-    console.error('❌ Error updating dashboard data:', error);
-    throw error;
-  }
-}
-
-// HTTP Handlers
-export const getDashboardStatsHandler = async (req: Request, res: Response) => {
-  try {
-    const stats = await getDashboardStats();
     res.json({
       success: true,
-      data: stats
+      data: {
+        financial,
+        transactions
+      }
     });
+
   } catch (error) {
-    console.error('❌ Error in getDashboardStatsHandler:', error);
+    console.error('Error fetching supervisor dashboard:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch dashboard stats'
+      message: 'Failed to fetch supervisor dashboard data',
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
-};
-
-export const getDashboardQueuesHandler = async (req: Request, res: Response) => {
-  try {
-    const queues = await getDashboardQueues();
-    res.json({
-      success: true,
-      data: queues
-    });
-  } catch (error) {
-    console.error('❌ Error in getDashboardQueuesHandler:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch queue data'
-    });
-  }
-};
-
-export const getDashboardVehiclesHandler = async (req: Request, res: Response) => {
-  try {
-    const vehicles = await getDashboardVehicles();
-    res.json({
-      success: true,
-      data: vehicles
-    });
-  } catch (error) {
-    console.error('❌ Error in getDashboardVehiclesHandler:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch vehicle data'
-    });
-  }
-};
-
-export const getDashboardBookingsHandler = async (req: Request, res: Response) => {
-  try {
-    const bookings = await getDashboardBookings();
-    res.json({
-      success: true,
-      data: bookings
-    });
-  } catch (error) {
-    console.error('❌ Error in getDashboardBookingsHandler:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch booking data'
-    });
-  }
-};
-
-export const getSupervisorDashboardHandler = async (req: Request, res: Response) => {
-  try {
-    const data = await getSupervisorDashboardData();
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error('❌ Error in getSupervisorDashboardHandler:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch supervisor dashboard data'
-    });
-  }
-};
-
-// For demo: emit WebSocket events (to be called from queue/booking logic)
-export const emitVehicleQueueEvent = (io: any, vehicle: any, queue: any) => {
-  io.emit('vehicle_queue_event', {
-    type: 'VEHICLE_ENTERED_QUEUE',
-    vehicle,
-    queue
-  });
-};
-
-export const emitBookingEvent = (io: any, booking: any) => {
-  io.emit('booking_event', {
-    type: 'NEW_BOOKING',
-    booking
-  });
 }; 

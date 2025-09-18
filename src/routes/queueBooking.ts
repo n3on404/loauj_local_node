@@ -20,8 +20,16 @@ export default function createQueueBookingRouter(webSocketService?: WebSocketSer
    * @route GET /api/queue-booking/destinations
    * @desc Get all available destinations with seat counts
    * @access Private (Staff only)
+   * @query { governorate?: string, delegation?: string } - Optional filters
    */
   router.get('/destinations', queueBookingController.getAvailableDestinations.bind(queueBookingController));
+
+  /**
+   * @route GET /api/queue-booking/locations
+   * @desc Get available governments and delegations for filtering
+   * @access Private (Staff only)
+   */
+  router.get('/locations', queueBookingController.getAvailableLocations.bind(queueBookingController));
 
   /**
    * @route GET /api/queue-booking/destinations/:destinationId/seats

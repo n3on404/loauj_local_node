@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { publicController } from '../controllers/publicController';
+import { dayPassController } from '../controllers/dayPassController';
 
 const router = Router();
 
@@ -62,5 +63,12 @@ router.get('/health', (req, res) => {
     service: 'Louaj Local Node - Public API'
   });
 });
+
+/**
+ * @route GET /api/public/test-drivers-without-day-pass
+ * @desc Test endpoint to get drivers without day pass (NO AUTH)
+ * @access Public (for testing)
+ */
+router.get('/test-drivers-without-day-pass', dayPassController.getDriversWithoutDayPass.bind(dayPassController));
 
 export default router;
