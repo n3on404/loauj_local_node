@@ -13,10 +13,16 @@ export const getStationConfig = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    console.log('🔍 Station config debug:', {
+      recordId: stationConfig.id,
+      stationId: stationConfig.stationId,
+      stationName: stationConfig.stationName
+    });
+    
     res.json({
       success: true,
       data: {
-        id: stationConfig.id,
+        id: stationConfig.stationId, // Use stationId instead of database record id
         name: stationConfig.stationName,
         governorate: stationConfig.governorate,
         delegation: stationConfig.delegation,

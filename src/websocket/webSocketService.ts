@@ -307,6 +307,11 @@ export class WebSocketService extends EventEmitter {
         this.emit('message', data); // Emit for Promise-based handlers
         break;
 
+      case 'instant_sync':
+        console.log('📡 Received instant sync:', data.payload?.dataType, data.payload?.operation);
+        this.handleInstantSync(data);
+        break;
+
       case 'vehicle_sync_full':
         console.log('🚐 Received full vehicle sync');
         this.handleVehicleFullSync(data);
@@ -448,6 +453,267 @@ export class WebSocketService extends EventEmitter {
       console.error('❌ Error processing vehicle delete sync:', error);
       this.sendVehicleSyncAck(data.messageId, 'vehicle_sync_delete', false, ['Processing error']);
     }
+  }
+
+  /**
+   * Handle instant sync from central server
+   */
+  private async handleInstantSync(data: any): Promise<void> {
+    try {
+      const { dataType, operation, data: syncData, syncId, stationId: targetStationId } = data.payload;
+      
+      console.log(`📡 Processing instant sync: ${dataType} ${operation} (${syncId})`);
+
+      // Check if this sync is targeted to our station (if stationId is specified)
+      if (targetStationId && targetStationId !== this.stationId) {
+        console.log(`⚠️ Sync not for this station (target: ${targetStationId}, current: ${this.stationId})`);
+        return;
+      }
+
+      switch (dataType) {
+        case 'staff':
+          await this.handleStaffSync(operation, syncData);
+          break;
+        case 'route':
+          await this.handleRouteSync(operation, syncData);
+          break;
+        case 'station':
+          await this.handleStationSync(operation, syncData);
+          break;
+        case 'vehicle':
+          await this.handleVehicleSync(operation, syncData);
+          break;
+        case 'destination':
+        case 'governorate':
+        case 'delegation':
+          await this.handleGeographicSync(dataType, operation, syncData);
+          break;
+        default:
+          console.warn(`⚠️ Unhandled sync data type: ${dataType}`);
+      }
+
+      // Send acknowledgment
+      this.sendInstantSyncAck(syncId, dataType, operation, true, []);
+
+      // Emit sync event for other services to listen
+      this.emit('instant_sync_processed', {
+        dataType,
+        operation,
+        data: syncData,
+        syncId
+      });
+
+    } catch (error) {
+      console.error('❌ Error processing instant sync:', error);
+      this.sendInstantSyncAck(data.payload?.syncId, data.payload?.dataType, data.payload?.operation, false, [error instanceof Error ? error.message : 'Unknown error']);
+    }
+  }
+
+  /**
+   * Handle staff sync
+   */
+  private async handleStaffSync(operation: string, staffData: any): Promise<void> {
+    const { prisma } = await import('../config/database');
+    
+    switch (operation) {
+      case 'create':
+        await prisma.staff.upsert({
+          where: { cin: staffData.cin },
+          update: {
+            firstName: staffData.firstName,
+            lastName: staffData.lastName,
+            phoneNumber: staffData.phoneNumber,
+            role: staffData.role,
+            isActive: staffData.isActive,
+            syncedAt: new Date()
+          },
+          create: {
+            id: staffData.id,
+            cin: staffData.cin,
+            firstName: staffData.firstName,
+            lastName: staffData.lastName,
+            phoneNumber: staffData.phoneNumber,
+            password: staffData.password || '$2b$12$default', // Placeholder password
+            role: staffData.role,
+            isActive: staffData.isActive,
+            syncedAt: new Date()
+          }
+        });
+        console.log(`✅ Staff synced: ${staffData.firstName} ${staffData.lastName} (${staffData.cin})`);
+        break;
+      case 'update':
+        await prisma.staff.update({
+          where: { id: staffData.id },
+          data: {
+            firstName: staffData.firstName,
+            lastName: staffData.lastName,
+            phoneNumber: staffData.phoneNumber,
+            role: staffData.role,
+            isActive: staffData.isActive,
+            syncedAt: new Date()
+          }
+        });
+        console.log(`✅ Staff updated: ${staffData.firstName} ${staffData.lastName}`);
+        break;
+      case 'delete':
+        await prisma.staff.delete({
+          where: { id: staffData.id }
+        });
+        console.log(`✅ Staff deleted: ${staffData.id}`);
+        break;
+    }
+  }
+
+  /**
+   * Handle route sync
+   */
+  private async handleRouteSync(operation: string, routeData: any): Promise<void> {
+    const { prisma } = await import('../config/database');
+    
+    switch (operation) {
+      case 'create':
+        await prisma.route.upsert({
+          where: { id: routeData.id },
+          update: {
+            stationId: routeData.destinationStationId,
+            stationName: routeData.destinationStation?.name || 'Unknown',
+            basePrice: routeData.basePrice,
+            isActive: routeData.isActive,
+            syncedAt: new Date()
+          },
+          create: {
+            id: routeData.id,
+            stationId: routeData.destinationStationId,
+            stationName: routeData.destinationStation?.name || 'Unknown',
+            basePrice: routeData.basePrice,
+            isActive: routeData.isActive,
+            syncedAt: new Date()
+          }
+        });
+        console.log(`✅ Route synced: ${routeData.departureStation?.name} → ${routeData.destinationStation?.name}`);
+        break;
+      case 'update':
+        await prisma.route.update({
+          where: { id: routeData.id },
+          data: {
+            basePrice: routeData.basePrice,
+            isActive: routeData.isActive,
+            syncedAt: new Date()
+          }
+        });
+        console.log(`✅ Route updated: ${routeData.id}`);
+        break;
+      case 'delete':
+        await prisma.route.delete({
+          where: { id: routeData.id }
+        });
+        console.log(`✅ Route deleted: ${routeData.id}`);
+        break;
+    }
+  }
+
+  /**
+   * Handle station config sync 
+   */
+  private async handleStationSync(operation: string, stationData: any): Promise<void> {
+    const { prisma } = await import('../config/database');
+    
+    switch (operation) {
+      case 'create':
+      case 'update':
+        await prisma.stationConfig.upsert({
+          where: { stationId: stationData.id },
+          update: {
+            stationName: stationData.name,
+            governorate: stationData.governorate?.name || 'Unknown',
+            delegation: stationData.delegation?.name || 'Unknown',
+            address: stationData.address,
+            isOperational: stationData.isActive
+          },
+          create: {
+            stationId: stationData.id,
+            stationName: stationData.name,
+            governorate: stationData.governorate?.name || 'Unknown',
+            delegation: stationData.delegation?.name || 'Unknown',
+            address: stationData.address,
+            isOperational: stationData.isActive,
+            serverVersion: '1.0.0'
+          }
+        });
+        console.log(`✅ Station config synced: ${stationData.name}`);
+        break;
+      case 'delete':
+        await prisma.stationConfig.delete({
+          where: { stationId: stationData.id }
+        });
+        console.log(`✅ Station config deleted: ${stationData.id}`);
+        break;
+    }
+  }
+
+  /**
+   * Handle vehicle sync (extended from existing)
+   */
+  private async handleVehicleSync(operation: string, vehicleData: any): Promise<void> {
+    // Use existing vehicle sync service
+    const { vehicleSyncService } = await import('../services/vehicleSyncService');
+    
+    switch (operation) {
+      case 'create':
+      case 'update':
+        await vehicleSyncService.handleVehicleUpdate(vehicleData, this.stationId || 'unknown');
+        break;
+      case 'delete':
+        await vehicleSyncService.handleVehicleDelete(vehicleData.id);
+        break;
+    }
+  }
+
+  /**
+   * Handle geographic data sync (destinations, governorates, delegations)
+   * Note: Local node stores these as strings, not separate models
+   */
+  private async handleGeographicSync(dataType: string, operation: string, data: any): Promise<void> {
+    // For the local node, geographic data is stored as strings in other models
+    // We'll log this for now and could update related records if needed
+    console.log(`📍 Geographic ${dataType} ${operation}: ${data.name || data.id} (stored as strings in local models)`);
+    
+    // Could potentially update route governorate/delegation fields if needed
+    if (dataType === 'governorate' || dataType === 'delegation') {
+      // Update route records that reference this geographic data
+      const { prisma } = await import('../config/database');
+      
+      try {
+        if (operation === 'update' && dataType === 'governorate') {
+          await prisma.route.updateMany({
+            where: { governorate: data.oldName || data.name },
+            data: { governorate: data.name }
+          });
+        }
+        // Similar logic could be added for delegation updates
+      } catch (error) {
+        console.warn(`⚠️ Could not update geographic reference: ${error}`);
+      }
+    }
+  }
+
+  /**
+   * Send instant sync acknowledgment to central server
+   */
+  private sendInstantSyncAck(syncId: string, dataType: string, operation: string, success: boolean, errors: string[]): void {
+    this.send({
+      type: 'instant_sync_ack',
+      payload: {
+        syncId,
+        dataType,
+        operation,
+        success,
+        errors,
+        stationId: this.stationId,
+        timestamp: new Date().toISOString()
+      },
+      timestamp: Date.now()
+    });
   }
 
   /**
