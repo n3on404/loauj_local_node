@@ -357,15 +357,12 @@ export const getVehiclesInQueue = async (req: Request, res: Response): Promise<v
         destinationId: entry.destinationId,
         enteredAt: entry.enteredAt,
         driver: entry.vehicle.driver ? {
-          firstName: entry.vehicle.driver.firstName,
-          lastName: entry.vehicle.driver.lastName,
           cin: entry.vehicle.driver.cin,
-          phoneNumber: entry.vehicle.driver.phoneNumber
+          accountStatus: entry.vehicle.driver.accountStatus
         } : null,
         vehicle: {
-          model: entry.vehicle.model,
-          color: entry.vehicle.color,
-          capacity: entry.vehicle.capacity
+          capacity: entry.vehicle.capacity,
+          licensePlate: entry.vehicle.licensePlate
         }
       });
       return acc;
@@ -441,15 +438,12 @@ export const getVehiclesForExit = async (req: Request, res: Response): Promise<v
       destinationId: entry.destinationId,
       enteredAt: entry.enteredAt,
       driver: entry.vehicle.driver ? {
-        firstName: entry.vehicle.driver.firstName,
-        lastName: entry.vehicle.driver.lastName,
         cin: entry.vehicle.driver.cin,
-        phoneNumber: entry.vehicle.driver.phoneNumber
+        accountStatus: entry.vehicle.driver.accountStatus
       } : null,
       vehicle: {
-        model: entry.vehicle.model,
-        color: entry.vehicle.color,
-        capacity: entry.vehicle.capacity
+        capacity: entry.vehicle.capacity,
+        licensePlate: entry.vehicle.licensePlate
       }
     }));
 
@@ -463,15 +457,12 @@ export const getVehiclesForExit = async (req: Request, res: Response): Promise<v
       startTime: trip.startTime,
       seatsBooked: trip.seatsBooked,
       driver: trip.vehicle.driver ? {
-        firstName: trip.vehicle.driver.firstName,
-        lastName: trip.vehicle.driver.lastName,
         cin: trip.vehicle.driver.cin,
-        phoneNumber: trip.vehicle.driver.phoneNumber
+        accountStatus: trip.vehicle.driver.accountStatus
       } : null,
       vehicle: {
-        model: trip.vehicle.model,
-        color: trip.vehicle.color,
-        capacity: trip.vehicle.capacity
+        capacity: trip.vehicle.capacity,
+        licensePlate: trip.vehicle.licensePlate
       }
     }));
 
@@ -574,15 +565,11 @@ export const searchVehicleByCIN = async (req: Request, res: Response): Promise<v
       success: true,
       data: {
         driver: {
-          firstName: driver.firstName,
-          lastName: driver.lastName,
           cin: driver.cin,
-          phoneNumber: driver.phoneNumber
+          accountStatus: driver.accountStatus
         },
         vehicle: {
           licensePlate: vehicle.licensePlate,
-          model: vehicle.model,
-          color: vehicle.color,
           capacity: vehicle.capacity
         },
         queueEntry: queueEntry ? {

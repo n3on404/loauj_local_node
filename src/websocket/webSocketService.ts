@@ -834,7 +834,7 @@ export class WebSocketService extends EventEmitter {
   }
 
   // Staff Authentication Methods
-  requestStaffLogin(cin: string): Promise<any> {
+  requestStaffLogin(cin: string, password: string): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.isConnected || !this.isAuthenticated) {
         reject(new Error('Station not connected to central server'));
@@ -862,7 +862,7 @@ export class WebSocketService extends EventEmitter {
       // Send request
       const success = this.send({
         type: 'staff_login_request',
-        payload: { cin },
+        payload: { cin, password },
         timestamp: Date.now(),
         messageId
       });

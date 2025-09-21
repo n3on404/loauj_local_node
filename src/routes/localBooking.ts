@@ -104,7 +104,7 @@ router.get('/eta/:destinationId', async (req, res) => {
         vehicle: {
           select: {
             licensePlate: true,
-            model: true,
+            capacity: true,
             isActive: true
           }
         },

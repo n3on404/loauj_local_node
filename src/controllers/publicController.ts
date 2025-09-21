@@ -226,13 +226,9 @@ export class PublicController {
           vehicleId: entry.vehicleId,
           licensePlate: entry.vehicle.licensePlate,
           capacity: entry.vehicle.capacity,
-          model: entry.vehicle.model,
-          color: entry.vehicle.color,
-
           // Driver info
           driverName: entry.vehicle.driver ?
-            `${entry.vehicle.driver.firstName} ${entry.vehicle.driver.lastName}` : 'Unknown',
-          driverPhone: entry.vehicle.driver?.phoneNumber,
+            `Driver ${entry.vehicle.driver.cin}` : 'Unknown',
 
           // Queue info
           queuePosition: entry.queuePosition,
@@ -510,12 +506,10 @@ export class PublicController {
           vehicleId: entry.vehicleId,
           licensePlate: entry.vehicle.licensePlate,
           capacity: entry.vehicle.capacity,
-          model: entry.vehicle.model,
           
           // Driver info
           driverName: entry.vehicle.driver ? 
-            `${entry.vehicle.driver.firstName} ${entry.vehicle.driver.lastName}` : 'Unknown',
-          driverPhone: entry.vehicle.driver?.phoneNumber,
+            `Driver ${entry.vehicle.driver.cin}` : 'Unknown',
           
           // Queue info
           queuePosition: entry.queuePosition,

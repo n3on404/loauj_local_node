@@ -320,6 +320,74 @@ export class QueueBookingController {
   }
 
   /**
+   * Cancel booking or remove specific number of seats
+   * DELETE /api/queue-booking/cancel/:bookingId
+   * PUT /api/queue-booking/cancel/:bookingId
+   */
+  async cancelBooking(req: Request, res: Response): Promise<void> {
+    try {
+      const { bookingId } = req.params;
+      const { seatsToCancel } = req.body; // Optional: number of seats to cancel (if not provided, cancels entire booking)
+      const staffId = req.staff?.id;
+
+      if (!bookingId) {
+        res.status(400).json({
+          success: false,
+          error: 'Booking ID is required'
+        });
+        return;
+      }
+
+      if (!staffId) {
+        res.status(401).json({
+          success: false,
+          error: 'Staff authentication required'
+        });
+        return;
+      }
+
+      // Validate seatsToCancel if provided
+      if (seatsToCancel !== undefined) {
+        if (typeof seatsToCancel !== 'number' || seatsToCancel <= 0) {
+          res.status(400).json({
+            success: false,
+            error: 'Seats to cancel must be a positive number'
+          });
+          return;
+        }
+      }
+
+      console.log(`🚫 Staff ${staffId} cancelling booking ${bookingId}${seatsToCancel ? `, ${seatsToCancel} seats` : ' (completely)'}`);
+
+      const result = await this.queueBookingService.cancelBooking(bookingId, seatsToCancel, staffId);
+
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          message: result.message,
+          data: {
+            cancelledCompletely: result.cancelledCompletely,
+            seatsRestored: result.seatsRestored,
+            updatedBooking: result.updatedBooking
+          }
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error || 'Failed to cancel booking'
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Error in cancelBooking controller:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+
+  /**
    * Get booking statistics
    * GET /api/queue-booking/stats
    */

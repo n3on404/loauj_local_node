@@ -328,7 +328,7 @@ router.get('/trips/daily', async (req: Request, res: Response) => {
 
     // Driver info for each vehicle
     const vehicleIds = Array.from(new Set(trips.map(t => t.vehicleId)));
-    const drivers = await prisma.driver.findMany({ where: { vehicleId: { in: vehicleIds } }, select: { vehicleId: true, firstName: true, lastName: true, cin: true } });
+    const drivers = await prisma.driver.findMany({ where: { vehicleId: { in: vehicleIds } }, select: { vehicleId: true, cin: true, accountStatus: true } });
     const driverMap = new Map(drivers.map(d => [d.vehicleId, d]));
 
     // Group trips by vehicle and aggregate per destination
@@ -363,7 +363,7 @@ router.get('/trips/daily', async (req: Request, res: Response) => {
         vehicle: {
           id: v.id,
           licensePlate: v.licensePlate,
-          driver: drv ? { firstName: drv.firstName, lastName: drv.lastName, cin: drv.cin } : null,
+          driver: drv ? { cin: drv.cin, accountStatus: drv.accountStatus } : null,
         },
         totals,
         destinations,
@@ -394,7 +394,7 @@ router.get('/:id/trips', async (req: Request, res: Response) => {
     // Try to fetch assigned driver (one-to-one)
     const driver = await prisma.driver.findFirst({
       where: { vehicleId: id },
-      select: { firstName: true, lastName: true, cin: true }
+      select: { cin: true, accountStatus: true }
     });
 
     const target = date ? new Date(`${date}T00:00:00`) : new Date();
@@ -453,9 +453,8 @@ router.get('/:id/trips', async (req: Request, res: Response) => {
           id: vehicle.id,
           licensePlate: vehicle.licensePlate,
           driver: driver ? {
-            firstName: driver.firstName,
-            lastName: driver.lastName,
             cin: driver.cin,
+            accountStatus: driver.accountStatus,
           } : null,
         },
         date: startOfDay.toISOString().slice(0,10),

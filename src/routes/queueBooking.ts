@@ -64,6 +64,17 @@ export default function createQueueBookingRouter(webSocketService?: WebSocketSer
   router.post('/verify', queueBookingController.verifyTicket.bind(queueBookingController));
 
   /**
+   * @route DELETE /api/queue-booking/cancel/:bookingId
+   * @route PUT /api/queue-booking/cancel/:bookingId
+   * @desc Cancel booking completely or remove specific number of seats
+   * @access Private (Staff only)
+   * @param {string} bookingId - The booking ID to cancel
+   * @body { seatsToCancel?: number } - Optional number of seats to cancel (if not provided, cancels entire booking)
+   */
+  router.delete('/cancel/:bookingId', queueBookingController.cancelBooking.bind(queueBookingController));
+  router.put('/cancel/:bookingId', queueBookingController.cancelBooking.bind(queueBookingController));
+
+  /**
    * @route POST /api/queue-booking/online
    * @desc Create online booking from central server
    * @access Private (Central Server only)

@@ -220,9 +220,8 @@ export const getDashboardVehicles = async (req: Request, res: Response) => {
       enteredAt: queue.enteredAt.toISOString(),
       estimatedDeparture: queue.estimatedDeparture?.toISOString(),
       driver: queue.vehicle.driver ? {
-        firstName: queue.vehicle.driver.firstName,
-        lastName: queue.vehicle.driver.lastName,
-        phoneNumber: queue.vehicle.driver.phoneNumber
+        cin: queue.vehicle.driver.cin,
+        accountStatus: queue.vehicle.driver.accountStatus
       } : null
     }));
 
@@ -418,7 +417,7 @@ export const getActivityLog = async (req: Request, res: Response) => {
           queuePosition: entry.queuePosition,
           ticketNumber: entry.ticketNumber,
           driverName: entry.vehicle.driver ? 
-            `${entry.vehicle.driver.firstName} ${entry.vehicle.driver.lastName}` : 
+            `Driver ${entry.vehicle.driver.cin}` : 
             'Unknown'
         }
       });
@@ -440,7 +439,7 @@ export const getActivityLog = async (req: Request, res: Response) => {
           destinationStationName: exit.destinationStationName,
           ticketNumber: exit.ticketNumber,
           driverName: exit.vehicle.driver ? 
-            `${exit.vehicle.driver.firstName} ${exit.vehicle.driver.lastName}` : 
+            `Driver ${exit.vehicle.driver.cin}` : 
             'Unknown'
         }
       });

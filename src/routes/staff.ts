@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import bcrypt from 'bcrypt';
 import { authenticate, requireSupervisor, requireCentralConnection } from '../middleware/auth';
 import { EnhancedLocalWebSocketServer } from '../websocket/LocalWebSocketServer';
 import prisma from '../config/database';
@@ -156,6 +157,7 @@ router.post('/', requireSupervisor, requireCentralConnection, async (req, res) =
         lastName,
         phoneNumber,
         cin,
+        password: centralResponseData.password || await bcrypt.hash(cin, 12), // CIN as default password
         role: centralResponseData.role || 'WORKER',
         isActive: centralResponseData.isActive ?? true,
         syncedAt: new Date(),
@@ -166,6 +168,7 @@ router.post('/', requireSupervisor, requireCentralConnection, async (req, res) =
         lastName,
         phoneNumber,
         cin,
+        password: centralResponseData.password || await bcrypt.hash(cin, 12), // CIN as default password
         role: centralResponseData.role || 'WORKER',
         isActive: centralResponseData.isActive ?? true,
         syncedAt: new Date(),
@@ -492,5 +495,63 @@ router.get('/:id/transactions', requireSupervisor, async (req, res) => {
   } catch (error: any) {
     console.error('Error fetching staff transactions:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch staff transactions', error: error?.message || 'Unknown error' });
+  }
+});
+
+/**
+ * Get current staff information from the session
+ */
+router.get('/current', async (req: any, res) => {
+  try {
+    // Get staff ID from the authenticated request
+    const staffId = req.staff?.id;
+    
+    if (!staffId) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'No staff session found' 
+      });
+    }
+
+    // Fetch staff information from database
+    const staff = await prisma.staff.findUnique({
+      where: { id: staffId },
+      select: {
+        id: true,
+        cin: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        phoneNumber: true,
+        isActive: true,
+      }
+    });
+
+    if (!staff) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Staff not found' 
+      });
+    }
+
+    if (!staff.isActive) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Staff account is inactive' 
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: staff
+    });
+
+  } catch (error: any) {
+    console.error('Error fetching current staff:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch current staff', 
+      error: error?.message || 'Unknown error' 
+    });
   }
 });

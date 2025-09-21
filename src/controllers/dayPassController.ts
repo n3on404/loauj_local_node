@@ -199,13 +199,12 @@ export class DayPassController {
           ...status,
           vehicle: {
             licensePlate: vehicle.licensePlate,
-            model: vehicle.model
+            capacity: vehicle.capacity
           },
           driver: {
             id: vehicle.driver.id,
-            firstName: vehicle.driver.firstName,
-            lastName: vehicle.driver.lastName,
-            cin: vehicle.driver.cin
+            cin: vehicle.driver.cin,
+            accountStatus: vehicle.driver.accountStatus
           }
         }
       });

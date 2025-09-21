@@ -67,8 +67,6 @@ class DayPassService {
         include: {
           driver: {
             select: {
-              firstName: true,
-              lastName: true,
               cin: true
             }
           },
@@ -211,8 +209,6 @@ class DayPassService {
         include: {
           driver: {
             select: {
-              firstName: true,
-              lastName: true,
               cin: true
             }
           },
@@ -259,8 +255,6 @@ class DayPassService {
         include: {
           driver: {
             select: {
-              firstName: true,
-              lastName: true,
               cin: true
             }
           },

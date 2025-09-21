@@ -25,6 +25,7 @@ export const getStationConfig = async (req: Request, res: Response): Promise<voi
           openingTime: stationConfig.openingTime,
           closingTime: stationConfig.closingTime
         },
+        serviceFee: stationConfig.serviceFee,
         isOperational: stationConfig.isOperational,
         isOnline: stationConfig.isOnline,
         lastSync: stationConfig.lastSync,
@@ -49,6 +50,7 @@ export const updateStationConfig = async (req: Request, res: Response): Promise<
       delegation, 
       address,
       operatingHours,
+      serviceFee,
       isOperational 
     } = req.body;
 
@@ -109,6 +111,7 @@ export const updateStationConfig = async (req: Request, res: Response): Promise<
         address: address || null,
         openingTime: operatingHours?.openingTime || '06:00',
         closingTime: operatingHours?.closingTime || '22:00',
+        serviceFee: serviceFee !== undefined ? serviceFee : 0.200,
         isOperational: isOperational !== undefined ? isOperational : true,
         updatedAt: new Date()
       },
@@ -120,6 +123,7 @@ export const updateStationConfig = async (req: Request, res: Response): Promise<
         address: address || null,
         openingTime: operatingHours?.openingTime || '06:00',
         closingTime: operatingHours?.closingTime || '22:00',
+        serviceFee: serviceFee !== undefined ? serviceFee : 0.200,
         isOperational: isOperational !== undefined ? isOperational : true,
         serverVersion: '1.0.0'
       }
@@ -138,6 +142,7 @@ export const updateStationConfig = async (req: Request, res: Response): Promise<
           openingTime: updatedConfig.openingTime,
           closingTime: updatedConfig.closingTime
         },
+        serviceFee: updatedConfig.serviceFee,
         isOperational: updatedConfig.isOperational,
         isOnline: updatedConfig.isOnline,
         updatedAt: updatedConfig.updatedAt

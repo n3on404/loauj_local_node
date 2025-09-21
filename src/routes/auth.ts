@@ -20,10 +20,10 @@ const initializeServices = () => {
   return getAuthService(webSocketService);
 };
 
-// Login with CIN - Initiate SMS verification
+// Login with CIN and password
 router.post('/login', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { cin } = req.body;
+    const { cin, password } = req.body;
     
     if (!cin || typeof cin !== 'string' || cin.length !== 8) {
       res.status(400).json({
@@ -34,22 +34,20 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const authService = initializeServices();
-    
-    // Check if station is connected to central server
-    if (!authService.isConnectedToCentral) {
-      res.status(503).json({
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      res.status(400).json({
         success: false,
-        message: 'Station not connected to central server. Please check your internet connection.',
-        code: 'NOT_CONNECTED',
-        connectionStatus: authService.connectionStatus
+        message: 'Password must be at least 6 characters long',
+        code: 'INVALID_PASSWORD'
       });
       return;
     }
 
+    const authService = initializeServices();
+
     console.log(`🔐 Processing login request for CIN: ${cin}`);
 
-    const result = await authService.initiateLogin(cin);
+    const result = await authService.login(cin, password);
 
     if (!result.success) {
       res.status(400).json({
@@ -63,8 +61,8 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     res.json({
       success: true,
       message: result.message,
-      requiresVerification: true,
-      data: result.data
+      token: result.token,
+      staff: result.staff
     });
   } catch (error) {
     console.error('❌ Login error:', error);
@@ -76,54 +74,72 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// Verify SMS code and complete authentication
-router.post('/verify', async (req: Request, res: Response): Promise<void> => {
+// Change password
+router.post('/change-password', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { cin, verificationCode } = req.body;
+    const { currentPassword, newPassword } = req.body;
     
-    if (!cin || !verificationCode) {
+    if (!currentPassword || !newPassword) {
       res.status(400).json({
         success: false,
-        message: 'CIN and verification code are required',
-        code: 'MISSING_FIELDS'
+        message: 'Current password and new password are required',
+        code: 'MISSING_PASSWORDS'
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long',
+        code: 'WEAK_PASSWORD'
+      });
+      return;
+    }
+
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    
+    if (!token) {
+      res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+        code: 'AUTH_REQUIRED'
       });
       return;
     }
 
     const authService = initializeServices();
-
-    // Check if station is connected to central server
-    if (!authService.isConnectedToCentral) {
-      res.status(503).json({
+    
+    // Verify token first
+    const tokenResult = await authService.verifyToken(token);
+    if (!tokenResult.valid || !tokenResult.staff) {
+      res.status(401).json({
         success: false,
-        message: 'Station not connected to central server. Please check your internet connection.',
-        code: 'NOT_CONNECTED',
-        connectionStatus: authService.connectionStatus
+        message: 'Invalid or expired token',
+        code: 'INVALID_TOKEN'
       });
       return;
     }
 
-    console.log(`🔍 Processing verification for CIN: ${cin}`);
-
-    const result = await authService.verifyLogin(cin, verificationCode);
+    // Change password
+    const result = await authService.changePassword(tokenResult.staff.id, currentPassword, newPassword);
 
     if (!result.success) {
       res.status(400).json({
         success: false,
         message: result.message,
-        code: 'VERIFICATION_FAILED'
+        code: 'PASSWORD_CHANGE_FAILED'
       });
       return;
     }
 
     res.json({
       success: true,
-      message: result.message,
-      token: result.token,
-      staff: result.staff
+      message: result.message
     });
   } catch (error) {
-    console.error('❌ Verification error:', error);
+    console.error('❌ Change password error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',

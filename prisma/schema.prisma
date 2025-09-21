@@ -21,6 +21,7 @@ model StationConfig {
   openingTime   String   @default("06:00") @map("opening_time")
   closingTime   String   @default("22:00") @map("closing_time")
   isOperational Boolean  @default(true) @map("is_operational")
+  serviceFee    Decimal  @default(0.200) @map("service_fee") @db.Decimal(10, 3)
   serverVersion String   @map("server_version")
   lastSync      DateTime? @map("last_sync")
   isOnline      Boolean  @default(false) @map("is_online")
@@ -38,6 +39,7 @@ model Staff {
   phoneNumber   String     @map("phone_number")
   firstName     String     @map("first_name")
   lastName      String     @map("last_name")
+  password      String     // Hashed password
   role          String     // 'WORKER' or 'SUPERVISOR'
   isActive      Boolean    @default(true) @map("is_active")
   lastLogin     DateTime?  @map("last_login")
@@ -50,6 +52,7 @@ model Staff {
   entryTickets  DriverEntryTicket[] @relation("EntryTicketStaff")
   exitTickets   DriverExitTicket[]  @relation("ExitTicketStaff")
   dayPasses     DayPass[]  @relation("DayPassStaff")
+  exitPasses    ExitPass[] @relation("ExitPassStaff")
   operationLogs OperationLog[]
   
   @@map("staff")
@@ -80,11 +83,8 @@ model Session {
 model Driver {
   id              String    @id // Same ID as central
   cin             String    @unique
-  phoneNumber     String    @map("phone_number")
-  firstName       String    @map("first_name")
-  lastName        String    @map("last_name")
   
-  // Origin location info (for compatibility with central)
+  // Origin location info - Always Monastir
   originGovernorateId String? @map("origin_governorate_id")
   originDelegationId  String? @map("origin_delegation_id")
   originAddress       String? @map("origin_address")
@@ -111,10 +111,7 @@ model Driver {
 model Vehicle {
   id              String            @id // Same ID as central
   licensePlate    String            @unique @map("license_plate")
-  capacity        Int
-  model           String?
-  year            Int?
-  color           String?
+  capacity        Int               @default(8)
   
   // Vehicle status (matching central server)
   isActive        Boolean           @default(false) @map("is_active") // Only active after driver approval
@@ -135,6 +132,7 @@ model Vehicle {
   entryTickets        DriverEntryTicket[]         // Entry tickets for this vehicle
   exitTickets         DriverExitTicket[]          // Exit tickets for this vehicle
   dayPasses           DayPass[]                   // Day passes for this vehicle
+  exitPasses          ExitPass[]                  // Exit passes for this vehicle
   
   @@map("vehicles")
 }
@@ -185,6 +183,7 @@ model VehicleQueue {
   vehicle         Vehicle     @relation(fields: [vehicleId], references: [id])
   bookings        Booking[]   // Customers book directly on queue entries
   trips           Trip[]      // Trips that started from this queue entry
+  exitPasses      ExitPass[]  // Exit passes for this queue entry
   
   @@map("vehicle_queue")
 }
@@ -406,4 +405,37 @@ model DayPass {
   createdByStaff  Staff    @relation("DayPassStaff", fields: [createdBy], references: [id])
   
   @@map("day_passes")
+}
+
+// =============== EXIT PASS SYSTEM ===============
+
+model ExitPass {
+  id                    String   @id @default(cuid())
+  queueId               String   @map("queue_id") // Reference to the queue entry
+  vehicleId             String   @map("vehicle_id")
+  licensePlate          String   @map("license_plate")
+  destinationId         String   @map("destination_id")
+  destinationName       String   @map("destination_name")
+  
+  // Previous vehicle info (if any)
+  previousVehicleId     String?  @map("previous_vehicle_id")
+  previousLicensePlate  String?  @map("previous_license_plate")
+  previousExitTime      DateTime? @map("previous_exit_time")
+  
+  // Current vehicle info
+  currentExitTime       DateTime @map("current_exit_time")
+  totalSeats            Int      @map("total_seats")
+  basePricePerSeat      Float    @map("base_price_per_seat")
+  totalBasePrice        Float    @map("total_base_price") // basePricePerSeat * totalSeats
+  
+  // Staff info
+  createdBy             String   @map("created_by") // Staff ID
+  createdAt             DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  queue                 VehicleQueue @relation(fields: [queueId], references: [id], onDelete: Cascade)
+  vehicle               Vehicle  @relation(fields: [vehicleId], references: [id])
+  createdByStaff        Staff    @relation("ExitPassStaff", fields: [createdBy], references: [id])
+  
+  @@map("exit_passes")
 }

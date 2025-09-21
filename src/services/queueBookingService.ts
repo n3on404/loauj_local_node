@@ -4,6 +4,18 @@ import * as dashboardController from '../controllers/dashboardController';
 import { env } from '../config/environment';
 import { configService } from '../config/supervisorConfig';
 
+/**
+ * Queue Booking Service
+ * 
+ * Handles bookings for REGULAR queue vehicles only.
+ * Overnight queue vehicles are excluded from booking operations.
+ * 
+ * This ensures that:
+ * - Staff can only book seats on vehicles in the regular daily queue
+ * - Overnight queue vehicles remain separate for next-day operations
+ * - Booking flow is simplified for current day operations
+ */
+
 export interface BookingRequest {
   destinationId: string;
   seatsRequested: number;
@@ -32,7 +44,9 @@ export interface QueueBooking {
   destinationName: string;
   startStationName: string; // Add current station name
   seatsBooked: number;
-  totalAmount: number;
+  baseAmount: number; // Base price from route
+  serviceFeeAmount: number; // Service fee amount
+  totalAmount: number; // Total amount (base + service fee)
   verificationCode: string;
   bookingType: 'CASH' | 'ONLINE';
   customerPhone?: string | null | undefined;
@@ -79,19 +93,19 @@ export class QueueBookingService {
     error?: string;
   }> {
     try {
-      console.log(`📊 Getting available seats for destination: ${destinationId}`);
+      console.log(`📊 Getting available seats for destination: ${destinationId} (REGULAR queue only)`);
 
-      // Get all vehicles in queue for this destination (both regular and overnight)
+      // Get only REGULAR queue vehicles for booking (exclude overnight queue)
       const queueEntries = await prisma.vehicleQueue.findMany({
         where: {
           destinationId,
+          queueType: 'REGULAR', // Only regular queue for booking
           status: { in: ['WAITING', 'LOADING', 'READY'] }
         },
         include: {
           vehicle: true
         },
         orderBy: [
-          { queueType: 'desc' }, // REGULAR comes after OVERNIGHT alphabetically, so we want OVERNIGHT first
           { queuePosition: 'asc' }
         ]
       });
@@ -99,7 +113,7 @@ export class QueueBookingService {
       if (queueEntries.length === 0) {
         return {
           success: false,
-          error: `No vehicles available for destination ${destinationId}`
+          error: `No regular queue vehicles available for destination ${destinationId}`
         };
       }
 
@@ -164,27 +178,27 @@ export class QueueBookingService {
    */
   async createBooking(bookingRequest: BookingRequest): Promise<BookingResult> {
     try {
-      console.log(`🎫 Creating booking for ${bookingRequest.seatsRequested} seats to ${bookingRequest.destinationId}`);
+      console.log(`🎫 Creating booking for ${bookingRequest.seatsRequested} seats to ${bookingRequest.destinationId} (REGULAR queue only)`);
 
       // Use a database transaction to prevent race conditions
       const result = await prisma.$transaction(async (tx) => {
-        // Get available seats within the transaction for consistency
+        // Get available seats within the transaction for consistency (REGULAR queue only)
         const queueEntries = await tx.vehicleQueue.findMany({
           where: {
             destinationId: bookingRequest.destinationId,
+            queueType: 'REGULAR', // Only regular queue for booking
             status: { in: ['WAITING', 'LOADING', 'READY'] }
           },
           include: {
             vehicle: true
           },
           orderBy: [
-            { queueType: 'desc' }, // OVERNIGHT first
             { queuePosition: 'asc' }
           ]
         });
 
         if (queueEntries.length === 0) {
-          throw new Error('No vehicles available for this destination');
+          throw new Error('No regular queue vehicles available for this destination');
         }
 
         // Calculate total available seats within transaction
@@ -249,7 +263,15 @@ export class QueueBookingService {
           }
 
           const verificationCode = this.generateVerificationCode();
-          const bookingAmount = seatsToBook * vehicle.basePrice;
+          
+          // Get station config for service fee
+          const stationConfig = await tx.stationConfig.findFirst();
+          const serviceFee = Number(stationConfig?.serviceFee || 0.200); // Convert Decimal to number, default to 0.200 TND if not set
+          
+          // Calculate base amount and total amount with service fee
+          const baseAmount = seatsToBook * vehicle.basePrice;
+          const serviceFeeAmount = seatsToBook * serviceFee;
+          const bookingAmount = baseAmount + serviceFeeAmount;
 
           // Create booking
           const bookingType = bookingRequest.bookingType || 'CASH';
@@ -304,6 +326,8 @@ export class QueueBookingService {
             destinationName: updatedQueueEntry.destinationName,
             startStationName: configService.getStationName(),
             seatsBooked: booking.seatsBooked,
+            baseAmount: baseAmount,
+            serviceFeeAmount: serviceFeeAmount,
             totalAmount: booking.totalAmount,
             verificationCode: booking.verificationCode,
             bookingType: (booking.bookingType || 'CASH') as 'CASH' | 'ONLINE',
@@ -450,6 +474,11 @@ export class QueueBookingService {
         };
       }
 
+      // Calculate breakdown from existing data
+      const pricePerSeat = booking.queue.basePrice;
+      const baseAmount = booking.seatsBooked * pricePerSeat;
+      const serviceFeeAmount = booking.totalAmount - baseAmount; // Calculate service fee as difference
+      
       const queueBooking: QueueBooking = {
         id: booking.id,
         queueId: booking.queueId,
@@ -457,6 +486,8 @@ export class QueueBookingService {
         destinationName: booking.queue.destinationName,
         startStationName: configService.getStationName(),
         seatsBooked: booking.seatsBooked,
+        baseAmount: baseAmount,
+        serviceFeeAmount: serviceFeeAmount,
         totalAmount: booking.totalAmount,
         verificationCode: booking.verificationCode,
         bookingType: (booking.bookingType || 'CASH') as 'CASH' | 'ONLINE',
@@ -532,6 +563,11 @@ export class QueueBookingService {
         }
       });
 
+      // Calculate breakdown from existing data
+      const pricePerSeat = updatedBooking.queue.basePrice;
+      const baseAmount = updatedBooking.seatsBooked * pricePerSeat;
+      const serviceFeeAmount = updatedBooking.totalAmount - baseAmount; // Calculate service fee as difference
+      
       const queueBooking: QueueBooking = {
         id: updatedBooking.id,
         queueId: updatedBooking.queueId,
@@ -539,6 +575,8 @@ export class QueueBookingService {
         destinationName: updatedBooking.queue.destinationName,
         startStationName: configService.getStationName(),
         seatsBooked: updatedBooking.seatsBooked,
+        baseAmount: baseAmount,
+        serviceFeeAmount: serviceFeeAmount,
         totalAmount: updatedBooking.totalAmount,
         verificationCode: updatedBooking.verificationCode,
         bookingType: (updatedBooking.bookingType || 'CASH') as 'CASH' | 'ONLINE',
@@ -584,7 +622,7 @@ export class QueueBookingService {
     error?: string;
   }> {
     try {
-      console.log('📊 Getting available destinations for booking (filtering fully booked)...');
+      console.log('📊 Getting available destinations for booking (REGULAR queue only, filtering fully booked)...');
       
       // First get all unique destinations from routes table to avoid duplication
       const allRoutes = await prisma.route.findMany({
@@ -601,12 +639,13 @@ export class QueueBookingService {
         }
       });
 
-      // Get available seats for each destination from vehicle queue
+      // Get available seats for each destination from regular queue only
       const destinationsWithSeats = await Promise.all(
         allRoutes.map(async (route) => {
           const queueEntries = await prisma.vehicleQueue.findMany({
             where: {
               destinationId: route.stationId,
+              queueType: 'REGULAR', // Only regular queue for booking
               status: { in: ['WAITING', 'LOADING'] }
             },
             select: {
@@ -682,6 +721,188 @@ export class QueueBookingService {
       console.error('❌ Error getting available destinations:', error);
       return {
         success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
+   * Cancel booking or remove specific number of seats
+   */
+  async cancelBooking(bookingId: string, seatsToCancel?: number, staffId?: string): Promise<{
+    success: boolean;
+    message: string;
+    updatedBooking?: QueueBooking;
+    cancelledCompletely?: boolean;
+    seatsRestored?: number;
+    error?: string;
+  }> {
+    try {
+      console.log(`🚫 Cancelling booking: ${bookingId}, seats to cancel: ${seatsToCancel || 'all'}`);
+
+      // Use a database transaction to ensure consistency
+      const result = await prisma.$transaction(async (tx) => {
+        // Get the booking with queue and vehicle info
+        const booking = await tx.booking.findUnique({
+          where: { id: bookingId },
+          include: {
+            queue: {
+              include: {
+                vehicle: true
+              }
+            }
+          }
+        });
+
+        if (!booking) {
+          throw new Error('Booking not found');
+        }
+
+        // Check if booking can be cancelled (only if not yet verified/used)
+        if (booking.isVerified) {
+          throw new Error('Cannot cancel a booking that has already been verified/used');
+        }
+
+        // Determine how many seats to cancel
+        const totalSeatsBooked = booking.seatsBooked;
+        const actualSeatsToCancel = seatsToCancel && seatsToCancel < totalSeatsBooked 
+          ? seatsToCancel 
+          : totalSeatsBooked;
+
+        if (seatsToCancel && seatsToCancel > totalSeatsBooked) {
+          throw new Error(`Cannot cancel ${seatsToCancel} seats. Booking only has ${totalSeatsBooked} seats.`);
+        }
+
+        const remainingSeats = totalSeatsBooked - actualSeatsToCancel;
+        const isCancellingCompletely = remainingSeats === 0;
+
+        // Calculate refund amount proportionally
+        const refundAmount = (booking.totalAmount / totalSeatsBooked) * actualSeatsToCancel;
+
+        let updatedBooking: any;
+
+        if (isCancellingCompletely) {
+          // Mark booking as cancelled completely
+          updatedBooking = await tx.booking.update({
+            where: { id: bookingId },
+            data: {
+              paymentStatus: 'CANCELLED',
+              verificationCode: `CANCELLED_${booking.verificationCode}`,
+              // Keep original data for audit trail
+            },
+            include: {
+              queue: {
+                include: {
+                  vehicle: true
+                }
+              }
+            }
+          });
+        } else {
+          // Update booking with reduced seats and amount
+          const newTotalAmount = booking.totalAmount - refundAmount;
+          updatedBooking = await tx.booking.update({
+            where: { id: bookingId },
+            data: {
+              seatsBooked: remainingSeats,
+              totalAmount: newTotalAmount
+            },
+            include: {
+              queue: {
+                include: {
+                  vehicle: true
+                }
+              }
+            }
+          });
+        }
+
+        // Restore seats to the vehicle queue
+        const updatedQueue = await tx.vehicleQueue.update({
+          where: { id: booking.queueId },
+          data: {
+            availableSeats: { increment: actualSeatsToCancel }
+          }
+        });
+
+        // If the vehicle was READY (fully booked) and now has available seats, change status back to LOADING
+        if (booking.queue.status === 'READY' && updatedQueue.availableSeats > 0) {
+          await tx.vehicleQueue.update({
+            where: { id: booking.queueId },
+            data: { status: 'LOADING' }
+          });
+          console.log(`🔄 Vehicle ${booking.queue.vehicle.licensePlate} status changed from READY to LOADING (seats available again)`);
+        }
+
+        return {
+          updatedBooking,
+          actualSeatsToCancel,
+          refundAmount,
+          isCancellingCompletely,
+          vehicleLicensePlate: booking.queue.vehicle.licensePlate,
+          destinationId: booking.queue.destinationId,
+          destinationName: booking.queue.destinationName
+        };
+      });
+
+      // Update vehicle statuses based on new seat availability (outside transaction)
+      try {
+        const { createQueueService } = await import('./queueService');
+        const queueService = createQueueService(this.webSocketService);
+        await queueService.updateVehicleStatusBasedOnBookings(result.updatedBooking.queueId);
+      } catch (error) {
+        console.error('❌ Error updating vehicle status after cancellation:', error);
+      }
+
+      // Broadcast the cancellation update
+      this.broadcastBookingUpdate(result.destinationId);
+
+      // Create the response booking object
+      let queueBooking: QueueBooking | undefined;
+      if (!result.isCancellingCompletely) {
+        const pricePerSeat = result.updatedBooking.queue.basePrice;
+        const baseAmount = result.updatedBooking.seatsBooked * pricePerSeat;
+        const serviceFeeAmount = result.updatedBooking.totalAmount - baseAmount;
+
+        queueBooking = {
+          id: result.updatedBooking.id,
+          queueId: result.updatedBooking.queueId,
+          vehicleLicensePlate: result.updatedBooking.queue.vehicle.licensePlate,
+          destinationName: result.updatedBooking.queue.destinationName,
+          startStationName: configService.getStationName(),
+          seatsBooked: result.updatedBooking.seatsBooked,
+          baseAmount: baseAmount,
+          serviceFeeAmount: serviceFeeAmount,
+          totalAmount: result.updatedBooking.totalAmount,
+          verificationCode: result.updatedBooking.verificationCode,
+          bookingType: (result.updatedBooking.bookingType || 'CASH') as 'CASH' | 'ONLINE',
+          customerPhone: result.updatedBooking.customerPhone,
+          onlineTicketId: result.updatedBooking.onlineTicketId,
+          createdAt: result.updatedBooking.createdAt,
+          queuePosition: result.updatedBooking.queue.queuePosition,
+          estimatedDeparture: result.updatedBooking.queue.estimatedDeparture
+        };
+      }
+
+      const message = result.isCancellingCompletely 
+        ? `Booking cancelled completely. ${result.actualSeatsToCancel} seats restored to vehicle ${result.vehicleLicensePlate}. Refund: ${result.refundAmount.toFixed(3)} TND`
+        : `${result.actualSeatsToCancel} seats cancelled from booking. ${result.actualSeatsToCancel} seats restored to vehicle ${result.vehicleLicensePlate}. Refund: ${result.refundAmount.toFixed(3)} TND`;
+
+      console.log(`✅ ${message}`);
+
+      return {
+        success: true,
+        message,
+        ...(queueBooking && { updatedBooking: queueBooking }),
+        cancelledCompletely: result.isCancellingCompletely,
+        seatsRestored: result.actualSeatsToCancel
+      };
+
+    } catch (error) {
+      console.error('❌ Error cancelling booking:', error);
+      return {
+        success: false,
+        message: 'Failed to cancel booking',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
@@ -859,6 +1080,11 @@ export class QueueBookingService {
           await this.createTripRecord(allocation.queueId, queueInfo);
         }
 
+        // Calculate breakdown from existing data
+        const pricePerSeat = queueInfo.basePrice;
+        const baseAmount = booking.seatsBooked * pricePerSeat;
+        const serviceFeeAmount = booking.totalAmount - baseAmount; // Calculate service fee as difference
+        
         const queueBooking: QueueBooking = {
           id: booking.id,
           queueId: booking.queueId,
@@ -866,6 +1092,8 @@ export class QueueBookingService {
           destinationName: queueInfo.destinationName,
           startStationName: configService.getStationName(),
           seatsBooked: booking.seatsBooked,
+          baseAmount: baseAmount,
+          serviceFeeAmount: serviceFeeAmount,
           totalAmount: booking.totalAmount,
           verificationCode: booking.verificationCode,
           bookingType: 'ONLINE',

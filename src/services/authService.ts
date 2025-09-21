@@ -1,17 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { WebSocketService } from '../websocket/webSocketService';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 export interface LoginResponse {
-  success: boolean;
-  message: string;
-  requiresVerification?: boolean;
-  data?: any;
-}
-
-export interface VerifyResponse {
   success: boolean;
   message: string;
   token?: string;
@@ -27,38 +21,61 @@ export interface TokenPayload {
 
 export class LocalAuthService {
   private webSocketService: WebSocketService;
+  private jwtSecret: string;
+  private saltRounds: number = 12;
 
   constructor(webSocketService: WebSocketService) {
     this.webSocketService = webSocketService;
+    this.jwtSecret = process.env.JWT_SECRET || '125169cc5d865676c9b13ec2df5926cc942ff45e84eb931d6e2cef2940f8efbc';
   }
 
   /**
-   * Initiate staff login process via WebSocket
+   * Hash CIN to use as default password
    */
-  async initiateLogin(cin: string): Promise<LoginResponse> {
+  private async hashCinPassword(cin: string): Promise<string> {
+    return await bcrypt.hash(cin, this.saltRounds);
+  }
+
+  /**
+   * Login with CIN and password
+   */
+  async login(cin: string, password: string): Promise<LoginResponse> {
     try {
-      // Check if WebSocket is connected
-      if (!this.webSocketService.isConnected || !this.webSocketService.authenticated) {
-        return {
-          success: false,
-          message: 'Station not connected to central server. Please check your internet connection.'
-        };
+      console.log(`🔐 Attempting login for CIN: ${cin}`);
+
+      // First try local authentication
+      const localResult = await this.loginLocally(cin, password);
+      if (localResult.success) {
+        return localResult;
       }
 
-      console.log(`🔐 Initiating staff login for CIN: ${cin}`);
+      // If local auth fails and we're connected, try central server
+      if (this.webSocketService.isConnected && this.webSocketService.authenticated) {
+        console.log(`🔄 Local auth failed, trying central server for CIN: ${cin}`);
+        const centralResult = await this.webSocketService.requestStaffLogin(cin, password);
+        
+        if (centralResult.success) {
+          // Store session locally for future use
+          const sessionResult = await this.storeSession(centralResult.data.token, centralResult.data.staff);
+          
+          if (!sessionResult.success) {
+            console.error('❌ Failed to store session locally:', sessionResult.error);
+          }
 
-      // Send login request via WebSocket
-      const result = await this.webSocketService.requestStaffLogin(cin);
-
-      if (result.success) {
-        console.log(`✅ SMS verification sent for staff: ${result.data?.firstName} ${result.data?.lastName}`);
+          console.log(`✅ Staff login successful via central: ${centralResult.data.staff.firstName} ${centralResult.data.staff.lastName}`);
+          
+          return {
+            success: true,
+            message: centralResult.message,
+            token: centralResult.data.token,
+            staff: centralResult.data.staff
+          };
+        }
       }
 
       return {
-        success: result.success,
-        message: result.message,
-        requiresVerification: result.success,
-        data: result.data
+        success: false,
+        message: 'Invalid CIN or password'
       };
 
     } catch (error) {
@@ -73,66 +90,89 @@ export class LocalAuthService {
 
       return {
         success: false,
-        message: 'Failed to process login request. Please try again.'
+        message: 'Login failed. Please try again.'
       };
     }
   }
 
   /**
-   * Verify SMS code and complete login process
+   * Login using local database
    */
-  async verifyLogin(cin: string, verificationCode: string): Promise<VerifyResponse> {
+  private async loginLocally(cin: string, password: string): Promise<LoginResponse> {
     try {
-      // Check if WebSocket is connected
-      if (!this.webSocketService.isConnected || !this.webSocketService.authenticated) {
+      // Find staff member in local database
+      const staff = await prisma.staff.findUnique({
+        where: { cin }
+      });
+
+      if (!staff || !staff.isActive) {
         return {
           success: false,
-          message: 'Station not connected to central server. Please check your internet connection.'
+          message: 'Invalid CIN or password'
         };
       }
 
-      console.log(`🔍 Verifying staff login for CIN: ${cin}`);
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, staff.password);
 
-      // Send verification request via WebSocket
-      const result = await this.webSocketService.requestStaffVerification(cin, verificationCode);
-
-      if (!result.success) {
+      if (!isValidPassword) {
         return {
           success: false,
-          message: result.message
+          message: 'Invalid CIN or password'
         };
       }
 
-      // Store session in local database
-      const sessionResult = await this.storeSession(result.data.token, result.data.staff);
+      // Create JWT token
+      const tokenPayload: TokenPayload = {
+        staffId: staff.id,
+        cin: staff.cin,
+        role: staff.role,
+        stationId: 'local' // Local station ID
+      };
+
+      const token = jwt.sign(tokenPayload, this.jwtSecret, { expiresIn: '30d' });
+
+      // Update last login time
+      await prisma.staff.update({
+        where: { id: staff.id },
+        data: { lastLogin: new Date() }
+      });
+
+      // Store session in database for token verification
+      const sessionResult = await this.storeSession(token, {
+        id: staff.id,
+        cin: staff.cin,
+        firstName: staff.firstName,
+        lastName: staff.lastName,
+        role: staff.role,
+        phoneNumber: staff.phoneNumber
+      });
 
       if (!sessionResult.success) {
         console.error('❌ Failed to store session locally:', sessionResult.error);
-        // Still return success since central auth worked
       }
 
-      console.log(`✅ Staff login successful: ${result.data.staff.firstName} ${result.data.staff.lastName}`);
+      console.log(`✅ Local login successful: ${staff.firstName} ${staff.lastName}`);
 
       return {
         success: true,
-        message: result.message,
-        token: result.data.token,
-        staff: result.data.staff
+        message: 'Login successful',
+        token,
+        staff: {
+          id: staff.id,
+          cin: staff.cin,
+          firstName: staff.firstName,
+          lastName: staff.lastName,
+          role: staff.role,
+          phoneNumber: staff.phoneNumber
+        }
       };
 
     } catch (error) {
-      console.error('❌ Local auth verification error:', error);
-      
-      if (error instanceof Error && error.message.includes('not connected')) {
-        return {
-          success: false,
-          message: 'Station not connected to central server. Please check your internet connection.'
-        };
-      }
-
+      console.error('❌ Local login error:', error);
       return {
         success: false,
-        message: 'Failed to verify login. Please try again.'
+        message: 'Login failed. Please try again.'
       };
     }
   }
@@ -200,6 +240,7 @@ export class LocalAuthService {
           firstName: staff.firstName,
           lastName: staff.lastName,
           phoneNumber: staff.phoneNumber,
+          password: staff.password || await this.hashCinPassword(staff.cin), // CIN as default password
           role: staff.role,
           isActive: true,
           lastLogin: new Date(),
@@ -211,6 +252,7 @@ export class LocalAuthService {
           firstName: staff.firstName,
           lastName: staff.lastName,
           phoneNumber: staff.phoneNumber,
+          password: staff.password || await this.hashCinPassword(staff.cin), // CIN as default password
           role: staff.role,
           isActive: true,
           lastLogin: new Date(),
@@ -336,6 +378,60 @@ export class LocalAuthService {
    */
   get isConnectedToCentral(): boolean {
     return this.webSocketService.isConnected && this.webSocketService.authenticated;
+  }
+
+  /**
+   * Change staff password
+   */
+  async changePassword(staffId: string, currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log(`🔒 Changing password for staff: ${staffId}`);
+
+      // Get staff with current password
+      const staff = await prisma.staff.findUnique({
+        where: { id: staffId }
+      });
+
+      if (!staff) {
+        return {
+          success: false,
+          message: 'Staff member not found'
+        };
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, staff.password);
+
+      if (!isValidPassword) {
+        return {
+          success: false,
+          message: 'Current password is incorrect'
+        };
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, this.saltRounds);
+
+      // Update password
+      await prisma.staff.update({
+        where: { id: staffId },
+        data: { password: hashedNewPassword }
+      });
+
+      console.log(`✅ Password changed successfully for staff: ${staffId}`);
+
+      return {
+        success: true,
+        message: 'Password changed successfully'
+      };
+
+    } catch (error) {
+      console.error('❌ Error changing password:', error);
+      return {
+        success: false,
+        message: 'Failed to change password'
+      };
+    }
   }
 
   /**

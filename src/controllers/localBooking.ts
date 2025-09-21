@@ -254,7 +254,7 @@ export class LocalBookingController {
                 select: {
                   id: true,
                   licensePlate: true,
-                  model: true
+                  capacity: true
                 }
               }
             }
@@ -477,7 +477,7 @@ export class LocalBookingController {
               vehicle: {
                 select: {
                   licensePlate: true,
-                  model: true
+                  capacity: true
                 }
               }
             }
@@ -527,7 +527,6 @@ export class LocalBookingController {
             },
             vehicle: {
               licensePlate: booking.queue.vehicle.licensePlate,
-              model: booking.queue.vehicle.model,
               queuePosition: booking.queue.queuePosition,
               estimatedDeparture: booking.queue.estimatedDeparture
             },
@@ -552,7 +551,7 @@ export class LocalBookingController {
               vehicle: {
                 select: {
                   licensePlate: true,
-                  model: true
+                  capacity: true
                 }
               }
             }
@@ -602,7 +601,6 @@ export class LocalBookingController {
           },
           vehicle: {
             licensePlate: verifiedBooking.queue.vehicle.licensePlate,
-            model: verifiedBooking.queue.vehicle.model,
             queuePosition: verifiedBooking.queue.queuePosition,
             estimatedDeparture: verifiedBooking.queue.estimatedDeparture
           },
@@ -642,7 +640,7 @@ export class LocalBookingController {
               vehicle: {
                 select: {
                   licensePlate: true,
-                  model: true
+                  capacity: true
                 }
               }
             }
@@ -682,7 +680,6 @@ export class LocalBookingController {
           },
           vehicle: {
             licensePlate: booking.queue.vehicle.licensePlate,
-            model: booking.queue.vehicle.model,
             queuePosition: booking.queue.queuePosition,
             estimatedDeparture: booking.queue.estimatedDeparture
           },
@@ -752,7 +749,6 @@ export class LocalBookingController {
           vehicle: {
             select: {
               licensePlate: true,
-              model: true
             }
           },
           _count: {

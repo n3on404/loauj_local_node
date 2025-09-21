@@ -88,7 +88,9 @@ export interface SimpleCashBooking {
   startStationName: string; // Start/origin station name
   seatsBooked: number;
   pricePerSeat: number; // Price per seat from route
-  totalAmount: number;
+  baseAmount: number; // Base price amount
+  serviceFeeAmount: number; // Service fee amount
+  totalAmount: number; // Total amount (base + service fee)
   routeId?: string | undefined; // Route ID if available
   ticketId: string; // This is the verification code
   bookingTime: Date; // Time when booking was created
@@ -287,9 +289,17 @@ export class SimpleCashBookingService {
             }
           });
 
+          // Get station config for service fee
+          const stationConfig = await tx.stationConfig.findFirst();
+          const serviceFee = Number(stationConfig?.serviceFee || 0.200); // Convert Decimal to number, default to 0.200 TND if not set
+          
           // Use route price if available, otherwise fall back to vehicle queue basePrice
           const pricePerSeat = route?.basePrice || vehicle.basePrice;
-          const bookingAmount = seatsToBook * pricePerSeat;
+          
+          // Calculate base amount and total amount with service fee
+          const baseAmount = seatsToBook * pricePerSeat;
+          const serviceFeeAmount = seatsToBook * serviceFee;
+          const bookingAmount = baseAmount + serviceFeeAmount;
 
           // Create booking
           const booking = await tx.booking.create({
@@ -345,6 +355,8 @@ export class SimpleCashBookingService {
             startStationName: stationConfig?.stationName || 'Local Station',
             seatsBooked: booking.seatsBooked,
             pricePerSeat: pricePerSeat,
+            baseAmount: baseAmount,
+            serviceFeeAmount: serviceFeeAmount,
             totalAmount: booking.totalAmount,
             ticketId: booking.verificationCode,
             bookingTime: new Date(),
@@ -479,6 +491,10 @@ export class SimpleCashBookingService {
 
       // Use route price if available, otherwise fall back to queue basePrice
       const pricePerSeat = route?.basePrice || updatedBooking.queue.basePrice;
+      
+      // Calculate breakdown from existing data
+      const baseAmount = updatedBooking.seatsBooked * pricePerSeat;
+      const serviceFeeAmount = updatedBooking.totalAmount - baseAmount; // Calculate service fee as difference
 
       const cashBooking: SimpleCashBooking = {
         id: updatedBooking.id,
@@ -490,6 +506,8 @@ export class SimpleCashBookingService {
         startStationName: stationConfig?.stationName || 'Local Station',
         seatsBooked: updatedBooking.seatsBooked,
         pricePerSeat: pricePerSeat,
+        baseAmount: baseAmount,
+        serviceFeeAmount: serviceFeeAmount,
         totalAmount: updatedBooking.totalAmount,
         routeId: route?.id,
         ticketId: updatedBooking.verificationCode,

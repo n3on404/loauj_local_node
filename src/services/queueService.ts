@@ -134,9 +134,6 @@ export class QueueService {
           data: {
             id: driverId,
             cin: `CIN_${Date.now()}`, // Required field
-            firstName: options.driverInfo.firstName || 'Unknown',
-            lastName: options.driverInfo.lastName || 'Unknown',
-            phoneNumber: options.driverInfo.phoneNumber || 'Unknown',
             isActive: true,
             accountStatus: 'APPROVED',
             syncedAt: new Date()
@@ -148,8 +145,6 @@ export class QueueService {
           data: {
             id: vehicleId,
             licensePlate,
-            model: options.vehicleInfo?.model || 'Unknown',
-            color: options.vehicleInfo?.color || 'White',
             capacity: options.totalSeats || 4,
             isActive: true,
             isAvailable: true,
@@ -188,7 +183,7 @@ export class QueueService {
           }
         });
         
-        console.log(`✅ Created new vehicle ${licensePlate} with driver ${driver.firstName} ${driver.lastName}`);
+        console.log(`✅ Created new vehicle ${licensePlate} with driver ${driver.cin}`);
       }
 
       if (!vehicle) {
@@ -214,7 +209,7 @@ export class QueueService {
         if (!dayPassValidation.isValid) {
           return {
             success: false,
-            error: `Le chauffeur ${vehicle.driver.firstName} ${vehicle.driver.lastName} n'a pas de pass journalier valide. ${dayPassValidation.message}`
+            error: `Le chauffeur ${vehicle.driver.cin} n'a pas de pass journalier valide. ${dayPassValidation.message}`
           };
         }
       }
@@ -871,8 +866,11 @@ export class QueueService {
 
         // If vehicle is now fully booked (READY with 0 available seats), print exit ticket and remove from queue
         if (newStatus === 'READY' && availableSeats === 0) {
-          console.log(`🚌 Vehicle ${queueEntry.vehicle.licensePlate} is now fully booked, generating exit ticket and removing from queue`);
+          console.log(`🚌 [BACKEND DEBUG] Vehicle ${queueEntry.vehicle.licensePlate} is now fully booked, generating exit ticket and removing from queue`);
+          console.log(`🚌 [BACKEND DEBUG] Status check: newStatus=${newStatus}, availableSeats=${availableSeats}, totalSeats=${totalSeats}`);
           await this.handleFullyBookedVehicle(queueEntry);
+        } else {
+          console.log(`🚌 [BACKEND DEBUG] Vehicle ${queueEntry.vehicle.licensePlate} not fully booked yet: newStatus=${newStatus}, availableSeats=${availableSeats}`);
         }
       }
 
@@ -1195,7 +1193,15 @@ export class QueueService {
    */
   private async handleFullyBookedVehicle(queueEntry: any): Promise<void> {
     try {
-      console.log(`🎫 Generating exit ticket for fully booked vehicle ${queueEntry.vehicle.licensePlate}`);
+      console.log(`🎫 [BACKEND DEBUG] Generating exit ticket for fully booked vehicle ${queueEntry.vehicle.licensePlate}`);
+      console.log(`🎫 [BACKEND DEBUG] Queue entry details:`, {
+        id: queueEntry.id,
+        licensePlate: queueEntry.vehicle.licensePlate,
+        destination: queueEntry.destinationName,
+        totalSeats: queueEntry.totalSeats,
+        availableSeats: queueEntry.availableSeats,
+        status: queueEntry.status
+      });
       
       // Generate exit ticket data
       const exitTicketData = {
@@ -1208,9 +1214,11 @@ export class QueueService {
         occupiedSeats: queueEntry.totalSeats - queueEntry.availableSeats
       };
 
+      console.log(`🎫 [BACKEND DEBUG] Generated exit ticket data:`, exitTicketData);
+
       // Broadcast exit ticket event to frontend for printing
       if (this.webSocketService) {
-        this.webSocketService.emit('exit_ticket_generated', {
+        const eventData = {
           type: 'exit_ticket_generated',
           payload: {
             vehicle: {
@@ -1220,7 +1228,13 @@ export class QueueService {
             },
             ticket: exitTicketData
           }
-        });
+        };
+        
+        console.log(`🎫 [BACKEND DEBUG] Broadcasting exit_ticket_generated event:`, eventData);
+        this.webSocketService.emit('exit_ticket_generated', eventData);
+        console.log(`🎫 [BACKEND DEBUG] Exit ticket event broadcasted successfully`);
+      } else {
+        console.log(`❌ [BACKEND DEBUG] WebSocket service not available, cannot broadcast exit ticket event`);
       }
 
       // Immediately remove vehicle from queue by directly deleting the queue entry

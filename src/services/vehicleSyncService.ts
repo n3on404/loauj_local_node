@@ -16,9 +16,6 @@ export interface VehicleData {
   driver?: {
     id: string;
     cin: string;
-    phoneNumber: string;
-    firstName: string;
-    lastName: string;
     originGovernorateId?: string;
     originDelegationId?: string;
     originAddress?: string;
@@ -61,9 +58,6 @@ export class VehicleSyncService {
       
       if (
         localDriver.cin !== incomingDriver.cin ||
-        localDriver.phoneNumber !== incomingDriver.phoneNumber ||
-        localDriver.firstName !== incomingDriver.firstName ||
-        localDriver.lastName !== incomingDriver.lastName ||
         localDriver.originGovernorateId !== (incomingDriver.originGovernorateId || null) ||
         localDriver.originDelegationId !== (incomingDriver.originDelegationId || null) ||
         localDriver.originAddress !== (incomingDriver.originAddress || null) ||
@@ -194,9 +188,6 @@ export class VehicleSyncService {
                   id: vehicleData.id,
                   licensePlate: vehicleData.licensePlate,
                   capacity: vehicleData.capacity,
-                  model: vehicleData.model || null,
-                  year: vehicleData.year || null,
-                  color: vehicleData.color || null,
                   isActive: vehicleData.isActive,
                   isAvailable: vehicleData.isAvailable,
                   // Set default destination based on first non-current authorized station
@@ -207,9 +198,6 @@ export class VehicleSyncService {
                 update: {
                   licensePlate: vehicleData.licensePlate,
                   capacity: vehicleData.capacity,
-                  model: vehicleData.model || null,
-                  year: vehicleData.year || null,
-                  color: vehicleData.color || null,
                   isActive: vehicleData.isActive,
                   isAvailable: vehicleData.isAvailable,
                   syncedAt: new Date()
@@ -252,9 +240,6 @@ export class VehicleSyncService {
                   create: {
                     id: vehicleData.driver.id,
                     cin: vehicleData.driver.cin,
-                    phoneNumber: vehicleData.driver.phoneNumber,
-                    firstName: vehicleData.driver.firstName,
-                    lastName: vehicleData.driver.lastName,
                     originGovernorateId: vehicleData.driver.originGovernorateId || null,
                     originDelegationId: vehicleData.driver.originDelegationId || null,
                     originAddress: vehicleData.driver.originAddress || null,
@@ -265,9 +250,6 @@ export class VehicleSyncService {
                   },
                   update: {
                     cin: vehicleData.driver.cin,
-                    phoneNumber: vehicleData.driver.phoneNumber,
-                    firstName: vehicleData.driver.firstName,
-                    lastName: vehicleData.driver.lastName,
                     originGovernorateId: vehicleData.driver.originGovernorateId || null,
                     originDelegationId: vehicleData.driver.originDelegationId || null,
                     originAddress: vehicleData.driver.originAddress || null,
@@ -372,9 +354,6 @@ export class VehicleSyncService {
             id: vehicleData.id,
             licensePlate: vehicleData.licensePlate,
             capacity: vehicleData.capacity,
-            model: vehicleData.model || null,
-            year: vehicleData.year || null,
-            color: vehicleData.color || null,
             isActive: vehicleData.isActive,
             isAvailable: vehicleData.isAvailable,
             syncedAt: new Date()
@@ -382,9 +361,6 @@ export class VehicleSyncService {
           update: {
             licensePlate: vehicleData.licensePlate,
             capacity: vehicleData.capacity,
-            model: vehicleData.model || null,
-            year: vehicleData.year || null,
-            color: vehicleData.color || null,
             isActive: vehicleData.isActive,
             isAvailable: vehicleData.isAvailable,
             syncedAt: new Date()
@@ -398,9 +374,6 @@ export class VehicleSyncService {
             create: {
               id: vehicleData.driver.id,
               cin: vehicleData.driver.cin,
-              phoneNumber: vehicleData.driver.phoneNumber,
-              firstName: vehicleData.driver.firstName,
-              lastName: vehicleData.driver.lastName,
               originGovernorateId: vehicleData.driver.originGovernorateId || null,
               originDelegationId: vehicleData.driver.originDelegationId || null,
               originAddress: vehicleData.driver.originAddress || null,
@@ -411,9 +384,6 @@ export class VehicleSyncService {
             },
             update: {
               cin: vehicleData.driver.cin,
-              phoneNumber: vehicleData.driver.phoneNumber,
-              firstName: vehicleData.driver.firstName,
-              lastName: vehicleData.driver.lastName,
               originGovernorateId: vehicleData.driver.originGovernorateId || null,
               originDelegationId: vehicleData.driver.originDelegationId || null,
               originAddress: vehicleData.driver.originAddress || null,
@@ -738,13 +708,8 @@ export class VehicleSyncService {
       if (filters.search) {
         where.OR = [
           { licensePlate: { contains: filters.search, mode: 'insensitive' } },
-          { model: { contains: filters.search, mode: 'insensitive' } },
           { driver: { 
-            OR: [
-              { firstName: { contains: filters.search, mode: 'insensitive' } },
-              { lastName: { contains: filters.search, mode: 'insensitive' } },
-              { cin: { contains: filters.search, mode: 'insensitive' } }
-            ]
+            cin: { contains: filters.search, mode: 'insensitive' }
           }}
         ];
       }
