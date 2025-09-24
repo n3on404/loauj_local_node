@@ -229,7 +229,7 @@ model VehicleSchedule {
 // =============== BOOKINGS (LOCAL) ===============
 
 model Booking {
-  id                String        @id // Same ID as central
+  id                String        @id @default(cuid())
   queueId           String        @map("queue_id") // Reference to VehicleQueue instead of schedule
   seatsBooked       Int           @map("seats_booked")
   totalAmount       Float         @map("total_amount")
@@ -411,29 +411,21 @@ model DayPass {
 
 model ExitPass {
   id                    String   @id @default(cuid())
-  queueId               String   @map("queue_id") // Reference to the queue entry
+  queueId               String?  @map("queue_id") // Reference to the queue entry (nullable to preserve exit pass after queue deletion)
   vehicleId             String   @map("vehicle_id")
   licensePlate          String   @map("license_plate")
   destinationId         String   @map("destination_id")
   destinationName       String   @map("destination_name")
   
-  // Previous vehicle info (if any)
-  previousVehicleId     String?  @map("previous_vehicle_id")
-  previousLicensePlate  String?  @map("previous_license_plate")
-  previousExitTime      DateTime? @map("previous_exit_time")
-  
   // Current vehicle info
   currentExitTime       DateTime @map("current_exit_time")
-  totalSeats            Int      @map("total_seats")
-  basePricePerSeat      Float    @map("base_price_per_seat")
-  totalBasePrice        Float    @map("total_base_price") // basePricePerSeat * totalSeats
   
   // Staff info
   createdBy             String   @map("created_by") // Staff ID
   createdAt             DateTime @default(now()) @map("created_at")
   
   // Relations
-  queue                 VehicleQueue @relation(fields: [queueId], references: [id], onDelete: Cascade)
+  queue                 VehicleQueue? @relation(fields: [queueId], references: [id], onDelete: SetNull)
   vehicle               Vehicle  @relation(fields: [vehicleId], references: [id])
   createdByStaff        Staff    @relation("ExitPassStaff", fields: [createdBy], references: [id])
   

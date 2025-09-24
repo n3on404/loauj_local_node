@@ -293,7 +293,7 @@ export default router;
 router.get('/trips/daily', async (req: Request, res: Response) => {
   try {
     const { date } = req.query as { date?: string };
-    const target = date ? new Date(`${date}T00:00:00`) : new Date();
+    const target = date ? (() => { const [y,m,d] = date.split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0); })() : new Date();
     const startOfDay = new Date(target); startOfDay.setHours(0,0,0,0);
     const endOfDay = new Date(startOfDay); endOfDay.setDate(endOfDay.getDate() + 1);
 
@@ -370,10 +370,98 @@ router.get('/trips/daily', async (req: Request, res: Response) => {
       };
     });
 
-    res.json({ success: true, data: { date: startOfDay.toISOString().slice(0,10), vehicles: result } });
+    res.json({ success: true, data: { date: `${startOfDay.getFullYear()}-${String(startOfDay.getMonth()+1).padStart(2,'0')}-${String(startOfDay.getDate()).padStart(2,'0')}`, vehicles: result } });
   } catch (error: any) {
     console.error('Error fetching daily trips:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch daily trips', error: error?.message || 'Unknown error' });
+  }
+});
+
+/**
+ * GET /api/vehicles/trips/daily-exit-income?date=YYYY-MM-DD
+ * Aggregates exit passes by vehicle (licensePlate) and destination for the day.
+ * Income per exit = vehicle.capacity * route.basePrice (no service fees).
+ */
+router.get('/trips/daily-exit-income', async (req: Request, res: Response) => {
+  try {
+    const { date } = req.query as { date?: string };
+    const target = date ? (() => { const [y,m,d] = date.split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0); })() : new Date();
+    const startOfDay = new Date(target); startOfDay.setHours(0,0,0,0);
+    const endOfDay = new Date(startOfDay); endOfDay.setDate(endOfDay.getDate() + 1);
+
+    // Fetch today's exit passes
+    const exits = await prisma.exitPass.findMany({
+      where: { currentExitTime: { gte: startOfDay, lt: endOfDay } },
+      select: {
+        id: true,
+        vehicleId: true,
+        licensePlate: true,
+        destinationId: true,
+        destinationName: true,
+        currentExitTime: true
+      },
+      orderBy: [{ licensePlate: 'asc' }, { currentExitTime: 'asc' }]
+    });
+
+    if (exits.length === 0) {
+      res.json({ success: true, data: { date: `${startOfDay.getFullYear()}-${String(startOfDay.getMonth()+1).padStart(2,'0')}-${String(startOfDay.getDate()).padStart(2,'0')}`, vehicles: [] } });
+      return;
+    }
+
+    // Load vehicle capacities
+    const vehicleIds = Array.from(new Set(exits.map(e => e.vehicleId)));
+    const vehicles = await prisma.vehicle.findMany({ where: { id: { in: vehicleIds } }, select: { id: true, licensePlate: true, capacity: true } });
+    const vehicleMap = new Map(vehicles.map(v => [v.id, v]));
+
+    // Load driver info
+    const drivers = await prisma.driver.findMany({ where: { vehicleId: { in: vehicleIds } }, select: { vehicleId: true, cin: true, accountStatus: true } });
+    const driverMap = new Map(drivers.map(d => [d.vehicleId, d]));
+
+    // Load basePrice by destinationId via Route (stationId)
+    const destinationIds = Array.from(new Set(exits.map(e => e.destinationId)));
+    const routes = await prisma.route.findMany({ where: { stationId: { in: destinationIds } }, select: { stationId: true, basePrice: true } });
+    const basePriceByStation = new Map(routes.map(r => [r.stationId, Number(r.basePrice || 0)]));
+
+    // Aggregate
+    type DestAgg = { name: string; count: number };
+    const licenseToAgg = new Map<string, { vehicleId: string; licensePlate: string; driver?: { cin: string; accountStatus: string } | null; totalIncome: number; destCounts: Map<string, DestAgg> }>();
+
+    exits.forEach(e => {
+      const v = vehicleMap.get(e.vehicleId);
+      const capacity = Number(v?.capacity || 0);
+      const basePrice = basePriceByStation.get(e.destinationId) || 0;
+      const amount = capacity * basePrice;
+
+      const key = e.licensePlate;
+      const agg = licenseToAgg.get(key) || {
+        vehicleId: e.vehicleId,
+        licensePlate: e.licensePlate,
+        driver: driverMap.get(e.vehicleId) || null,
+        totalIncome: 0,
+        destCounts: new Map<string, DestAgg>()
+      };
+      agg.totalIncome += amount;
+      const dKey = e.destinationName || '—';
+      const d = agg.destCounts.get(dKey) || { name: dKey, count: 0 };
+      d.count += 1;
+      agg.destCounts.set(dKey, d);
+      licenseToAgg.set(key, agg);
+    });
+
+    const result = Array.from(licenseToAgg.values()).map(v => ({
+      vehicle: {
+        id: v.vehicleId,
+        licensePlate: v.licensePlate,
+        driver: v.driver ? { cin: v.driver.cin, accountStatus: v.driver.accountStatus } : null,
+      },
+      totals: { totalIncome: v.totalIncome },
+      destinations: Array.from(v.destCounts.values()).map(d => ({ destination: d.name, count: d.count }))
+    }));
+
+    res.json({ success: true, data: { date: `${startOfDay.getFullYear()}-${String(startOfDay.getMonth()+1).padStart(2,'0')}-${String(startOfDay.getDate()).padStart(2,'0')}`, vehicles: result } });
+  } catch (error: any) {
+    console.error('Error fetching daily exit income:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch daily exit income', error: error?.message || 'Unknown error' });
   }
 });
 /**
@@ -397,7 +485,7 @@ router.get('/:id/trips', async (req: Request, res: Response) => {
       select: { cin: true, accountStatus: true }
     });
 
-    const target = date ? new Date(`${date}T00:00:00`) : new Date();
+    const target = date ? (() => { const [y,m,d] = date.split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0); })() : new Date();
     const startOfDay = new Date(target); startOfDay.setHours(0,0,0,0);
     const endOfDay = new Date(startOfDay); endOfDay.setDate(endOfDay.getDate() + 1);
 
@@ -457,7 +545,7 @@ router.get('/:id/trips', async (req: Request, res: Response) => {
             accountStatus: driver.accountStatus,
           } : null,
         },
-        date: startOfDay.toISOString().slice(0,10),
+        date: `${startOfDay.getFullYear()}-${String(startOfDay.getMonth()+1).padStart(2,'0')}-${String(startOfDay.getDate()).padStart(2,'0')}`,
         totals: { totalSeats, totalRevenue },
         trips: items,
       }

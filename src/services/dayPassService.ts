@@ -156,16 +156,16 @@ class DayPassService {
 
       // Check if day pass is still valid (not expired)
       if (now > dayPass.validUntil) {
-        // Mark as expired
-        await prisma.dayPass.update({
-          where: { id: dayPass.id },
-          data: { isExpired: true }
-        });
-
-        // Update driver status
-        await prisma.driver.update({
-          where: { id: driverId },
-          data: { hasValidDayPass: false }
+        // Mark as expired and deactivate within a transaction
+        await prisma.$transaction(async (tx) => {
+          await tx.dayPass.update({
+            where: { id: dayPass.id },
+            data: { isExpired: true, isActive: false }
+          });
+          await tx.driver.update({
+            where: { id: driverId },
+            data: { hasValidDayPass: false, dayPassExpiresAt: null }
+          });
         });
 
         return {
@@ -290,54 +290,53 @@ class DayPassService {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      // Find all day passes that should be expired (from previous days)
-      const dayPassesToExpire = await prisma.dayPass.findMany({
-        where: {
-          purchaseDate: {
-            lt: today
-          },
-          isActive: true,
-          isExpired: false
-        }
-      });
-
-      // Mark them as expired
-      const result = await prisma.dayPass.updateMany({
-        where: {
-          purchaseDate: {
-            lt: today
-          },
-          isActive: true,
-          isExpired: false
-        },
-        data: {
-          isExpired: true,
-          isActive: false
-        }
-      });
-
-      // Update all drivers who had expired day passes
-      const driverIds = dayPassesToExpire.map(dp => dp.driverId);
-      if (driverIds.length > 0) {
-        await prisma.driver.updateMany({
+      return await prisma.$transaction(async (tx) => {
+        // Select passes that ended before today (safer than purchaseDate)
+        const dayPassesToExpire = await tx.dayPass.findMany({
           where: {
-            id: {
-              in: driverIds
-            }
+            validUntil: { lt: today },
+            isActive: true,
+            isExpired: false
+          },
+          select: { id: true, driverId: true }
+        });
+
+        if (dayPassesToExpire.length === 0) {
+          await loggingService.log('DAY_PASSES_EXPIRED', {
+            expiredCount: 0,
+            driverIds: []
+          });
+          return { expiredCount: 0 };
+        }
+
+        // Mark them expired (idempotent guard on where)
+        const result = await tx.dayPass.updateMany({
+          where: {
+            id: { in: dayPassesToExpire.map(dp => dp.id) },
+            isActive: true,
+            isExpired: false
           },
           data: {
-            hasValidDayPass: false,
-            dayPassExpiresAt: null
+            isExpired: true,
+            isActive: false
           }
         });
-      }
 
-      await loggingService.log('DAY_PASSES_EXPIRED', {
-        expiredCount: result.count,
-        driverIds
+        const driverIds = Array.from(new Set(dayPassesToExpire.map(dp => dp.driverId)));
+        if (driverIds.length > 0) {
+          await tx.driver.updateMany({
+            where: { id: { in: driverIds } },
+            data: { hasValidDayPass: false, dayPassExpiresAt: null }
+          });
+        }
+
+        await loggingService.log('DAY_PASSES_EXPIRED', {
+          expiredCount: result.count,
+          driverIds
+        });
+
+        return { expiredCount: result.count };
       });
-
-      return { expiredCount: result.count };
 
     } catch (error) {
       console.error('Error expiring day passes:', error);

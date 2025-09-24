@@ -220,7 +220,8 @@ export class LocalBookingController {
         departureStationId,
         destinationStationId,
         numberOfSeats,
-        selectedVehicles
+        selectedVehicles,
+        staffId
       } = req.body;
 
       // Validate input
@@ -331,7 +332,7 @@ export class LocalBookingController {
           try {
             const { createQueueService } = await import('../services/queueService');
             const queueService = createQueueService(webSocketService);
-            await queueService.updateVehicleStatusBasedOnBookings(vehicle.queueId);
+            await queueService.updateVehicleStatusBasedOnBookings(vehicle.queueId, staffId);
           } catch (error) {
             console.error('❌ Error updating vehicle status after booking:', error);
           }

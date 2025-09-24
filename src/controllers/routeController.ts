@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { routeService } from '../services/routeService';
 import { prisma } from '../config/database';
+import { configService } from '../config/supervisorConfig';
 
 export class RouteController {
   /**
@@ -86,13 +87,21 @@ export class RouteController {
         return;
       }
 
-      if (!station?.id) {
-        res.status(400).json({
-          success: false,
-          message: 'Supervisor must be assigned to a station',
-          code: 'NO_STATION_ASSIGNED'
-        });
-        return;
+      // Resolve supervisor station ID
+      let supervisorStationId: string | undefined = station?.id;
+      if (!supervisorStationId) {
+        const fallbackStationId = configService.getStationId();
+        if (fallbackStationId && fallbackStationId !== 'unknown-station') {
+          supervisorStationId = fallbackStationId;
+          console.log(`ℹ️ Using fallback station from config for supervisor: ${supervisorStationId}`);
+        } else {
+          res.status(400).json({
+            success: false,
+            message: 'Supervisor must be assigned to a station',
+            code: 'NO_STATION_ASSIGNED'
+          });
+          return;
+        }
       }
 
       const { id } = req.params;
@@ -123,7 +132,7 @@ export class RouteController {
 
 
 
-      const updatedRoute = await routeService.updateRoutePrice(id, basePrice, station.id);
+      const updatedRoute = await routeService.updateRoutePrice(id, basePrice, supervisorStationId);
       
       if (!updatedRoute) {
         res.status(404).json({

@@ -5,7 +5,8 @@ import {
   getDriverTickets,
   getVehiclesInQueue,
   getVehiclesForExit,
-  searchVehicleByCIN
+  searchVehicleByCIN,
+  getDriverIncomeForDate
 } from '../controllers/driverTicketController';
 import { authenticate } from '../middleware/auth';
 
@@ -28,5 +29,8 @@ router.get('/exit/vehicles', authenticate, getVehiclesForExit);
 
 // Search vehicle by driver CIN
 router.get('/search/cin/:cin', authenticate, searchVehicleByCIN);
+
+// Get driver's income for a given date (based on exit passes)
+router.get('/income/:licensePlate', authenticate, getDriverIncomeForDate);
 
 export default router; 

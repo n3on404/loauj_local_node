@@ -386,6 +386,82 @@ export const getVehiclesInQueue = async (req: Request, res: Response): Promise<v
   }
 };
 
+/**
+ * Get driver's income for a given date based on exit passes.
+ * Income = vehicle.capacity * route.basePrice, summed over today's exit passes.
+ * Does not include service fees.
+ * GET /api/driver-tickets/income/:licensePlate?date=YYYY-MM-DD
+ */
+export const getDriverIncomeForDate = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { licensePlate } = req.params as { licensePlate?: string };
+    const { date } = req.query as { date?: string };
+
+    if (!licensePlate) {
+      res.status(400).json({ success: false, message: 'License plate is required' });
+      return;
+    }
+
+    // Resolve vehicle and capacity
+    const vehicle = await prisma.vehicle.findUnique({ where: { licensePlate } });
+    if (!vehicle) {
+      res.status(404).json({ success: false, message: `Vehicle ${licensePlate} not found` });
+      return;
+    }
+
+    const target = date ? (() => { const [y,m,d] = date.split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0); })() : new Date();
+    const startOfDay = new Date(target); startOfDay.setHours(0,0,0,0);
+    const endOfDay = new Date(startOfDay); endOfDay.setDate(endOfDay.getDate() + 1);
+
+    // Fetch today's exit passes for this vehicle
+    const exitPasses = await prisma.exitPass.findMany({
+      where: {
+        vehicleId: vehicle.id,
+        currentExitTime: { gte: startOfDay, lt: endOfDay }
+      },
+      select: { id: true, destinationId: true, destinationName: true, currentExitTime: true }
+    });
+
+    // Preload routes by destinationId used in exit passes
+    const destinationIds = Array.from(new Set(exitPasses.map(p => p.destinationId).filter(Boolean)));
+    const routes = destinationIds.length > 0
+      ? await prisma.route.findMany({ where: { stationId: { in: destinationIds } }, select: { stationId: true, basePrice: true } })
+      : [];
+    const routeMap = new Map(routes.map(r => [r.stationId, Number(r.basePrice || 0)]));
+
+    // Compute per-pass income (capacity * basePrice), no service fees
+    const capacity = Number(vehicle.capacity || 0);
+    const items = exitPasses.map(p => {
+      const basePrice = routeMap.get(p.destinationId) || 0;
+      const amount = capacity * basePrice;
+      return {
+        id: p.id,
+        destinationId: p.destinationId,
+        destinationName: p.destinationName,
+        exitTime: p.currentExitTime,
+        capacity,
+        basePrice,
+        amount
+      };
+    });
+
+    const totalIncome = items.reduce((s, it) => s + it.amount, 0);
+
+    res.json({
+      success: true,
+      data: {
+        licensePlate,
+        date: `${startOfDay.getFullYear()}-${String(startOfDay.getMonth()+1).padStart(2,'0')}-${String(startOfDay.getDate()).padStart(2,'0')}`,
+        totals: { totalIncome },
+        items
+      }
+    });
+  } catch (error) {
+    console.error('Error computing driver income:', error);
+    res.status(500).json({ success: false, message: 'Failed to compute driver income', error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+};
+
 export const getVehiclesForExit = async (req: Request, res: Response): Promise<void> => {
   try {
     // Get vehicles from both queue and trips

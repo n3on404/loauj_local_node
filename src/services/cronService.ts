@@ -15,6 +15,8 @@ class CronService {
     
     // Schedule day pass expiration at midnight every day
     this.scheduleDayPassExpiration();
+    // Run a catch-up expiration once at startup (in case the server was down at midnight)
+    this.triggerDayPassExpiration().catch(() => {});
     
     console.log('✅ Cron jobs initialized successfully');
   }

@@ -774,10 +774,15 @@ export class QueueService {
    * Automatically update vehicle status based on booking activity
    * This method should be called after any booking is created or updated
    */
-  async updateVehicleStatusBasedOnBookings(queueId: string): Promise<{
+  async updateVehicleStatusBasedOnBookings(queueId: string, staffId?: string): Promise<{
     success: boolean;
     statusChanged?: boolean;
     newStatus?: string;
+    exitPass?: {
+      currentExitPass: any;
+      totalAmount: any;
+      previousExitPass: any;
+    };
     error?: string;
   }> {
     try {
@@ -843,14 +848,15 @@ export class QueueService {
 
       // Update status if it changed
       if (statusChanged) {
-        await prisma.vehicleQueue.update({
+        const updatedQueue = await prisma.vehicleQueue.update({
           where: { id: queueId },
           data: {
             status: newStatus,
             ...(newStatus === 'READY' && !queueEntry.estimatedDeparture && {
               estimatedDeparture: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes from now
             })
-          }
+          },
+          include: { vehicle: true }
         });
 
         console.log(`✅ Vehicle ${queueEntry.vehicle.licensePlate} status updated to ${newStatus}`);
@@ -864,11 +870,81 @@ export class QueueService {
           status: newStatus
         });
 
-        // If vehicle is now fully booked (READY with 0 available seats), print exit ticket and remove from queue
-        if (newStatus === 'READY' && availableSeats === 0) {
-          console.log(`🚌 [BACKEND DEBUG] Vehicle ${queueEntry.vehicle.licensePlate} is now fully booked, generating exit ticket and removing from queue`);
-          console.log(`🚌 [BACKEND DEBUG] Status check: newStatus=${newStatus}, availableSeats=${availableSeats}, totalSeats=${totalSeats}`);
-          await this.handleFullyBookedVehicle(queueEntry);
+        // If vehicle is now fully booked (READY with 0 available seats), create exit pass and remove from queue
+        if (newStatus === 'READY' && updatedQueue.availableSeats === 0) {
+          console.log(`🚌 [BACKEND DEBUG] Vehicle ${updatedQueue.vehicle.licensePlate} fully booked; creating exit pass`);
+
+          // Find previous exit pass today for same destination
+          const startOfDay = new Date();
+          startOfDay.setHours(0,0,0,0);
+          const endOfDay = new Date();
+          endOfDay.setHours(23,59,59,999);
+
+          // Determine a valid staff to attribute the exit pass to
+          const creatorStaffId = staffId || (await prisma.staff.findFirst({ select: { id: true } }))?.id;
+          if (!creatorStaffId) {
+            throw new Error('No valid staff found to attribute exit pass (createdBy)');
+          }
+
+          const currentExitPass = await prisma.exitPass.create({
+            data: {
+              queueId: updatedQueue.id,
+              vehicleId: updatedQueue.vehicleId,
+              licensePlate: updatedQueue.vehicle.licensePlate,
+              destinationId: updatedQueue.destinationId,
+              destinationName: updatedQueue.destinationName,
+              currentExitTime: new Date(),
+              createdBy: creatorStaffId
+            }
+          });
+
+          const previousExitPass = await prisma.exitPass.findFirst({
+            where: {
+              destinationId: updatedQueue.destinationId,
+              destinationName: updatedQueue.destinationName,
+              currentExitTime: {
+                gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                lte: new Date(new Date().setHours(23, 59, 59, 999))
+              }
+            },
+            orderBy: { currentExitTime: 'desc' }
+          });
+          //search in the route
+          const routeInfo = await prisma.route.findFirst({
+            where :{
+              stationId : updatedQueue.destinationId
+            }
+            
+          })
+          let totalAmount = 0.0;
+          if (routeInfo){
+            const totalPrice = routeInfo.basePrice * updatedQueue.vehicle.capacity;
+            totalAmount = totalPrice;
+          }
+
+          // Remove from queue
+          await prisma.vehicleQueue.delete({ where: { id: updatedQueue.id } });
+          await this.reorderQueue(updatedQueue.destinationId);
+
+          // Broadcast updates
+          this.broadcastQueueUpdate(updatedQueue.destinationId);
+          if (this.webSocketService) {
+            this.webSocketService.emit('vehicle_departed', {
+              type: 'vehicle_departed',
+              payload: {
+                licensePlate: updatedQueue.vehicle.licensePlate,
+                destination: updatedQueue.destinationName,
+                reason: 'fully_booked',
+              }
+            });
+          }
+
+          return {
+            success: true,
+            statusChanged,
+            newStatus,
+            exitPass: { currentExitPass,  totalAmount, previousExitPass }
+          };
         } else {
           console.log(`🚌 [BACKEND DEBUG] Vehicle ${queueEntry.vehicle.licensePlate} not fully booked yet: newStatus=${newStatus}, availableSeats=${availableSeats}`);
         }

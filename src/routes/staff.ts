@@ -335,13 +335,16 @@ router.get('/report/daily', requireSupervisor, async (req, res) => {
     const startOfDay = new Date(target); startOfDay.setHours(0,0,0,0);
     const endOfDay = new Date(startOfDay); endOfDay.setDate(endOfDay.getDate() + 1);
 
-    // Fetch bookings grouped by staff
+    // Station config for service fee
+    const stationConfig = await prisma.stationConfig.findFirst();
+    const serviceFee = Number(stationConfig?.serviceFee || 0.200);
+
+    // Fetch bookings grouped by staff (need seats to compute service fee)
     const bookings = await prisma.booking.findMany({
       where: { createdAt: { gte: startOfDay, lt: endOfDay }, createdBy: { not: null } },
       select: {
         createdBy: true,
-        totalAmount: true,
-        queue: { select: { destinationName: true } },
+        seatsBooked: true,
       }
     });
 
@@ -357,7 +360,7 @@ router.get('/report/daily', requireSupervisor, async (req, res) => {
     dayPasses.forEach(dp => { if (dp.createdBy) activeStaffIds.add(dp.createdBy); });
 
     if (activeStaffIds.size === 0) {
-      res.json({ success: true, data: { date: startOfDay.toISOString().slice(0,10), staff: [] } });
+      res.json({ success: true, data: { date: `${startOfDay.getFullYear()}-${String(startOfDay.getMonth()+1).padStart(2,'0')}-${String(startOfDay.getDate()).padStart(2,'0')}`, staff: [] } });
       return;
     }
 
@@ -367,22 +370,20 @@ router.get('/report/daily', requireSupervisor, async (req, res) => {
     });
     const staffMap = new Map(staffList.map(s => [s.id, s]));
 
-    // Aggregate
-    const staffAgg = new Map<string, { cash: number; dayPass: number; grand: number; destinations: Map<string, { name: string; amount: number; count: number }> }>();
+    // Aggregate (service fees only for bookings)
+    const staffAgg = new Map<string, { serviceFees: number; dayPass: number; income: number }>();
     const ensure = (id: string) => {
-      if (!staffAgg.has(id)) staffAgg.set(id, { cash: 0, dayPass: 0, grand: 0, destinations: new Map() });
+      if (!staffAgg.has(id)) staffAgg.set(id, { serviceFees: 0, dayPass: 0, income: 0 });
       return staffAgg.get(id)!;
     };
 
     bookings.forEach(b => {
       if (!b.createdBy) return;
       const agg = ensure(b.createdBy);
-      const amt = Number(b.totalAmount || 0);
-      agg.cash += amt;
-      agg.grand += amt;
-      const dest = b.queue?.destinationName || '—';
-      const d = agg.destinations.get(dest) || { name: dest, amount: 0, count: 0 };
-      d.amount += amt; d.count += 1; agg.destinations.set(dest, d);
+      const seats = Number(b.seatsBooked || 0);
+      const feeAmt = seats * serviceFee;
+      agg.serviceFees += feeAmt;
+      agg.income += feeAmt;
     });
 
     dayPasses.forEach(dp => {
@@ -390,19 +391,18 @@ router.get('/report/daily', requireSupervisor, async (req, res) => {
       const agg = ensure(dp.createdBy);
       const amt = Number(dp.price || 0);
       agg.dayPass += amt;
-      agg.grand += amt;
+      agg.income += amt;
     });
 
     const result = Array.from(staffAgg.entries()).map(([id, agg]) => {
       const s = staffMap.get(id)!;
       return {
         staff: { id: s.id, cin: s.cin, firstName: s.firstName, lastName: s.lastName, role: s.role },
-        totals: { cash: agg.cash, dayPass: agg.dayPass, grand: agg.grand },
-        destinations: Array.from(agg.destinations.values()),
+        totals: { serviceFees: agg.serviceFees, dayPass: agg.dayPass, income: agg.income, serviceFeeRate: serviceFee },
       };
     });
 
-    res.json({ success: true, data: { date: startOfDay.toISOString().slice(0,10), staff: result } });
+    res.json({ success: true, data: { date: `${startOfDay.getFullYear()}-${String(startOfDay.getMonth()+1).padStart(2,'0')}-${String(startOfDay.getDate()).padStart(2,'0')}`, staff: result } });
   } catch (error: any) {
     console.error('Error fetching staff daily report:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch staff daily report', error: error?.message || 'Unknown error' });
@@ -426,13 +426,17 @@ router.get('/:id/transactions', requireSupervisor, async (req, res) => {
     }
 
     // Compute day range
-    const target = date ? new Date(`${date}T00:00:00`) : new Date();
+    const target = date ? (() => { const [y,m,d] = date.split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0); })() : new Date();
     const startOfDay = new Date(target);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(startOfDay);
     endOfDay.setDate(endOfDay.getDate() + 1);
 
-    // Bookings created by staff (cash only by design)
+    // Get station config for service fee calculation
+    const stationConfig = await prisma.stationConfig.findFirst();
+    const serviceFee = Number(stationConfig?.serviceFee || 0.200);
+
+    // Bookings created by staff with detailed breakdown
     const bookings = await prisma.booking.findMany({
       where: {
         createdBy: id,
@@ -446,9 +450,20 @@ router.get('/:id/transactions', requireSupervisor, async (req, res) => {
         bookingType: true,
         bookingSource: true,
         paymentMethod: true,
-        queue: { select: { destinationName: true } },
+        verificationCode: true,
+        queue: { 
+          select: { 
+            destinationName: true,
+            basePrice: true,
+            vehicle: {
+              select: {
+                licensePlate: true
+              }
+            }
+          } 
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Order by time for timeline
     });
 
     // Day passes sold by staff
@@ -466,30 +481,81 @@ router.get('/:id/transactions', requireSupervisor, async (req, res) => {
         price: true,
         purchaseDate: true,
       },
-      orderBy: { purchaseDate: 'desc' },
+      orderBy: { purchaseDate: 'asc' }, // Order by time for timeline
     });
 
-    // Totals
-    const totalCashBookingsAmount = bookings.reduce((sum, b: any) => sum + (b.totalAmount || 0), 0);
-    const totalDayPasses = dayPasses.reduce((sum: number, p: any) => sum + (p.price || 0), 0);
-    const grandTotal = totalCashBookingsAmount + totalDayPasses;
+    // Calculate detailed breakdown for each booking (focus on service fees only)
+    const enhancedBookings = bookings.map(booking => {
+      const seatsBooked = booking.seatsBooked;
+      const serviceFeeAmount = seatsBooked * serviceFee;
+
+      return {
+        ...booking,
+        serviceFee,
+        serviceFeeAmount,
+        vehicleLicensePlate: booking.queue?.vehicle?.licensePlate || 'N/A',
+        destinationName: booking.queue?.destinationName || 'N/A'
+      };
+    });
+
+    // Calculate totals (only service fees and day passes)
+    const totalServiceFees = enhancedBookings.reduce((sum, b) => sum + (b.serviceFeeAmount || 0), 0);
+    const totalDayPasses = dayPasses.reduce((sum, p) => sum + (p.price || 0), 0);
+    const totalIncome = totalServiceFees + totalDayPasses;
+
+    // Calculate work timeline
+    const allTransactions = [
+      ...enhancedBookings.map(b => ({ type: 'booking', time: b.createdAt, amount: b.serviceFeeAmount, serviceFee: b.serviceFeeAmount })),
+      ...dayPasses.map(d => ({ type: 'daypass', time: d.purchaseDate, amount: d.price, serviceFee: 0 }))
+    ].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+    const workStartTime = allTransactions.length > 0 ? allTransactions[0].time : null;
+    const workEndTime = allTransactions.length > 0 ? allTransactions[allTransactions.length - 1].time : null;
+
+    // Calculate work duration
+    let workDuration = null;
+    if (workStartTime && workEndTime) {
+      const start = new Date(workStartTime);
+      const end = new Date(workEndTime);
+      const diffMs = end.getTime() - start.getTime();
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      workDuration = `${hours}h ${minutes}m`;
+    }
 
     res.json({
       success: true,
       data: {
-        staff: { id: staff.id, cin: staff.cin, firstName: staff.firstName, lastName: staff.lastName, role: staff.role },
+        staff: { 
+          id: staff.id, 
+          cin: staff.cin, 
+          firstName: staff.firstName, 
+          lastName: staff.lastName, 
+          role: staff.role 
+        },
         date: startOfDay.toISOString().slice(0, 10),
+        workTimeline: {
+          startTime: workStartTime,
+          endTime: workEndTime,
+          duration: workDuration,
+          totalTransactions: allTransactions.length
+        },
         totals: {
-          totalCashBookingsAmount,
+          totalServiceFees,
           totalDayPasses,
-          grandTotal,
+          totalIncome,
+          serviceFeeRate: serviceFee
         },
         items: {
-          bookings,
-          entryTickets: [],
-          exitTickets: [],
+          bookings: enhancedBookings,
           dayPasses,
         },
+        summary: {
+          totalSeatsBooked: enhancedBookings.reduce((sum, b) => sum + b.seatsBooked, 0),
+          totalDayPassesSold: dayPasses.length,
+          averageServiceFeePerSeat: enhancedBookings.length > 0 ? 
+            totalServiceFees / enhancedBookings.reduce((sum, b) => sum + b.seatsBooked, 0) : 0
+        }
       },
     });
   } catch (error: any) {
